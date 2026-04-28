@@ -1,0 +1,694 @@
+@extends('layouts.app')
+
+@section('content')
+
+<style>
+    tbody td.sticky-aksi {
+        position: sticky;
+        right: 0;
+        background-color: white;
+        box-shadow: -6px 0 12px -8px rgba(0,0,0,0.25);
+        border-left: 1px solid #d1d5db;
+        z-index: 5;
+    }
+    thead th.sticky-aksi {
+        position: sticky;
+        right: 0;
+        background-color: #dc2626;
+        box-shadow: -6px 0 12px -8px rgba(0,0,0,0.25);
+        z-index: 11;
+    }
+</style>
+
+<!-- HEADER -->
+<div class="mb-4">
+    <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow max-w-full">
+
+        <h2 class="text-lg font-semibold">Data Kasus</h2>
+
+        <div class="flex items-center gap-3">
+            <form method="GET" action="{{ route('kasus.index') }}" class="flex items-center gap-2">
+                <input type="text" name="search" value="{{ request('search') }}"
+                    placeholder="Cari Kasus..."
+                    class="px-4 py-2 border rounded-lg text-sm w-64 focus:ring focus:outline-none">
+                <button type="submit" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </button>
+                @if(request('search'))
+                    <a href="{{ route('kasus.index') }}" class="bg-gray-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-gray-600">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </a>
+                @endif
+            </form>
+
+            <a href="{{ route('kasus.create') }}"
+                class="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-orange-600 whitespace-nowrap">
+                + Tambah Kasus
+            </a>
+        </div>
+
+    </div>
+</div>
+
+<!-- FILTER FORM -->
+<div class="mb-4">
+    <div class="bg-white p-4 rounded-xl shadow">
+        <form method="GET" action="{{ route('kasus.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <!-- Search Input -->
+            <div>
+                <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Pencarian Global</label>
+                <input type="text" id="search" name="search" value="{{ request('search') }}"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="Kode, deskripsi, divisi, nama pelaku...">
+            </div>
+
+            <!-- Status Penanganan -->
+            <div>
+                <label for="status_penanganan" class="block text-sm font-medium text-gray-700 mb-1">Status Penanganan</label>
+                <select id="status_penanganan" name="status_penanganan"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Semua Status</option>
+                    <option value="001" {{ request('status_penanganan') == '001' ? 'selected' : '' }}>001 (Proses internal LJK)</option>
+                    <option value="002" {{ request('status_penanganan') == '002' ? 'selected' : '' }}>002 (Selesai diproses internal LJK)</option>
+                    <option value="003" {{ request('status_penanganan') == '003' ? 'selected' : '' }}>003 (Dalam proses penanganan aparat penegak hukum)</option>
+                    <option value="004" {{ request('status_penanganan') == '004' ? 'selected' : '' }}>004 (Berkekuatan hukum tetap)</option>
+                </select>
+            </div>
+
+            <!-- Jenis Fraud -->
+            <div>
+                <label for="jenis_fraud" class="block text-sm font-medium text-gray-700 mb-1">Jenis Fraud</label>
+                <select id="jenis_fraud" name="jenis_fraud"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Semua Jenis</option>
+                    @foreach($jenisFraudOptions as $jf)
+                        <option value="{{ $jf->id }}" {{ request('jenis_fraud') == $jf->id ? 'selected' : '' }}>
+                            {{ $jf->kode ? $jf->kode . ' (' . $jf->nama . ')' : $jf->nama }}
+                        </option>
+                    @endforeach
+                </select>
+            </div>
+
+            <!-- Jenis Laporan -->
+            <div>
+                <label for="jenis_laporan" class="block text-sm font-medium text-gray-700 mb-1">Jenis Laporan</label>
+                <select id="jenis_laporan" name="jenis_laporan"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Semua Tipe Laporan</option>
+                    <option value="semester" {{ request('jenis_laporan') == 'semester' ? 'selected' : '' }}>Semester</option>
+                    <option value="signifikan" {{ request('jenis_laporan') == 'signifikan' ? 'selected' : '' }}>Signifikan</option>
+                </select>
+            </div>
+
+            <!-- Tanggal Awal -->
+            <div>
+                <label for="tanggal_awal" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Awal</label>
+                <input type="date" id="tanggal_awal" name="tanggal_awal" value="{{ request('tanggal_awal') }}"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <!-- Tanggal Akhir -->
+            <div>
+                <label for="tanggal_akhir" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Akhir</label>
+                <input type="date" id="tanggal_akhir" name="tanggal_akhir" value="{{ request('tanggal_akhir') }}"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+            </div>
+
+            <!-- Buttons -->
+            <div class="flex gap-2 md:col-span-2 lg:col-span-5">
+                <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-600">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                    Cari & Filter
+                </button>
+                <a href="{{ route('kasus.index') }}" class="bg-gray-500 text-white px-4 py-2 rounded-md text-sm hover:bg-gray-600">
+                    <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                    Reset
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- TABLE -->
+<div class="bg-white p-6 rounded-xl shadow mt-8">
+
+    <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold"></h2>
+        <select id="reportTypeSelector" class="px-7 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
+            <option value="semester">Laporan Semester</option>
+            <option value="signifikan">Laporan Signifikan</option>
+        </select>
+    </div>
+
+    <div id="semesterTableContainer" class="overflow-x-auto">
+        <table class="min-w-[3500px] text-xs border-collapse">
+
+    <!-- HEADER -->
+    <thead class="bg-red-600 text-white">
+<style>
+    tbody td.sticky-aksi {
+        position: sticky;
+        right: 0;
+        background-color: white;
+        box-shadow: -6px 0 12px -8px rgba(0,0,0,0.25);
+        border-left: 1px solid #d1d5db;
+        z-index: 5;
+    }
+    thead th.sticky-aksi {
+        position: sticky;
+        right: 0;
+        background-color: #dc2626;
+        box-shadow: -6px 0 12px -8px rgba(0,0,0,0.25);
+        z-index: 11;
+    }
+</style>
+@php
+    $statusLabels = [
+        '001' => '001 (Proses internal LJK)',
+        '002' => '002 (Selesai diproses internal LJK)',
+        '003' => '003 (Dalam proses penanganan aparat penegak hukum)',
+        '004' => '004 (Berkekuatan hukum tetap)',
+    ];
+    $formatRefLabel = function ($ref) {
+        return $ref
+            ? ($ref->kode ? $ref->kode . ' (' . $ref->nama . ')' : $ref->nama)
+            : '-';
+    };
+    $semesterKasus = $kasus->getCollection()->where('jenis_laporan', 'semester');
+    $signifikanKasus = $kasus->getCollection()->where('jenis_laporan', 'signifikan');
+@endphp
+
+                <tr>
+                    <th rowspan="3" class="border p-2">No</th>
+                    <th rowspan="3" class="border p-2">Kode Komponen</th>
+                    <th rowspan="3" class="border p-2">Kejadian Fraud Menurut Pelaku</th>
+                    <th rowspan="3" class="border p-2">ID Kejadian Fraud</th>
+
+                    <th colspan="2" class="border p-2">Jenis Fraud</th>
+
+                    <th rowspan="3" class="border p-2">Aktivitas Terkait Fraud</th>
+                    <th rowspan="3" class="border p-2">Deskripsi Fraud / Modus Operandi</th>
+
+                    <th colspan="2" class="border p-2">Lokasi Fraud</th>
+
+                    <th rowspan="3" class="border p-2">Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud</th>
+                    <th rowspan="3" class="border p-2">Pihak Yang Dirugikan</th>
+
+                    <th colspan="3" class="border p-2">Waktu</th>
+
+                    <th colspan="9" class="border p-2">Jumlah Kerugian</th>
+
+                    <th colspan="2" class="border p-2">Kelemahan Penyebab Fraud</th>
+                    <th colspan="2" class="border p-2">Tindakan untuk Penanganan Fraud</th>
+
+                    <th colspan="4" class="border p-2">Tindakan Perbaikan untuk Pencegahan Fraud</th>
+
+                    <th colspan="16" class="border p-2">Pelaku Fraud</th>
+
+                    <th rowspan="3" class="border p-2">Status Penanganan</th>
+                    <th rowspan="3" class="border p-2 text-center sticky-aksi">Aksi</th>
+                </tr>
+                <tr>
+                    <th rowspan="2" class="border p-2">Jenis Fraud</th>
+                    <th rowspan="2" class="border p-2">Keterangan Jenis Fraud</th>
+
+                    <th rowspan="2" class="border p-2">Lokasi Fraud</th>
+                    <th rowspan="2" class="border p-2">Keterangan Lokasi Fraud</th>
+
+                    <th colspan="2" class="border p-2">Waktu Terjadi</th>
+                    <th rowspan="2" class="border p-2">Fraud Diketahui</th>
+
+                    <th colspan="3" class="border p-2">LJK</th>
+                    <th colspan="3" class="border p-2">Konsumen</th>
+                    <th colspan="3" class="border p-2">Pihak Lain</th>
+
+                    <th rowspan="2" class="border p-2">Kelemahan Penyebab Fraud</th>
+                    <th rowspan="2" class="border p-2">Keterangan</th>
+
+                    <th rowspan="2" class="border p-2">Tindakan untuk Penanganan Fraud</th>
+                    <th rowspan="2" class="border p-2">Keterangan</th>
+
+                    <th rowspan="2" class="border p-2">Tindakan Perbaikan untuk Pencegahan Fraud</th>
+                    <th rowspan="2" class="border p-2">Keterangan</th>
+                    <th rowspan="2" class="border p-2">Target Waktu Pelaksanaan</th>
+                    <th rowspan="2" class="border p-2">Realisasi Pelaksanaan</th>
+
+                    <th rowspan="2" class="border p-2">Internal/Eksternal</th>
+                    <th colspan="8" class="border p-2">Identitas Pelaku</th>
+                    <th colspan="4" class="border p-2">Jabatan Pelaku</th>
+                    <th rowspan="2" class="border p-2">Keterangan Pelaku</th>
+                    <th rowspan="2" class="border p-2">Status Pelaku</th>
+                    <th rowspan="2" class="border p-2">Pengenaan Sanksi</th>
+                </tr>
+                <tr>
+                    <th class="border p-2">Awal</th>
+                    <th class="border p-2">Akhir</th>
+
+                    <th class="border p-2">Rill</th>
+                    <th class="border p-2">Pot</th>
+                    <th class="border p-2">Rec</th>
+
+                    <th class="border p-2">Rill</th>
+                    <th class="border p-2">Pot</th>
+                    <th class="border p-2">Rec</th>
+
+                    <th class="border p-2">Rill</th>
+                    <th class="border p-2">Pot</th>
+                    <th class="border p-2">Rec</th>
+
+                    <th class="border p-2">Nama</th>
+                    <th class="border p-2">Jenis Identitas</th>
+                    <th class="border p-2">Nomor Identitas</th>
+                    <th class="border p-2">Jenis Kelamin</th>
+                    <th class="border p-2">Tempat Lahir</th>
+                    <th class="border p-2">Tanggal Lahir</th>
+                    <th class="border p-2">Alamat Identitas</th>
+                    <th class="border p-2">Alamat Domisili</th>
+                    <th class="border p-2">Pada Saat Fraud Terjadi</th>
+                    <th class="border p-2">Keterangan</th>
+                    <th class="border p-2">Pada Saat Fraud Diketahui</th>
+                    <th class="border p-2">Keterangan</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white">
+                @forelse($semesterKasus as $k)
+                    <tr class="hover:bg-gray-50 align-top">
+                        <td class="border p-2">{{ $k->id }}</td>
+                        <td class="border p-2">{{ $k->kode_komponen }}</td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->kejadianFraud as $i) {{ $i->kode ? $i->kode . ' (' . $i->nama . ')' : $i->nama }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->kejadianFraud as $i) {{ $i->pivot->kode_kejadian ?? '-' }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->jenisFraud as $i) {{ $i->kode ? $i->kode . ' (' . $i->nama . ')' : $i->nama }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->jenisFraud as $i) {{ $i->pivot->keterangan }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            {{ $formatRefLabel($k->aktivitasTerkait) }}
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">{{ $k->deskripsi_fraud }}</td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->lokasiFraud as $i) {{ $i->kode ? $i->kode . ' (' . $i->nama . ')' : $i->nama }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->lokasiFraud as $i) {{ $i->pivot->keterangan }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">{{ $k->divisi_unit }}</td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            {{ $formatRefLabel($k->pihakDirugikan) }}
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            {{ $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '-' }}
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            {{ $k->waktuFraud && $k->waktuFraud->waktu_akhir ? \Carbon\Carbon::parse($k->waktuFraud->waktu_akhir)->format('Y-m-d') : '-' }}
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            {{ $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '-' }}
+                        </td>
+
+                        <td class="border p-2">{{ $k->kerugianFraud->ljk_rill ?? 0 }}</td>
+                        <td class="border p-2">{{ $k->kerugianFraud->ljk_potensial ?? 0 }}</td>
+                        <td class="border p-2">{{ $k->kerugianFraud->ljk_recovery ?? 0 }}</td>
+
+                        <td class="border p-2">{{ $k->kerugianFraud->konsumen_rill ?? 0 }}</td>
+                        <td class="border p-2">{{ $k->kerugianFraud->konsumen_potensial ?? 0 }}</td>
+                        <td class="border p-2">{{ $k->kerugianFraud->konsumen_recovery ?? 0 }}</td>
+
+                        <td class="border p-2">{{ $k->kerugianFraud->pihak_lain_rill ?? 0 }}</td>
+                        <td class="border p-2">{{ $k->kerugianFraud->pihak_lain_potensial ?? 0 }}</td>
+                        <td class="border p-2">{{ $k->kerugianFraud->pihak_lain_recovery ?? 0 }}</td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->kelemahanFraud as $i) {{ $i->kode ? $i->kode . ' (' . $i->nama . ')' : $i->nama }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->kelemahanFraud as $i) {{ $i->pivot->keterangan }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->penangananFraud as $i) {{ $i->kode ? $i->kode . ' (' . $i->nama . ')' : $i->nama }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->penangananFraud as $i) {{ $i->pivot->keterangan }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pencegahanFraud as $i) {{ $i->refPencegahan ? ($i->refPencegahan->kode ? $i->refPencegahan->kode . ' (' . $i->refPencegahan->nama . ')' : $i->refPencegahan->nama) : '-' }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pencegahanFraud as $i) {{ $i->keterangan }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pencegahanFraud as $i) {{ $i->target_waktu ? \Carbon\Carbon::parse($i->target_waktu)->format('Y-m-d') : '-' }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pencegahanFraud as $i) {{ $i->realisasi ? \Carbon\Carbon::parse($i->realisasi)->format('Y-m-d') : '-' }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->kategori }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->nama }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->jenisIdentitas ? ($p->jenisIdentitas->kode ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : $p->jenisIdentitas->nama) : '-' }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->nomor_identitas }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->jenis_kelamin }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->tempat_lahir }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '-' }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->alamat_identitas }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->alamat_domisili }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '-' }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->ket_jabatan_kejadian }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->jabatanDiketahui ? ($p->jabatanDiketahui->kode ? $p->jabatanDiketahui->kode . ' (' . $p->jabatanDiketahui->nama . ')' : $p->jabatanDiketahui->nama) : '-' }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->ket_jabatan_diketahui }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->keterangan }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-' }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @forelse($k->pelakuFrauds as $p)
+                                {{ $p->sanksi ?? '-' }}<br>
+                            @empty
+                                -
+                            @endforelse
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap">
+                            <span class="inline-flex whitespace-nowrap px-2 py-1 text-white rounded text-xs bg-slate-500">
+                                {{ $statusLabels[$k->status_penanganan] ?? $k->status_penanganan }}
+                            </span>
+                        </td>
+
+                        <td class="border p-2 text-center sticky-aksi">
+                            <div class="flex gap-1 justify-center">
+                                <a href="{{ route('kasus.show',$k->id) }}" class="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600" title="View">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                </a>
+                                <a href="{{ route('kasus.edit',$k->id) }}" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                </a>
+                                <form action="{{ route('kasus.destroy',$k->id) }}" method="POST" style="display:inline;">
+                                    @csrf @method('DELETE')
+                                    <button class="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600" title="Delete" onclick="return confirm('Yakin ingin menghapus?')">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="50" class="border p-4 text-center">Tidak ada data laporan semester.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
+    <div id="signifikanTableContainer" class="overflow-x-auto hidden">
+        <table class="min-w-[3200px] text-xs border-collapse">
+            <thead class="bg-red-600 text-white">
+                <tr>
+                    <th rowspan="3" class="border p-2">No</th>
+                    <th rowspan="3" class="border p-2">Kode Komponen</th>
+                    <th rowspan="3" class="border p-2">Kejadian Fraud Menurut Pelaku</th>
+                    <th rowspan="3" class="border p-2">ID Kejadian Fraud</th>
+
+                    <th colspan="2" class="border p-2">Jenis Fraud</th>
+
+                    <th rowspan="3" class="border p-2">Aktivitas Terkait Fraud</th>
+                    <th rowspan="3" class="border p-2">Deskripsi Fraud / Modus Operandi</th>
+
+                    <th colspan="2" class="border p-2">Lokasi Fraud</th>
+
+                    <th rowspan="3" class="border p-2">Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud</th>
+                    <th rowspan="3" class="border p-2">Pihak Yang Dirugikan</th>
+                    <th rowspan="3" class="border p-2">Jumlah Kerugian Potensial</th>
+                    <th rowspan="3" class="border p-2">Tindak Lanjut LJK</th>
+
+                    <th colspan="3" class="border p-2">Waktu</th>
+                    <th colspan="16" class="border p-2">Pelaku Fraud</th>
+                    <th rowspan="3" class="border p-2">Status Penanganan</th>
+                    <th rowspan="3" class="border p-2 text-center sticky-aksi">Aksi</th>
+                </tr>
+                <tr>
+                    <th rowspan="2" class="border p-2">Jenis Fraud</th>
+                    <th rowspan="2" class="border p-2">Keterangan Jenis Fraud</th>
+
+                    <th rowspan="2" class="border p-2">Lokasi Fraud</th>
+                    <th rowspan="2" class="border p-2">Keterangan Lokasi Fraud</th>
+
+                    <th colspan="2" class="border p-2">Waktu Terjadi</th>
+                    <th rowspan="2" class="border p-2">Fraud Diketahui</th>
+
+                    <th rowspan="2" class="border p-2">Internal/Eksternal</th>
+                    <th colspan="8" class="border p-2">Identitas Pelaku</th>
+                    <th colspan="4" class="border p-2">Jabatan Pelaku</th>
+                    <th rowspan="2" class="border p-2">Keterangan Pelaku</th>
+                    <th rowspan="2" class="border p-2">Status Pelaku</th>
+                    <th rowspan="2" class="border p-2">Pengenaan Sanksi</th>
+                </tr>
+                <tr>
+                    <th class="border p-2">Awal</th>
+                    <th class="border p-2">Akhir</th>
+
+                    <th class="border p-2">Nama</th>
+                    <th class="border p-2">Jenis Identitas</th>
+                    <th class="border p-2">Nomor Identitas</th>
+                    <th class="border p-2">Jenis Kelamin</th>
+                    <th class="border p-2">Tempat Lahir</th>
+                    <th class="border p-2">Tanggal Lahir</th>
+                    <th class="border p-2">Alamat Identitas</th>
+                    <th class="border p-2">Alamat Domisili</th>
+                    <th class="border p-2">Pada Saat Fraud Terjadi</th>
+                    <th class="border p-2">Keterangan</th>
+                    <th class="border p-2">Pada Saat Fraud Diketahui</th>
+                    <th class="border p-2">Keterangan</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white">
+                @forelse($signifikanKasus as $k)
+                    <tr class="hover:bg-gray-50 align-top">
+                        <td class="border p-2">{{ $k->id }}</td>
+                        <td class="border p-2">{{ $k->kode_komponen }}</td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->kejadianFraud as $i) {{ $i->kode ? $i->kode . ' (' . $i->nama . ')' : $i->nama }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->kejadianFraud as $i) {{ $i->pivot->kode_kejadian ?? '-' }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->jenisFraud as $i) {{ $i->kode ? $i->kode . ' (' . $i->nama . ')' : $i->nama }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->jenisFraud as $i) {{ $i->pivot->keterangan }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            {{ $formatRefLabel($k->aktivitasTerkait) }}
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">{{ $k->deskripsi_fraud }}</td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->lokasiFraud as $i) {{ $i->kode ? $i->kode . ' (' . $i->nama . ')' : $i->nama }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->lokasiFraud as $i) {{ $i->pivot->keterangan }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">{{ $k->divisi_unit }}</td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            {{ $formatRefLabel($k->pihakDirugikan) }}
+                        </td>
+
+                        <td class="border p-2">{{ $k->kerugianFraud->ljk_potensial ?? 0 }}</td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">{{ $k->tindak_lanjut_ljk ?? '-' }}</td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            {{ $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '-' }}
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            {{ $k->waktuFraud && $k->waktuFraud->waktu_akhir ? \Carbon\Carbon::parse($k->waktuFraud->waktu_akhir)->format('Y-m-d') : '-' }}
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            {{ $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '-' }}
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->kategori }}<br>@endforeach
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->nama }}<br>@endforeach
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->jenisIdentitas ? ($p->jenisIdentitas->kode ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : $p->jenisIdentitas->nama) : '-' }}<br>@endforeach
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->nomor_identitas }}<br>@endforeach
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->jenis_kelamin }}<br>@endforeach
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->tempat_lahir }}<br>@endforeach
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '-' }}<br>@endforeach
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->alamat_identitas }}<br>@endforeach
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->alamat_domisili }}<br>@endforeach
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '-' }}<br>@endforeach
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->ket_jabatan_kejadian }}<br>@endforeach
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->jabatanDiketahui ? ($p->jabatanDiketahui->kode ? $p->jabatanDiketahui->kode . ' (' . $p->jabatanDiketahui->nama . ')' : $p->jabatanDiketahui->nama) : '-' }}<br>@endforeach
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->ket_jabatan_diketahui }}<br>@endforeach
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->keterangan }}<br>@endforeach
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-' }}<br>@endforeach
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @forelse($k->pelakuFrauds as $p)
+                                {{ $p->sanksi ?? '-' }}<br>
+                            @empty
+                                -
+                            @endforelse
+                        </td>
+                        <td class="border p-2 whitespace-nowrap">
+                            <span class="inline-flex whitespace-nowrap px-2 py-1 text-white rounded text-xs bg-slate-500">
+                                {{ $statusLabels[$k->status_penanganan] ?? $k->status_penanganan }}
+                            </span>
+                        </td>
+                        <td class="border p-2 text-center sticky-aksi">
+                            <div class="flex gap-1 justify-center">
+                                <a href="{{ route('kasus.show',$k->id) }}" class="bg-blue-500 text-white px-2 py-1 rounded text-xs hover:bg-blue-600" title="View">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                </a>
+                                <a href="{{ route('kasus.edit',$k->id) }}" class="bg-yellow-500 text-white px-2 py-1 rounded text-xs hover:bg-yellow-600" title="Edit">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                </a>
+                                <form action="{{ route('kasus.destroy',$k->id) }}" method="POST" style="display:inline;">
+                                    @csrf @method('DELETE')
+                                    <button class="bg-red-500 text-white px-2 py-1 rounded text-xs hover:bg-red-600" title="Delete" onclick="return confirm('Yakin ingin menghapus?')">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                @empty
+                    <tr>
+                        <td colspan="38" class="border p-4 text-center">Tidak ada data laporan signifikan.</td>
+                    </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    document.getElementById('reportTypeSelector').addEventListener('change', function(e) {
+        const selectedType = e.target.value;
+        const semesterContainer = document.getElementById('semesterTableContainer');
+        const signifikanContainer = document.getElementById('signifikanTableContainer');
+        
+        if (selectedType === 'semester') {
+            semesterContainer.classList.remove('hidden');
+            signifikanContainer.classList.add('hidden');
+        } else {
+            semesterContainer.classList.add('hidden');
+            signifikanContainer.classList.remove('hidden');
+        }
+    });
+</script>
+
+<!-- PAGINATION -->
+<div class="mt-4">
+    {{ $kasus->links() }}
+</div>
+
+@endsection
