@@ -68,13 +68,18 @@
                     </div>
                 </div>
 
+            <div class="mt-4 text-right">
+                <a href="{{ route('password.request') }}" class="text-sm text-blue-500 hover:underline">
+                    Lupa Password?
+                </a>
+            </div>
+
                 <button type="submit"
                         class="w-full bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-lg">
                     Login
                 </button>
             </form>
 
-                        <!-- REGISTER -->
             <p class="text-center text-sm text-gray-500 mt-6">
                 Don’t have an account?
                 <a href="{{ route('register') }}" class="text-blue-500 hover:underline">

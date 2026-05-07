@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use App\Models\Kasus;
 
 class DashboardController extends Controller
@@ -10,10 +11,11 @@ class DashboardController extends Controller
     public function index()
     {
         // ================= TOTAL KASUS =================
-        $totalKasus = Kasus::count();
+        $totalKasus = Kasus::where('user_id', Auth::id())->count();
 
         // ================= TOTAL KERUGIAN =================
-        $totalKerugian = Kasus::with('kerugianFraud')
+        $totalKerugian = Kasus::where('user_id', Auth::id())
+            ->with('kerugianFraud')
             ->get()
             ->sum(function ($k) {
                 return
@@ -23,8 +25,8 @@ class DashboardController extends Controller
             });
 
         // ================= STATUS =================
-        $open = Kasus::where('status_penanganan', 'Open')->count();
-        $closed = Kasus::where('status_penanganan', 'Closed')->count();
+        $open = Kasus::where('user_id', Auth::id())->where('status_penanganan', 'Open')->count();
+        $closed = Kasus::where('user_id', Auth::id())->where('status_penanganan', 'Closed')->count();
 
         // ================= SEMESTER (5 TERBARU) =================
         $semesterKasus = Kasus::with([
@@ -44,6 +46,7 @@ class DashboardController extends Controller
                 $query->with(['jenisIdentitas', 'statusPelaku', 'jabatanKejadian', 'jabatanDiketahui']);
             }
         ])
+        ->where('user_id', Auth::id())
         ->where('jenis_laporan', 'semester')
         ->latest()
         ->limit(5)
@@ -62,10 +65,19 @@ class DashboardController extends Controller
                 $query->with(['jenisIdentitas', 'statusPelaku', 'jabatanKejadian', 'jabatanDiketahui']);
             }
         ])
+        ->where('user_id', Auth::id())
         ->where('jenis_laporan', 'signifikan')
         ->latest()
         ->limit(5)
         ->get();
+
+        // Tambahkan nomor urut per tabel dashboard
+        foreach ($semesterKasus as $index => $k) {
+            $k->nomor_urut = $index + 1;
+        }
+        foreach ($signifikanKasus as $index => $k) {
+            $k->nomor_urut = $index + 1;
+        }
 
         return view('dashboard', compact(
             'totalKasus',

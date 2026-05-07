@@ -28,15 +28,15 @@ class KerugianFraud extends Model
     ];
 
     protected $casts = [
-        'ljk_rill' => 'decimal:2',
-        'ljk_potensial' => 'decimal:2',
-        'ljk_recovery' => 'decimal:2',
-        'konsumen_rill' => 'decimal:2',
-        'konsumen_potensial' => 'decimal:2',
-        'konsumen_recovery' => 'decimal:2',
-        'pihak_lain_rill' => 'decimal:2',
-        'pihak_lain_potensial' => 'decimal:2',
-        'pihak_lain_recovery' => 'decimal:2',
+        'ljk_rill' => 'decimal:0',
+        'ljk_potensial' => 'decimal:0',
+        'ljk_recovery' => 'decimal:0',
+        'konsumen_rill' => 'decimal:0',
+        'konsumen_potensial' => 'decimal:0',
+        'konsumen_recovery' => 'decimal:0',
+        'pihak_lain_rill' => 'decimal:0',
+        'pihak_lain_potensial' => 'decimal:0',
+        'pihak_lain_recovery' => 'decimal:0',
     ];
 
     public function kasus()

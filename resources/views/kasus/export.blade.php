@@ -121,15 +121,15 @@
                             </td>
                             <td class="px-6 py-3 text-sm">{{ ucfirst($k->jenis_laporan ?? 'semester') }}</td>
                             <td class="px-6 py-3 text-sm">{{ $k->tindak_lanjut_ljk ?? '-' }}</td>
-                            <td class="px-6 py-3 text-sm">{{ $k->jenis_laporan === 'signifikan' ? '-' : number_format($k->kerugianFraud->ljk_rill ?? 0, 0, ',', '.') }}</td>
-                            <td class="px-6 py-3 text-sm">{{ number_format($k->kerugianFraud->ljk_potensial ?? 0, 0, ',', '.') }}</td>
-                            <td class="px-6 py-3 text-sm">{{ $k->jenis_laporan === 'signifikan' ? '-' : number_format($k->kerugianFraud->ljk_recovery ?? 0, 0, ',', '.') }}</td>
-                            <td class="px-6 py-3 text-sm">{{ $k->jenis_laporan === 'signifikan' ? '-' : number_format($k->kerugianFraud->konsumen_rill ?? 0, 0, ',', '.') }}</td>
-                            <td class="px-6 py-3 text-sm">{{ number_format($k->kerugianFraud->konsumen_potensial ?? 0, 0, ',', '.') }}</td>
-                            <td class="px-6 py-3 text-sm">{{ $k->jenis_laporan === 'signifikan' ? '-' : number_format($k->kerugianFraud->konsumen_recovery ?? 0, 0, ',', '.') }}</td>
-                            <td class="px-6 py-3 text-sm">{{ $k->jenis_laporan === 'signifikan' ? '-' : number_format($k->kerugianFraud->pihak_lain_rill ?? 0, 0, ',', '.') }}</td>
-                            <td class="px-6 py-3 text-sm">{{ number_format($k->kerugianFraud->pihak_lain_potensial ?? 0, 0, ',', '.') }}</td>
-                            <td class="px-6 py-3 text-sm">{{ $k->jenis_laporan === 'signifikan' ? '-' : number_format($k->kerugianFraud->pihak_lain_recovery ?? 0, 0, ',', '.') }}</td>
+                            <td class="px-6 py-3 text-sm">{{ $k->jenis_laporan === 'signifikan' ? '-' : (optional($k->kerugianFraud)->ljk_rill !== null ? number_format(optional($k->kerugianFraud)->ljk_rill, 0, ',', '.') : '') }}</td>
+                            <td class="px-6 py-3 text-sm">{{ optional($k->kerugianFraud)->ljk_potensial !== null ? number_format(optional($k->kerugianFraud)->ljk_potensial, 0, ',', '.') : '' }}</td>
+                            <td class="px-6 py-3 text-sm">{{ $k->jenis_laporan === 'signifikan' ? '-' : (optional($k->kerugianFraud)->ljk_recovery !== null ? number_format(optional($k->kerugianFraud)->ljk_recovery, 0, ',', '.') : '') }}</td>
+                            <td class="px-6 py-3 text-sm">{{ $k->jenis_laporan === 'signifikan' ? '-' : (optional($k->kerugianFraud)->konsumen_rill !== null ? number_format(optional($k->kerugianFraud)->konsumen_rill, 0, ',', '.') : '') }}</td>
+                            <td class="px-6 py-3 text-sm">{{ optional($k->kerugianFraud)->konsumen_potensial !== null ? number_format(optional($k->kerugianFraud)->konsumen_potensial, 0, ',', '.') : '' }}</td>
+                            <td class="px-6 py-3 text-sm">{{ $k->jenis_laporan === 'signifikan' ? '-' : (optional($k->kerugianFraud)->konsumen_recovery !== null ? number_format(optional($k->kerugianFraud)->konsumen_recovery, 0, ',', '.') : '') }}</td>
+                            <td class="px-6 py-3 text-sm">{{ $k->jenis_laporan === 'signifikan' ? '-' : (optional($k->kerugianFraud)->pihak_lain_rill !== null ? number_format(optional($k->kerugianFraud)->pihak_lain_rill, 0, ',', '.') : '') }}</td>
+                            <td class="px-6 py-3 text-sm">{{ optional($k->kerugianFraud)->pihak_lain_potensial !== null ? number_format(optional($k->kerugianFraud)->pihak_lain_potensial, 0, ',', '.') : '' }}</td>
+                            <td class="px-6 py-3 text-sm">{{ $k->jenis_laporan === 'signifikan' ? '-' : (optional($k->kerugianFraud)->pihak_lain_recovery !== null ? number_format(optional($k->kerugianFraud)->pihak_lain_recovery, 0, ',', '.') : '') }}</td>
                             <td class="px-6 py-3 text-sm">
                                 <a href="{{ route('kasus.show', $k->id) }}" 
                                     class="text-blue-500 hover:text-blue-700 font-medium">Lihat</a>

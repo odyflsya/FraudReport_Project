@@ -41,8 +41,8 @@
         <div class="form-group">
             <label>Jenis Kelamin</label>
             <select name="jenis_kelamin" class="form-control" required>
-                <option value="L">Laki-laki</option>
-                <option value="P">Perempuan</option>
+                <option value="L">(L) Laki-laki</option>
+                <option value="P">(P) Perempuan</option>
             </select>
         </div>
         <div class="form-group">

@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Mail\SendOtpCode;
+use App\Models\EmailOtp;
 use App\Models\User;
-use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -42,10 +43,18 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
         ]);
 
-        event(new Registered($user));
+        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
 
-        Auth::login($user);
+        EmailOtp::create([
+            'email' => $user->email,
+            'code_hash' => Hash::make($code),
+            'expires_at' => now()->addMinutes(10),
+        ]);
 
-        return redirect(route('dashboard', absolute: false));
+        Mail::to($user->email)->send(new SendOtpCode($code));
+
+        session(['otp_email' => $user->email]);
+
+        return redirect()->route('verification.code')->with('status', 'Akun Anda berhasil dibuat. Silakan cek email untuk kode verifikasi.');
     }
 }

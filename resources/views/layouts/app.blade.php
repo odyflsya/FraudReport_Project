@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Fraud Report</title>
     @vite('resources/css/app.css')
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
 
 <body class="bg-gray-100">
@@ -71,8 +72,8 @@
             </a>
 
             <!-- Pengaturan -->
-            <a href="#"
-               class="px-6 py-3 hover:bg-sky-500 flex items-center gap-3 transition">
+            <a href="{{ route('pengaturan.index') }}"
+               class="px-6 py-3 flex items-center gap-3 transition {{ request()->routeIs('pengaturan.index', 'profile.edit') ? 'bg-orange-500' : 'hover:bg-sky-500' }}">
 
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-width="2"
@@ -103,6 +104,8 @@
                 Input Kasus
                 @elseif(request()->routeIs('kasus.export'))
                 Export Laporan
+                @elseif(request()->routeIs('pengaturan.index', 'profile.edit'))
+                Pengaturan
                 @else
                 Dashboard
                 @endif
@@ -128,10 +131,21 @@
             </svg>
 
             <!-- User -->
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 bg-gray-300 rounded-full"></div>
+            <a href="{{ route('pengaturan.index') }}" class="flex items-center gap-2 hover:opacity-75 transition">
+                @if(auth()->user()->profile_photo_path)
+                    <img src="{{ Storage::url(auth()->user()->profile_photo_path) }}" alt="{{ auth()->user()->name }}" class="w-8 h-8 rounded-full object-cover border-2 border-gray-300">
+                @else
+                    <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
+                @endif
                 <span class="text-sm">{{ auth()->user()->name }}</span>
-            </div>
+            </a>
+
+            <form method="POST" action="{{ route('profile.logout') }}" class="ml-2">
+                @csrf
+                <button type="submit" class="p-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition" title="Logout">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
+            </form>
 
         </div>
 
