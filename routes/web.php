@@ -6,7 +6,7 @@ use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    return view('welcome');
+    return redirect()->route('login');
 });
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
@@ -21,6 +21,8 @@ Route::middleware('auth')->group(function () {
     // Kasus routes
     Route::resource('kasus', KasusController::class);
     Route::get('/kasus-export', [KasusController::class, 'export'])->name('kasus.export');
+    Route::get('/kasus-export-excel', [KasusController::class, 'exportExcel'])->name('kasus.export-excel');
+    Route::get('/kasus-export-pdf', [KasusController::class, 'exportPdf'])->name('kasus.export-pdf');
 });
 
 require __DIR__.'/auth.php';

@@ -11,12 +11,12 @@
 <div class="flex h-screen">
 
     <!-- SIDEBAR -->
-<aside class="w-64 bg-sky-600 text-white flex flex-col fixed h-full">
+    <aside class="w-64 bg-sky-600 text-white flex flex-col fixed h-full">
 
         <!-- LOGO -->
-        <div class="p-6 text-lg font-semibold flex items-center gap-2">
-            <div class="w-6 h-6 bg-orange-500 rotate-45"></div>
-            Fraud <span class="text-orange-400">Report</span>
+        <div class="p-6 flex items-center gap-2 text-white font-semibold border-b border-white/20">
+            <img src="{{ asset('assets/img/logo.png') }}" class="w-12 h-12">
+            <span class="text-lg">Fraud <span class="text-brand-orange">Report</span></span>
         </div>
 
         <!-- MENU -->
@@ -24,7 +24,7 @@
 
             <!-- Dashboard -->
             <a href="{{ route('dashboard') }}"
-               class="px-6 py-3 flex items-center gap-3 transition {{ request()->routeIs('dashboard') ? 'bg-orange-500' : 'hover:bg-sky-500' }}">
+               class="px-6 py-3 flex items-center gap-3 transition duration-200 {{ request()->routeIs('dashboard') ? 'bg-orange-500 shadow-md' : 'hover:bg-white/10' }}">
 
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-width="2"
@@ -36,7 +36,7 @@
 
             <!-- Manajemen Kasus -->
             <a href="{{ route('kasus.index') }}"
-               class="px-6 py-3 flex items-center gap-3 transition {{ request()->routeIs('kasus.index', 'kasus.show', 'kasus.edit') ? 'bg-orange-500' : 'hover:bg-sky-500' }}">
+               class="px-6 py-3 flex items-center gap-3 transition duration-200 {{ request()->routeIs('kasus.index', 'kasus.show', 'kasus.edit') ? 'bg-orange-500 shadow-md' : 'hover:bg-white/10' }}">
 
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-width="2"
@@ -48,7 +48,7 @@
 
             <!-- Input Kasus -->
             <a href="{{ route('kasus.create') }}"
-               class="px-6 py-3 flex items-center gap-3 transition {{ request()->routeIs('kasus.create') ? 'bg-orange-500' : 'hover:bg-sky-500' }}">
+               class="px-6 py-3 flex items-center gap-3 transition duration-200 {{ request()->routeIs('kasus.create') ? 'bg-orange-500 shadow-md' : 'hover:bg-white/10' }}">
 
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-width="2"
@@ -60,7 +60,7 @@
 
             <!-- Export -->
             <a href="{{ route('kasus.export') }}"
-               class="px-6 py-3 flex items-center gap-3 transition {{ request()->routeIs('kasus.export') ? 'bg-orange-500' : 'hover:bg-sky-500' }}">
+               class="px-6 py-3 flex items-center gap-3 transition duration-200 {{ request()->routeIs('kasus.export') ? 'bg-orange-500 shadow-md' : 'hover:bg-white/10' }}">
 
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-width="2"
@@ -71,16 +71,28 @@
             </a>
 
             <!-- Pengaturan -->
-            <a href="#"
-               class="px-6 py-3 hover:bg-sky-500 flex items-center gap-3 transition">
+            <div class="px-6 py-3 text-xs uppercase tracking-wide text-slate-200">Pengaturan</div>
+
+            <a href="{{ route('profile.edit') }}"
+               class="px-6 py-3 flex items-center gap-3 transition duration-200 {{ request()->routeIs('profile.edit') ? 'bg-orange-500 shadow-md' : 'hover:bg-white/10' }}">
 
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-width="2"
-                        d="M11.983 5.5a1.5 1.5 0 012.034 0l.78.76a1.5 1.5 0 001.46.38l1.05-.28a1.5 1.5 0 011.79 1.79l-.28 1.05a1.5 1.5 0 00.38 1.46l.76.78a1.5 1.5 0 010 2.034l-.76.78a1.5 1.5 0 00-.38 1.46l.28 1.05a1.5 1.5 0 01-1.79 1.79l-1.05-.28a1.5 1.5 0 00-1.46.38l-.78.76a1.5 1.5 0 01-2.034 0l-.78-.76a1.5 1.5 0 00-1.46-.38l-1.05.28a1.5 1.5 0 01-1.79-1.79l.28-1.05a1.5 1.5 0 00-.38-1.46l-.76-.78a1.5 1.5 0 010-2.034l.76-.78a1.5 1.5 0 00.38-1.46l-.28-1.05a1.5 1.5 0 011.79-1.79l1.05.28a1.5 1.5 0 001.46-.38l.78-.76z"/>
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232a2.828 2.828 0 114 4L7.5 21.966H3v-4.5L15.232 5.232z" />
                 </svg>
 
-                Pengaturan
+                Edit Profil
             </a>
+
+            <form method="POST" action="{{ route('logout') }}">
+                @csrf
+                <button type="submit" class="w-full text-left px-6 py-3 flex items-center gap-3 transition duration-200 hover:bg-white/10">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/>
+                    </svg>
+
+                    Logout
+                </button>
+            </form>
 
         </nav>
     </aside>
@@ -138,12 +150,12 @@
     </div>
 </div>
 
-        <!-- CONTENT -->
+<!-- CONTENT -->
 <div class="mt-[80px] p-8 overflow-x-auto overflow-y-auto h-[calc(100vh-80px)]">
-      @yield('content')
-        </div>
+    @yield('content')
+</div>
 
-    </main>
+</main>
 
 </div>
 
