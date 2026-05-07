@@ -1,6 +1,34 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $formatCurrencyInput = function ($value) {
+        $value = (string) ($value ?? '');
+        if ($value === '') {
+            return '';
+        }
+
+        // Jika sudah ada format titik sebagai ribuan, kembalikan apa adanya
+        if (strpos($value, '.') !== false && strpos($value, ',') === false) {
+            return $value;
+        }
+
+        // Jika ada koma (desimal), tangani sebagai format Eropa
+        if (strpos($value, ',') !== false) {
+            $parts = explode(',', $value);
+            $integerPart = str_replace('.', '', $parts[0]);
+            $decimalPart = $parts[1] ?? '';
+            return number_format((float) ($integerPart . '.' . $decimalPart), 0, ',', '.');
+        }
+
+        // Jika angka biasa, format sebagai ribuan
+        if (is_numeric($value)) {
+            return number_format((float) $value, 0, ',', '.');
+        }
+
+        return $value;
+    };
+@endphp
 <div class="min-h-screen bg-slate-50 py-6 sm:py-8">
     <div class="mx-auto w-full px-4 sm:px-6 lg:px-8">
         <!-- Main Card -->
@@ -110,12 +138,12 @@
 
                     <!-- SECTION: AKTIVITAS TERKAIT -->
                         <div>
-                            <label for="aktivitas_terkait_id" class="mb-2 block text-sm font-medium text-slate-700">Aktivitas Terkait <span class="text-red-500">*</span></label>
+                            <label for="aktivitas_terkait_id" class="mb-2 block text-sm font-medium text-slate-700">Aktivitas Terkait Fraud <span class="text-red-500">*</span></label>
                             <select id="aktivitas_terkait_id" name="aktivitas_terkait_id" required
                                 class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                 <option value="">Pilih Aktivitas Terkait</option>
                                 @foreach($aktivitasTerkait as $at)
-                                    <option value="{{ $at->id }}" {{ old('aktivitas_terkait_id') == $at->id ? 'selected' : '' }}>{{ $at->kode }} - {{ $at->nama }}</option>
+                                    <option value="{{ $at->id }}" {{ old('aktivitas_terkait_id') == $at->id ? 'selected' : '' }}>{{ $at->kode }} ({{ $at->nama }})</option>
                                 @endforeach
                             </select>
                             @error('aktivitas_terkait_id')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
@@ -198,7 +226,7 @@
 
                     <!-- SECTION: WAKTU FRAUD -->
                     <div>
-                        <h3 class="mb-4 text-lg font-semibold text-slate-900">Waktu Fraud</h3>
+                        <h3 class="mb-4 text-lg font-semibold text-slate-900">Waktu </h3>
                         <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                             <div>
                                 <label for="waktu_awal" class="mb-2 block text-sm font-medium text-slate-700">Waktu Awal</label>
@@ -213,7 +241,7 @@
                                 @error('waktu_akhir')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="waktu_diketahui" class="mb-2 block text-sm font-medium text-slate-700">Waktu Diketahui</label>
+                                <label for="waktu_diketahui" class="mb-2 block text-sm font-medium text-slate-700">Waktu Fraud Diketahui</label>
                                 <input type="date" id="waktu_diketahui" name="waktu_diketahui"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                 @error('waktu_diketahui')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
@@ -230,21 +258,21 @@
                                 <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                                     <div class="signifikan-hidden">
                                         <label class="mb-2 block text-sm font-medium text-slate-700">Kerugian Riil (Rp)</label>
-                                        <input type="number" name="ljk_rill" step="0.01" min="0"
-                                            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            placeholder="0" value="{{ old('ljk_rill', 0) }}">
+                                        <input type="text" name="ljk_rill" inputmode="decimal" autocomplete="off"
+                                            class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                            placeholder="" value="{{ $formatCurrencyInput(old('ljk_rill', '')) }}">
                                     </div>
                                     <div>
                                         <label class="mb-2 block text-sm font-medium text-slate-700">Kerugian Potensial (Rp)</label>
-                                        <input type="number" name="ljk_potensial" step="0.01" min="0"
-                                            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            placeholder="0" value="{{ old('ljk_potensial', 0) }}">
+                                        <input type="text" name="ljk_potensial" inputmode="decimal" autocomplete="off"
+                                            class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                            placeholder="" value="{{ $formatCurrencyInput(old('ljk_potensial', '')) }}">
                                     </div>
                                     <div class="signifikan-hidden">
                                         <label class="mb-2 block text-sm font-medium text-slate-700">Recovery (Rp)</label>
-                                        <input type="number" name="ljk_recovery" step="0.01" min="0"
-                                            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            placeholder="0" value="{{ old('ljk_recovery', 0) }}">
+                                        <input type="text" name="ljk_recovery" inputmode="decimal" autocomplete="off"
+                                            class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                            placeholder="" value="{{ $formatCurrencyInput(old('ljk_recovery', '')) }}">
                                     </div>
                                 </div>
                             </div>
@@ -254,21 +282,21 @@
                                 <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                                     <div class="signifikan-hidden">
                                         <label class="mb-2 block text-sm font-medium text-slate-700">Kerugian Riil (Rp)</label>
-                                        <input type="number" name="konsumen_rill" step="0.01" min="0"
-                                            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            placeholder="0" value="{{ old('konsumen_rill', 0) }}">
+                                        <input type="text" name="konsumen_rill" inputmode="decimal" autocomplete="off"
+                                            class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                            placeholder="" value="{{ $formatCurrencyInput(old('konsumen_rill', '')) }}">
                                     </div>
                                     <div>
                                         <label class="mb-2 block text-sm font-medium text-slate-700">Kerugian Potensial (Rp)</label>
-                                        <input type="number" name="konsumen_potensial" step="0.01" min="0"
-                                            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            placeholder="0" value="{{ old('konsumen_potensial', 0) }}">
+                                        <input type="text" name="konsumen_potensial" inputmode="decimal" autocomplete="off"
+                                            class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                            placeholder="" value="{{ $formatCurrencyInput(old('konsumen_potensial', '')) }}">
                                     </div>
                                     <div class="signifikan-hidden">
                                         <label class="mb-2 block text-sm font-medium text-slate-700">Recovery (Rp)</label>
-                                        <input type="number" name="konsumen_recovery" step="0.01" min="0"
-                                            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            placeholder="0" value="{{ old('konsumen_recovery', 0) }}">
+                                        <input type="text" name="konsumen_recovery" inputmode="decimal" autocomplete="off"
+                                            class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                            placeholder="" value="{{ $formatCurrencyInput(old('konsumen_recovery', '')) }}">
                                     </div>
                                 </div>
                             </div>
@@ -278,21 +306,21 @@
                                 <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                                     <div class="signifikan-hidden">
                                         <label class="mb-2 block text-sm font-medium text-slate-700">Kerugian Riil (Rp)</label>
-                                        <input type="number" name="pihak_lain_rill" step="0.01" min="0"
-                                            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            placeholder="0" value="{{ old('pihak_lain_rill', 0) }}">
+                                        <input type="text" name="pihak_lain_rill" inputmode="decimal" autocomplete="off"
+                                            class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                            placeholder="" value="{{ $formatCurrencyInput(old('pihak_lain_rill', '')) }}">
                                     </div>
                                     <div>
                                         <label class="mb-2 block text-sm font-medium text-slate-700">Kerugian Potensial (Rp)</label>
-                                        <input type="number" name="pihak_lain_potensial" step="0.01" min="0"
-                                            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            placeholder="0" value="{{ old('pihak_lain_potensial', 0) }}">
+                                        <input type="text" name="pihak_lain_potensial" inputmode="decimal" autocomplete="off"
+                                            class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                            placeholder="" value="{{ $formatCurrencyInput(old('pihak_lain_potensial', '')) }}">
                                     </div>
                                     <div class="signifikan-hidden">
                                         <label class="mb-2 block text-sm font-medium text-slate-700">Recovery (Rp)</label>
-                                        <input type="number" name="pihak_lain_recovery" step="0.01" min="0"
-                                            class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            placeholder="0" value="{{ old('pihak_lain_recovery', 0) }}">
+                                        <input type="text" name="pihak_lain_recovery" inputmode="decimal" autocomplete="off"
+                                            class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                            placeholder="" value="{{ $formatCurrencyInput(old('pihak_lain_recovery', '')) }}">
                                     </div>
                                 </div>
                             </div>
@@ -328,7 +356,7 @@
 
                     <!-- SECTION: TINDAKAN PENANGANAN FRAUD -->
                     <div>
-                        <h3 class="mb-4 text-lg font-semibold text-slate-900">Tindakan Penanganan Fraud</h3>
+                        <h3 class="mb-4 text-lg font-semibold text-slate-900">Tindakan untuk Penanganan Fraud</h3>
                         <div class="space-y-3">
                             <div>
                                 <label for="penanganan_fraud" class="mb-2 block text-sm font-medium text-slate-700">Pilih Tindakan Penanganan <span class="text-red-500">*</span></label>
@@ -337,7 +365,7 @@
                                     onchange="toggleKeteranganField(this, 'penanganan_fraud_keterangan_wrapper')">
                                     <option value="">Pilih Tindakan Penanganan</option>
                                     @foreach($penangananFraud as $pf)
-                                        <option value="{{ $pf->id }}" data-keterangan="{{ ((strpos(strtolower($pf->nama), 'lainnya') !== false || strpos(strtolower($pf->nama), 'lain') !== false) || (strpos(strtolower($pf->kode), 'lainnya') !== false || strpos(strtolower($pf->kode), 'lain') !== false)) ? 'true' : 'false' }}" {{ old('penanganan_fraud') == $pf->id ? 'selected' : '' }}>{{ $pf->kode }} - {{ $pf->nama }}</option>
+                                        <option value="{{ $pf->id }}" data-keterangan="{{ ((strpos(strtolower($pf->nama), 'lainnya') !== false || strpos(strtolower($pf->nama), 'lain') !== false) || (strpos(strtolower($pf->kode), 'lainnya') !== false || strpos(strtolower($pf->kode), 'lain') !== false)) ? 'true' : 'false' }}" {{ old('penanganan_fraud') == $pf->id ? 'selected' : '' }}>{{ $pf->kode }} ({{ $pf->nama }})</option>
                                     @endforeach
                                 </select>
                                 @error('penanganan_fraud')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
@@ -354,15 +382,15 @@
 
                     <!-- SECTION: TINDAKAN PERBAIKAN / PENCEGAHAN FRAUD -->
                     <div>
-                        <h3 class="mb-4 text-lg font-semibold text-slate-900">Tindakan Perbaikan / Pencegahan Fraud</h3>
+                        <h3 class="mb-4 text-lg font-semibold text-slate-900">Tindakan Perbaikan untuk Pencegahan Fraud</h3>
                         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
-                                <label for="pencegahan_id" class="mb-2 block text-sm font-medium text-slate-700">Ref Pencegahan <span class="text-red-500">*</span></label>
+                                <label for="pencegahan_id" class="mb-2 block text-sm font-medium text-slate-700">Pilih Tindakan Perbaikan<span class="text-red-500">*</span></label>
                                 <select id="pencegahan_id" name="pencegahan_fraud[pencegahan_id]" required
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
-                                    <option value="">Pilih Ref Pencegahan</option>
+                                    <option value="">Pilih Tindakan Perbaikan</option>
                                     @foreach($pencegahanFraud as $pf)
-                                        <option value="{{ $pf->id }}" {{ old('pencegahan_fraud.pencegahan_id') == $pf->id ? 'selected' : '' }}>{{ $pf->kode }} - {{ $pf->nama }}</option>
+                                        <option value="{{ $pf->id }}" {{ old('pencegahan_fraud.pencegahan_id') == $pf->id ? 'selected' : '' }}>{{ $pf->kode }} ({{ $pf->nama }})</option>
                                     @endforeach
                                 </select>
                                 @error('pencegahan_fraud.pencegahan_id')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
@@ -395,7 +423,7 @@
                         <h3 class="mb-4 text-lg font-semibold text-slate-900">Data Pelaku Fraud</h3>
                         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
-                                <label for="kategori" class="mb-2 block text-sm font-medium text-slate-700">Kategori <span class="text-red-500">*</span></label>
+                                <label for="kategori" class="mb-2 block text-sm font-medium text-slate-700">Internal/Eksternal <span class="text-red-500">*</span></label>
                                 <select id="kategori" name="pelaku_fraud[kategori]" required
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                     <option value="">Pilih Kategori</option>
@@ -478,50 +506,69 @@
                                 @error('pelaku_fraud.alamat_domisili')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="jabatan_saat_kejadian_id" class="mb-2 block text-sm font-medium text-slate-700">Jabatan Saat Kejadian</label>
+                                <label for="jabatan_saat_kejadian_id" class="mb-2 block text-sm font-medium text-slate-700">Jabatan Pada Saat Fraud Terjadi</label>
                                 <select id="jabatan_saat_kejadian_id" name="pelaku_fraud[jabatan_saat_kejadian_id]"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                     <option value="">Pilih Jabatan</option>
                                     @foreach($jabatanKejadian as $jk)
-                                        <option value="{{ $jk->id }}" {{ old('pelaku_fraud.jabatan_saat_kejadian_id') == $jk->id ? 'selected' : '' }}>{{ $jk->nama }}</option>
+                                        <option value="{{ $jk->id }}" {{ old('pelaku_fraud.jabatan_saat_kejadian_id') == $jk->id ? 'selected' : '' }}>{{ $jk->kode }} ({{ $jk->nama }})</option>
                                     @endforeach
                                 </select>
                                 @error('pelaku_fraud.jabatan_saat_kejadian_id')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="ket_jabatan_kejadian" class="mb-2 block text-sm font-medium text-slate-700">Keterangan Jabatan Kejadian</label>
+                                <label for="ket_jabatan_kejadian" class="mb-2 block text-sm font-medium text-slate-700">Keterangan Jabatan Pada Saat Fraud Terjadi</label>
                                 <input type="text" id="ket_jabatan_kejadian" name="pelaku_fraud[ket_jabatan_kejadian]" value="{{ old('pelaku_fraud.ket_jabatan_kejadian') }}"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                     placeholder="Keterangan jabatan">
                                 @error('pelaku_fraud.ket_jabatan_kejadian')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="jabatan_saat_diketahui_id" class="mb-2 block text-sm font-medium text-slate-700">Jabatan Saat Diketahui</label>
+                                <label for="jabatan_saat_diketahui_id" class="mb-2 block text-sm font-medium text-slate-700">Jabatan Pada Saat Fraud Diketahui</label>
                                 <select id="jabatan_saat_diketahui_id" name="pelaku_fraud[jabatan_saat_diketahui_id]"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                     <option value="">Pilih Jabatan</option>
                                     @foreach($jabatanSemua as $js)
-                                        <option value="{{ $js->id }}" {{ old('pelaku_fraud.jabatan_saat_diketahui_id') == $js->id ? 'selected' : '' }}>{{ $js->nama }}</option>
+                                        <option value="{{ $js->id }}" {{ old('pelaku_fraud.jabatan_saat_diketahui_id') == $js->id ? 'selected' : '' }}>{{ $js->kode }} ({{ $js->nama }})</option>
                                     @endforeach
                                 </select>
                                 @error('pelaku_fraud.jabatan_saat_diketahui_id')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="ket_jabatan_diketahui" class="mb-2 block text-sm font-medium text-slate-700">Keterangan Jabatan Diketahui</label>
+                                <label for="ket_jabatan_diketahui" class="mb-2 block text-sm font-medium text-slate-700">Keterangan Jabatan Pada Saat Fraud Diketahui</label>
                                 <input type="text" id="ket_jabatan_diketahui" name="pelaku_fraud[ket_jabatan_diketahui]" value="{{ old('pelaku_fraud.ket_jabatan_diketahui') }}"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                     placeholder="Keterangan jabatan">
                                 @error('pelaku_fraud.ket_jabatan_diketahui')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
+<div class="md:col-span-2">
+    <label for="keterangan" class="mb-2 block text-sm font-medium text-slate-700">
+        Keterangan Pelaku
+    </label>
+
+    <select id="keterangan" name="pelaku_fraud[keterangan]"
+        class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
+        
+        <option value="">Pilih Keterangan</option>
+
+        <option value="001 (Konsumen)" {{ old('pelaku_fraud.keterangan') == '001 (Konsumen)' ? 'selected' : '' }}>
+            001 (Konsumen)
+        </option>
+        <option value="002 (Pihak yang bekerjasama dengan bank)" {{ old('pelaku_fraud.keterangan') == '002 (Pihak yang bekerjasama dengan bank)' ? 'selected' : '' }}>
+            002 (Pihak yang bekerjasama dengan bank)
+        </option>
+        <option value="003 (Pihak yang tidak berhubungan langsung)" {{ old('pelaku_fraud.keterangan') == '003 (Pihak yang tidak berhubungan langsung)' ? 'selected' : '' }}>
+            003 (Pihak yang tidak berhubungan langsung)
+        </option>
+
+    </select>
+
+    @error('pelaku_fraud.keterangan')
+        <span class="text-red-500 text-sm">{{ $message }}</span>
+    @enderror
+</div>
                             <div class="md:col-span-2">
-                                <label for="keterangan" class="mb-2 block text-sm font-medium text-slate-700">Keterangan Pelaku</label>
-                                <textarea id="keterangan" name="pelaku_fraud[keterangan]" rows="3" required
-                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                    placeholder="Keterangan umum">{{ old('pelaku_fraud.keterangan') }}</textarea>
-                                @error('pelaku_fraud.keterangan')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
-                            </div>
-                            <div class="md:col-span-2">
-                                <label for="sanksi" class="mb-2 block text-sm font-medium text-slate-700">Sanksi</label>
+                                <label for="sanksi" class="mb-2 block text-sm font-medium text-slate-700">Pengenaan Sanksi</label>
                                 <textarea id="sanksi" name="pelaku_fraud[sanksi]" rows="3"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                     placeholder="Sanksi yang diberikan">{{ old('pelaku_fraud.sanksi') }}</textarea>
@@ -625,6 +672,56 @@
         });
     }
 
+    function formatCurrencyValue(value) {
+        if (typeof value !== 'string' || value.trim() === '') {
+            return value;
+        }
+
+        let cleaned = value.replace(/[^0-9,]/g, '');
+        const parts = cleaned.split(',');
+        let integerPart = parts[0].replace(/^0+(?=\d)/, '');
+        const decimalPart = parts[1] || '';
+
+        if (integerPart === '') {
+            integerPart = '0';
+        }
+
+        integerPart = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+        return decimalPart ? `${integerPart},${decimalPart}` : integerPart;
+    }
+
+    function sanitizeCurrencyValue(value) {
+        if (typeof value !== 'string' || value.trim() === '') {
+            return value;
+        }
+
+        let cleaned = value.replace(/\./g, '');
+        cleaned = cleaned.replace(/,/g, '.');
+        return cleaned;
+    }
+
+    function initCurrencyInputs() {
+        const currencyInputs = document.querySelectorAll('.currency-input');
+
+        currencyInputs.forEach(input => {
+            input.value = formatCurrencyValue(input.value);
+
+            input.addEventListener('blur', () => {
+                input.value = formatCurrencyValue(input.value);
+            });
+        });
+
+        const form = document.getElementById('kasusForm');
+        if (form) {
+            form.addEventListener('submit', () => {
+                currencyInputs.forEach(input => {
+                    input.value = sanitizeCurrencyValue(input.value);
+                });
+            });
+        }
+    }
+
 function toggleJenisLaporanFields() {
     const jenisLaporanSelect = document.getElementById('jenis_laporan');
     const wrapper = document.getElementById('tindak_lanjut_ljk_wrapper');
@@ -712,6 +809,7 @@ function toggleJenisLaporanFields() {
             input.addEventListener('change', checkFormValidity);
         });
 
+        initCurrencyInputs();
         checkFormValidity();
     });
 </script>

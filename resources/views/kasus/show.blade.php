@@ -198,21 +198,21 @@
                                 <tbody>
                                     <tr>
                                         <td class="border border-gray-300 px-4 py-2 font-medium">LJK</td>
-                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $kasus->jenis_laporan === 'signifikan' ? '-' : number_format($kasus->kerugianFraud->ljk_rill ?? 0, 0, ',', '.') }}</td>
-                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ number_format($kasus->kerugianFraud->ljk_potensial ?? 0, 0, ',', '.') }}</td>
-                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $kasus->jenis_laporan === 'signifikan' ? '-' : number_format($kasus->kerugianFraud->ljk_recovery ?? 0, 0, ',', '.') }}</td>
+                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $kasus->jenis_laporan === 'signifikan' ? '-' : (optional($kasus->kerugianFraud)->ljk_rill !== null ? number_format(optional($kasus->kerugianFraud)->ljk_rill, 0, ',', '.') : '') }}</td>
+                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ optional($kasus->kerugianFraud)->ljk_potensial !== null ? number_format(optional($kasus->kerugianFraud)->ljk_potensial, 0, ',', '.') : '' }}</td>
+                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $kasus->jenis_laporan === 'signifikan' ? '-' : (optional($kasus->kerugianFraud)->ljk_recovery !== null ? number_format(optional($kasus->kerugianFraud)->ljk_recovery, 0, ',', '.') : '') }}</td>
                                     </tr>
                                     <tr>
                                         <td class="border border-gray-300 px-4 py-2 font-medium">Konsumen</td>
-                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $kasus->jenis_laporan === 'signifikan' ? '-' : number_format($kasus->kerugianFraud->konsumen_rill ?? 0, 0, ',', '.') }}</td>
-                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ number_format($kasus->kerugianFraud->konsumen_potensial ?? 0, 0, ',', '.') }}</td>
-                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $kasus->jenis_laporan === 'signifikan' ? '-' : number_format($kasus->kerugianFraud->konsumen_recovery ?? 0, 0, ',', '.') }}</td>
+                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $kasus->jenis_laporan === 'signifikan' ? '-' : (optional($kasus->kerugianFraud)->konsumen_rill !== null ? number_format(optional($kasus->kerugianFraud)->konsumen_rill, 0, ',', '.') : '') }}</td>
+                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ optional($kasus->kerugianFraud)->konsumen_potensial !== null ? number_format(optional($kasus->kerugianFraud)->konsumen_potensial, 0, ',', '.') : '' }}</td>
+                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $kasus->jenis_laporan === 'signifikan' ? '-' : (optional($kasus->kerugianFraud)->konsumen_recovery !== null ? number_format(optional($kasus->kerugianFraud)->konsumen_recovery, 0, ',', '.') : '') }}</td>
                                     </tr>
                                     <tr>
                                         <td class="border border-gray-300 px-4 py-2 font-medium">Pihak Lain</td>
-                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $kasus->jenis_laporan === 'signifikan' ? '-' : number_format($kasus->kerugianFraud->pihak_lain_rill ?? 0, 0, ',', '.') }}</td>
-                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ number_format($kasus->kerugianFraud->pihak_lain_potensial ?? 0, 0, ',', '.') }}</td>
-                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $kasus->jenis_laporan === 'signifikan' ? '-' : number_format($kasus->kerugianFraud->pihak_lain_recovery ?? 0, 0, ',', '.') }}</td>
+                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $kasus->jenis_laporan === 'signifikan' ? '-' : (optional($kasus->kerugianFraud)->pihak_lain_rill !== null ? number_format(optional($kasus->kerugianFraud)->pihak_lain_rill, 0, ',', '.') : '') }}</td>
+                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ optional($kasus->kerugianFraud)->pihak_lain_potensial !== null ? number_format(optional($kasus->kerugianFraud)->pihak_lain_potensial, 0, ',', '.') : '' }}</td>
+                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $kasus->jenis_laporan === 'signifikan' ? '-' : (optional($kasus->kerugianFraud)->pihak_lain_recovery !== null ? number_format(optional($kasus->kerugianFraud)->pihak_lain_recovery, 0, ',', '.') : '') }}</td>
                                     </tr>
                                 </tbody>
                             </table>

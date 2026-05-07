@@ -20,6 +20,10 @@
     }
 </style>
 
+@php
+    $formatCurrency = fn($value) => $value === null || $value === '' ? '' : number_format($value, 0, ',', '.');
+@endphp
+
 <!-- HEADER -->
 <div class="mb-4">
     <div class="flex justify-between items-center bg-white p-4 rounded-xl shadow max-w-full">
@@ -27,24 +31,6 @@
         <h2 class="text-lg font-semibold">Data Kasus</h2>
 
         <div class="flex items-center gap-3">
-            <form method="GET" action="{{ route('kasus.index') }}" class="flex items-center gap-2">
-                <input type="text" name="search" value="{{ request('search') }}"
-                    placeholder="Cari Kasus..."
-                    class="px-4 py-2 border rounded-lg text-sm w-64 focus:ring focus:outline-none">
-                <button type="submit" class="bg-blue-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-600">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
-                </button>
-                @if(request('search'))
-                    <a href="{{ route('kasus.index') }}" class="bg-gray-500 text-white px-3 py-2 rounded-lg text-sm hover:bg-gray-600">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </a>
-                @endif
-            </form>
-
             <a href="{{ route('kasus.create') }}"
                 class="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-orange-600 whitespace-nowrap">
                 + Tambah Kasus
@@ -63,7 +49,7 @@
                 <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Pencarian Global</label>
                 <input type="text" id="search" name="search" value="{{ request('search') }}"
                     class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="Kode, deskripsi, divisi, nama pelaku...">
+                    placeholder="ID kejadian, deskripsi, divisi, nama pelaku...">
             </div>
 
             <!-- Status Penanganan -->
@@ -182,6 +168,12 @@
             ? ($ref->kode ? $ref->kode . ' (' . $ref->nama . ')' : $ref->nama)
             : '-';
     };
+    $jenisKelaminLabel = function ($value) {
+        $value = strtoupper(trim((string) ($value ?? '')));
+        if ($value === 'L') return 'L (Laki-laki)';
+        if ($value === 'P') return 'P (Perempuan)';
+        return $value !== '' ? $value : '-';
+    };
     $semesterKasus = $kasus->getCollection()->where('jenis_laporan', 'semester');
     $signifikanKasus = $kasus->getCollection()->where('jenis_laporan', 'signifikan');
 @endphp
@@ -252,17 +244,17 @@
                     <th class="border p-2">Awal</th>
                     <th class="border p-2">Akhir</th>
 
-                    <th class="border p-2">Rill</th>
-                    <th class="border p-2">Pot</th>
-                    <th class="border p-2">Rec</th>
+                    <th class="border p-2">Riil (incurred)</th>
+                    <th class="border p-2">Potensial (Potential)</th>
+                    <th class="border p-2">Setelah Pengembalian (Recovery)</th>
 
-                    <th class="border p-2">Rill</th>
-                    <th class="border p-2">Pot</th>
-                    <th class="border p-2">Rec</th>
+                    <th class="border p-2">Riil (incurred)</th>
+                    <th class="border p-2">Potensial (Potential)</th>
+                    <th class="border p-2">Setelah Pengembalian (Recovery)</th>
 
-                    <th class="border p-2">Rill</th>
-                    <th class="border p-2">Pot</th>
-                    <th class="border p-2">Rec</th>
+                    <th class="border p-2">Riil (incurred)</th>
+                    <th class="border p-2">Potensial (Potential)</th>
+                    <th class="border p-2">Setelah Pengembalian (Recovery)</th>
 
                     <th class="border p-2">Nama</th>
                     <th class="border p-2">Jenis Identitas</th>
@@ -273,15 +265,15 @@
                     <th class="border p-2">Alamat Identitas</th>
                     <th class="border p-2">Alamat Domisili</th>
                     <th class="border p-2">Pada Saat Fraud Terjadi</th>
-                    <th class="border p-2">Keterangan</th>
+                    <th class="border p-2">Keterangan Jabatan</th>
                     <th class="border p-2">Pada Saat Fraud Diketahui</th>
-                    <th class="border p-2">Keterangan</th>
+                    <th class="border p-2">Keterangan Jabatan</th>
                 </tr>
-            </thead>
+            </thead
             <tbody class="bg-white">
                 @forelse($semesterKasus as $k)
                     <tr class="hover:bg-gray-50 align-top">
-                        <td class="border p-2">{{ $k->id }}</td>
+                        <td class="border p-2">{{ $loop->iteration }}</td>
                         <td class="border p-2">{{ $k->kode_komponen }}</td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
@@ -328,17 +320,17 @@
                             {{ $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '-' }}
                         </td>
 
-                        <td class="border p-2">{{ $k->kerugianFraud->ljk_rill ?? 0 }}</td>
-                        <td class="border p-2">{{ $k->kerugianFraud->ljk_potensial ?? 0 }}</td>
-                        <td class="border p-2">{{ $k->kerugianFraud->ljk_recovery ?? 0 }}</td>
+<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->ljk_rill) }}</td>
+<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->ljk_potensial) }}</td>
+<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->ljk_recovery) }}</td>
 
-                        <td class="border p-2">{{ $k->kerugianFraud->konsumen_rill ?? 0 }}</td>
-                        <td class="border p-2">{{ $k->kerugianFraud->konsumen_potensial ?? 0 }}</td>
-                        <td class="border p-2">{{ $k->kerugianFraud->konsumen_recovery ?? 0 }}</td>
+<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->konsumen_rill) }}</td>
+<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->konsumen_potensial) }}</td>
+<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->konsumen_recovery) }}</td>
 
-                        <td class="border p-2">{{ $k->kerugianFraud->pihak_lain_rill ?? 0 }}</td>
-                        <td class="border p-2">{{ $k->kerugianFraud->pihak_lain_potensial ?? 0 }}</td>
-                        <td class="border p-2">{{ $k->kerugianFraud->pihak_lain_recovery ?? 0 }}</td>
+<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->pihak_lain_rill) }}</td>
+<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->pihak_lain_potensial) }}</td>
+<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->pihak_lain_recovery) }}</td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->kelemahanFraud as $i) {{ $i->kode ? $i->kode . ' (' . $i->nama . ')' : $i->nama }}<br>@endforeach
@@ -389,7 +381,7 @@
                         </td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                            @foreach($k->pelakuFrauds as $p) {{ $p->jenis_kelamin }}<br>@endforeach
+                            @foreach($k->pelakuFrauds as $p) {{ $jenisKelaminLabel($p->jenis_kelamin) }}<br>@endforeach
                         </td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
@@ -536,7 +528,7 @@
             <tbody class="bg-white">
                 @forelse($signifikanKasus as $k)
                     <tr class="hover:bg-gray-50 align-top">
-                        <td class="border p-2">{{ $k->id }}</td>
+                        <td class="border p-2">{{ $loop->iteration }}</td>
                         <td class="border p-2">{{ $k->kode_komponen }}</td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
@@ -573,7 +565,7 @@
                             {{ $formatRefLabel($k->pihakDirugikan) }}
                         </td>
 
-                        <td class="border p-2">{{ $k->kerugianFraud->ljk_potensial ?? 0 }}</td>
+                        <td class="border p-2">{{ $formatCurrency($k->kerugianFraud->ljk_potensial) }}</td>
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">{{ $k->tindak_lanjut_ljk ?? '-' }}</td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
@@ -599,7 +591,7 @@
                             @foreach($k->pelakuFrauds as $p) {{ $p->nomor_identitas }}<br>@endforeach
                         </td>
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                            @foreach($k->pelakuFrauds as $p) {{ $p->jenis_kelamin }}<br>@endforeach
+                            @foreach($k->pelakuFrauds as $p) {{ $jenisKelaminLabel($p->jenis_kelamin) }}<br>@endforeach
                         </td>
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->tempat_lahir }}<br>@endforeach

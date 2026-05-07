@@ -1,6 +1,14 @@
 @extends('layouts.app')
 
 @section('content')
+@php
+    $jenisKelaminLabel = function ($value) {
+        $value = strtoupper(trim((string) ($value ?? '')));
+        if ($value === 'L') return 'L (Laki-laki)';
+        if ($value === 'P') return 'P (Perempuan)';
+        return $value !== '' ? $value : '';
+    };
+@endphp
 <div class="container">
     <h1>Pelaku Fraud List</h1>
     <a href="{{ route('pelaku-fraud.create') }}" class="btn btn-primary">Create Pelaku Fraud</a>
@@ -29,7 +37,7 @@
                 <td>{{ $p->nama }}</td>
                 <td>{{ $p->jenisIdentitas ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : '' }}</td>
                 <td>{{ $p->nomor_identitas }}</td>
-                <td>{{ $p->jenis_kelamin }}</td>
+                <td>{{ $jenisKelaminLabel($p->jenis_kelamin) }}</td>
                 <td>{{ $p->statusPelaku ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : '' }}</td>
                 <td>{{ $p->jabatanSaatKejadian ? $p->jabatanSaatKejadian->kode . ' (' . $p->jabatanSaatKejadian->nama . ')' : '' }}</td>
                 <td>{{ $p->jabatanSaatDiketahui ? $p->jabatanSaatDiketahui->kode . ' (' . $p->jabatanSaatDiketahui->nama . ')' : '' }}</td>

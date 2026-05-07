@@ -42,8 +42,8 @@
         <div class="form-group">
             <label>Jenis Kelamin</label>
             <select name="jenis_kelamin" class="form-control" required>
-                <option value="L" {{ $pelakuFraud->jenis_kelamin == 'L' ? 'selected' : '' }}>Laki-laki</option>
-                <option value="P" {{ $pelakuFraud->jenis_kelamin == 'P' ? 'selected' : '' }}>Perempuan</option>
+                <option value="L" {{ $pelakuFraud->jenis_kelamin == 'L' ? 'selected' : '' }}>(L) Laki-laki</option>
+                <option value="P" {{ $pelakuFraud->jenis_kelamin == 'P' ? 'selected' : '' }}>(P) Perempuan</option>
             </select>
         </div>
         <div class="form-group">
