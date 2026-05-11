@@ -32,6 +32,9 @@ Route::middleware('guest')->group(function () {
     Route::get('register/verify', [OtpLoginController::class, 'showVerifyForm'])
         ->name('verification.code');
 
+    Route::post('register/verify/resend', [OtpLoginController::class, 'resendOtp'])
+        ->name('verification.resend.code');
+
     Route::post('register/verify', [OtpLoginController::class, 'verifyOtp'])
         ->name('verification.verify.code');
 

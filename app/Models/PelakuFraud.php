@@ -36,6 +36,21 @@ class PelakuFraud extends Model
         'kategori' => 'string',
     ];
 
+    public function getJenisKelaminLabelAttribute()
+    {
+        $value = strtoupper(trim((string) ($this->jenis_kelamin ?? '')));
+
+        if ($value === 'L') {
+            return 'L (Laki-laki)';
+        }
+
+        if ($value === 'P') {
+            return 'P (Perempuan)';
+        }
+
+        return $value !== '' ? $value : '-';
+    }
+
     public function kasus()
     {
         return $this->belongsTo(Kasus::class);

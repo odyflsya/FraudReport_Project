@@ -381,7 +381,7 @@
                         </td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                            @foreach($k->pelakuFrauds as $p) {{ $jenisKelaminLabel($p->jenis_kelamin) }}<br>@endforeach
+                            @foreach($k->pelakuFrauds as $p) {{ $p->jenis_kelamin_label }}<br>@endforeach
                         </td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
@@ -591,7 +591,7 @@
                             @foreach($k->pelakuFrauds as $p) {{ $p->nomor_identitas }}<br>@endforeach
                         </td>
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                            @foreach($k->pelakuFrauds as $p) {{ $jenisKelaminLabel($p->jenis_kelamin) }}<br>@endforeach
+                            @foreach($k->pelakuFrauds as $p) {{ $p->jenis_kelamin_label }}<br>@endforeach
                         </td>
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->tempat_lahir }}<br>@endforeach

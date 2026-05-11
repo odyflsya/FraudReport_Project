@@ -29,7 +29,7 @@ class ExportService
             'pelakuFrauds' => function($q) {
                 $q->with(['jenisIdentitas', 'statusPelaku', 'jabatanKejadian', 'jabatanDiketahui']);
             }
-        ]);
+        ])->where('user_id', auth()->id());
 
         if (!empty($filters['search'])) {
             $search = $filters['search'];
@@ -208,7 +208,7 @@ class ExportService
                     return $p->jenisIdentitas ? ($p->jenisIdentitas->kode ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : $p->jenisIdentitas->nama) : '-';
                 })->join("\n") : '-',
                 'nomor_identitas' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('nomor_identitas')->join("\n") : '-',
-                'jenis_kelamin' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('jenis_kelamin')->join("\n") : '-',
+                'jenis_kelamin' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('jenis_kelamin_label')->join("\n") : '-',
                 'tempat_lahir' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('tempat_lahir')->join("\n") : '-',
                 'tanggal_lahir' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->map(function($p) {
                     return $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '-';
@@ -317,7 +317,7 @@ class ExportService
                     return $p->jenisIdentitas ? ($p->jenisIdentitas->kode ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : $p->jenisIdentitas->nama) : '-';
                 })->join("\n") : '-',
                 'nomor_identitas' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('nomor_identitas')->join("\n") : '-',
-                'jenis_kelamin' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('jenis_kelamin')->join("\n") : '-',
+                'jenis_kelamin' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('jenis_kelamin_label')->join("\n") : '-',
                 'tempat_lahir' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('tempat_lahir')->join("\n") : '-',
                 'tanggal_lahir' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->map(function($p) {
                     return $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '-';

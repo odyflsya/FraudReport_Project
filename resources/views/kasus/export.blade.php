@@ -128,6 +128,7 @@
                 '003' => '003 (Dalam proses penanganan aparat penegak hukum)',
                 '004' => '004 (Berkekuatan hukum tetap)',
             ];
+            $formatCurrency = fn($value) => $value === null || $value === '' ? '' : number_format($value, 0, ',', '.');
             $formatRefLabel = function ($ref) {
                 return $ref
                     ? ($ref->kode ? $ref->kode . ' (' . $ref->nama . ')' : $ref->nama)
@@ -137,103 +138,103 @@
 
         <!-- LAPORAN SEMESTER TABLE -->
         <div id="semesterTableContainer" class="bg-white rounded-lg shadow overflow-x-auto mb-8">
-            <table class="min-w-full text-[10px] border-collapse" id="semesterTable">
+            <table class="min-w-[3500px] text-xs border-collapse" id="semesterTable">
                 <thead class="bg-red-600 text-white sticky top-0">
                     <tr>
-                        <th rowspan="3" class="border p-2">No</th>
-                        <th rowspan="3" class="border p-2">Kode Komponen</th>
-                        <th rowspan="3" class="border p-2">Kejadian Fraud Menurut Pelaku</th>
-                        <th rowspan="3" class="border p-2">ID Kejadian Fraud</th>
+                    <th rowspan="3" class="border p-2">No</th>
+                    <th rowspan="3" class="border p-2">Kode Komponen</th>
+                    <th rowspan="3" class="border p-2">Kejadian Fraud Menurut Pelaku</th>
+                    <th rowspan="3" class="border p-2">ID Kejadian Fraud</th>
 
-                        <th colspan="2" class="border p-2">Jenis Fraud</th>
+                    <th colspan="2" class="border p-2">Jenis Fraud</th>
 
-                        <th rowspan="3" class="border p-2">Aktivitas Terkait Fraud</th>
-                        <th rowspan="3" class="border p-2">Deskripsi Fraud / Modus Operandi</th>
+                    <th rowspan="3" class="border p-2">Aktivitas Terkait Fraud</th>
+                    <th rowspan="3" class="border p-2">Deskripsi Fraud / Modus Operandi</th>
 
-                        <th colspan="2" class="border p-2">Lokasi Fraud</th>
+                    <th colspan="2" class="border p-2">Lokasi Fraud</th>
 
-                        <th rowspan="3" class="border p-2">Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud</th>
-                        <th rowspan="3" class="border p-2">Pihak Yang Dirugikan</th>
+                    <th rowspan="3" class="border p-2">Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud</th>
+                    <th rowspan="3" class="border p-2">Pihak Yang Dirugikan</th>
 
-                        <th colspan="3" class="border p-2">Waktu</th>
+                    <th colspan="3" class="border p-2">Waktu</th>
 
-                        <th colspan="9" class="border p-2">Jumlah Kerugian</th>
+                    <th colspan="9" class="border p-2">Jumlah Kerugian</th>
 
-                        <th colspan="2" class="border p-2">Kelemahan Penyebab Fraud</th>
-                        <th colspan="2" class="border p-2">Tindakan untuk Penanganan Fraud</th>
+                    <th colspan="2" class="border p-2">Kelemahan Penyebab Fraud</th>
+                    <th colspan="2" class="border p-2">Tindakan untuk Penanganan Fraud</th>
 
-                        <th colspan="4" class="border p-2">Tindakan Perbaikan untuk Pencegahan Fraud</th>
+                    <th colspan="4" class="border p-2">Tindakan Perbaikan untuk Pencegahan Fraud</th>
 
-                        <th colspan="16" class="border p-2">Pelaku Fraud</th>
+                    <th colspan="16" class="border p-2">Pelaku Fraud</th>
 
-                        <th rowspan="3" class="border p-2">Status Penanganan</th>
-                    </tr>
-                    <tr>
-                        <th rowspan="2" class="border p-2">Jenis Fraud</th>
-                        <th rowspan="2" class="border p-2">Keterangan Jenis Fraud</th>
+                    <th rowspan="3" class="border p-2">Status Penanganan</th>
+                </tr>
+                <tr>
+                    <th rowspan="2" class="border p-2">Jenis Fraud</th>
+                    <th rowspan="2" class="border p-2">Keterangan Jenis Fraud</th>
 
-                        <th rowspan="2" class="border p-2">Lokasi Fraud</th>
-                        <th rowspan="2" class="border p-2">Keterangan Lokasi Fraud</th>
+                    <th rowspan="2" class="border p-2">Lokasi Fraud</th>
+                    <th rowspan="2" class="border p-2">Keterangan Lokasi Fraud</th>
 
-                        <th colspan="2" class="border p-2">Waktu Terjadi</th>
-                        <th rowspan="2" class="border p-2">Fraud Diketahui</th>
+                    <th colspan="2" class="border p-2">Waktu Terjadi</th>
+                    <th rowspan="2" class="border p-2">Fraud Diketahui</th>
 
-                        <th colspan="3" class="border p-2">LJK</th>
-                        <th colspan="3" class="border p-2">Konsumen</th>
-                        <th colspan="3" class="border p-2">Pihak Lain</th>
+                    <th colspan="3" class="border p-2">LJK</th>
+                    <th colspan="3" class="border p-2">Konsumen</th>
+                    <th colspan="3" class="border p-2">Pihak Lain</th>
 
-                        <th rowspan="2" class="border p-2">Kelemahan Penyebab Fraud</th>
-                        <th rowspan="2" class="border p-2">Keterangan</th>
+                    <th rowspan="2" class="border p-2">Kelemahan Penyebab Fraud</th>
+                    <th rowspan="2" class="border p-2">Keterangan</th>
 
-                        <th rowspan="2" class="border p-2">Tindakan untuk Penanganan Fraud</th>
-                        <th rowspan="2" class="border p-2">Keterangan</th>
+                    <th rowspan="2" class="border p-2">Tindakan untuk Penanganan Fraud</th>
+                    <th rowspan="2" class="border p-2">Keterangan</th>
 
-                        <th rowspan="2" class="border p-2">Tindakan Perbaikan untuk Pencegahan Fraud</th>
-                        <th rowspan="2" class="border p-2">Keterangan</th>
-                        <th rowspan="2" class="border p-2">Target Waktu Pelaksanaan</th>
-                        <th rowspan="2" class="border p-2">Realisasi Pelaksanaan</th>
+                    <th rowspan="2" class="border p-2">Tindakan Perbaikan untuk Pencegahan Fraud</th>
+                    <th rowspan="2" class="border p-2">Keterangan</th>
+                    <th rowspan="2" class="border p-2">Target Waktu Pelaksanaan</th>
+                    <th rowspan="2" class="border p-2">Realisasi Pelaksanaan</th>
 
-                        <th rowspan="2" class="border p-2">Internal/Eksternal</th>
-                        <th colspan="8" class="border p-2">Identitas Pelaku</th>
-                        <th colspan="4" class="border p-2">Jabatan Pelaku</th>
-                        <th rowspan="2" class="border p-2">Keterangan Pelaku</th>
-                        <th rowspan="2" class="border p-2">Status Pelaku</th>
-                        <th rowspan="2" class="border p-2">Pengenaan Sanksi</th>
-                    </tr>
-                    <tr>
-                        <th class="border p-2">Awal</th>
-                        <th class="border p-2">Akhir</th>
+                    <th rowspan="2" class="border p-2">Internal/Eksternal</th>
+                    <th colspan="8" class="border p-2">Identitas Pelaku</th>
+                    <th colspan="4" class="border p-2">Jabatan Pelaku</th>
+                    <th rowspan="2" class="border p-2">Keterangan Pelaku</th>
+                    <th rowspan="2" class="border p-2">Status Pelaku</th>
+                    <th rowspan="2" class="border p-2">Pengenaan Sanksi</th>
+                </tr>
+                <tr>
+                    <th class="border p-2">Awal</th>
+                    <th class="border p-2">Akhir</th>
 
-                        <th class="border p-2">Rill</th>
-                        <th class="border p-2">Pot</th>
-                        <th class="border p-2">Rec</th>
+                    <th class="border p-2">Riil (incurred)</th>
+                    <th class="border p-2">Potensial (Potential)</th>
+                    <th class="border p-2">Setelah Pengembalian (Recovery)</th>
 
-                        <th class="border p-2">Rill</th>
-                        <th class="border p-2">Pot</th>
-                        <th class="border p-2">Rec</th>
+                    <th class="border p-2">Riil (incurred)</th>
+                    <th class="border p-2">Potensial (Potential)</th>
+                    <th class="border p-2">Setelah Pengembalian (Recovery)</th>
 
-                        <th class="border p-2">Rill</th>
-                        <th class="border p-2">Pot</th>
-                        <th class="border p-2">Rec</th>
+                    <th class="border p-2">Riil (incurred)</th>
+                    <th class="border p-2">Potensial (Potential)</th>
+                    <th class="border p-2">Setelah Pengembalian (Recovery)</th>
 
-                        <th class="border p-2">Nama</th>
-                        <th class="border p-2">Jenis Identitas</th>
-                        <th class="border p-2">Nomor Identitas</th>
-                        <th class="border p-2">Jenis Kelamin</th>
-                        <th class="border p-2">Tempat Lahir</th>
-                        <th class="border p-2">Tanggal Lahir</th>
-                        <th class="border p-2">Alamat Identitas</th>
-                        <th class="border p-2">Alamat Domisili</th>
-                        <th class="border p-2">Pada Saat Fraud Terjadi</th>
-                        <th class="border p-2">Keterangan</th>
-                        <th class="border p-2">Pada Saat Fraud Diketahui</th>
-                        <th class="border p-2">Keterangan</th>
-                    </tr>
+                    <th class="border p-2">Nama</th>
+                    <th class="border p-2">Jenis Identitas</th>
+                    <th class="border p-2">Nomor Identitas</th>
+                    <th class="border p-2">Jenis Kelamin</th>
+                    <th class="border p-2">Tempat Lahir</th>
+                    <th class="border p-2">Tanggal Lahir</th>
+                    <th class="border p-2">Alamat Identitas</th>
+                    <th class="border p-2">Alamat Domisili</th>
+                    <th class="border p-2">Pada Saat Fraud Terjadi</th>
+                    <th class="border p-2">Keterangan Jabatan</th>
+                    <th class="border p-2">Pada Saat Fraud Diketahui</th>
+                    <th class="border p-2">Keterangan Jabatan</th>
+                </tr>
                 </thead>
                 <tbody class="bg-white">
                     @forelse($semesterData['kasus'] as $k)
                         <tr class="hover:bg-gray-50 align-top">
-                            <td class="border p-2">{{ $k->id }}</td>
+                            <td class="border p-2">{{ $loop->iteration }}</td>
                             <td class="border p-2">{{ $k->kode_komponen }}</td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
@@ -280,17 +281,17 @@
                                 {{ $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '-' }}
                             </td>
 
-                            <td class="border p-2">{{ $k->kerugianFraud->ljk_rill ?? 0 }}</td>
-                            <td class="border p-2">{{ $k->kerugianFraud->ljk_potensial ?? 0 }}</td>
-                            <td class="border p-2">{{ $k->kerugianFraud->ljk_recovery ?? 0 }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->ljk_rill ?? 0) }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->ljk_potensial ?? 0) }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->ljk_recovery ?? 0) }}</td>
 
-                            <td class="border p-2">{{ $k->kerugianFraud->konsumen_rill ?? 0 }}</td>
-                            <td class="border p-2">{{ $k->kerugianFraud->konsumen_potensial ?? 0 }}</td>
-                            <td class="border p-2">{{ $k->kerugianFraud->konsumen_recovery ?? 0 }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->konsumen_rill ?? 0) }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->konsumen_potensial ?? 0) }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->konsumen_recovery ?? 0) }}</td>
 
-                            <td class="border p-2">{{ $k->kerugianFraud->pihak_lain_rill ?? 0 }}</td>
-                            <td class="border p-2">{{ $k->kerugianFraud->pihak_lain_potensial ?? 0 }}</td>
-                            <td class="border p-2">{{ $k->kerugianFraud->pihak_lain_recovery ?? 0 }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->pihak_lain_rill ?? 0) }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->pihak_lain_potensial ?? 0) }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->pihak_lain_recovery ?? 0) }}</td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                                 @foreach($k->kelemahanFraud as $i) {{ $i->kode ? $i->kode . ' (' . $i->nama . ')' : $i->nama }}<br>@endforeach
@@ -332,7 +333,7 @@
                                 @foreach($k->pelakuFrauds as $p) {{ $p->nomor_identitas }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->jenis_kelamin }}<br>@endforeach
+                                @foreach($k->pelakuFrauds as $p) {{ $p->jenis_kelamin_label }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->tempat_lahir }}<br>@endforeach
@@ -372,7 +373,9 @@
                                 @endforelse
                             </td>
                             <td class="border p-2 text-center">
-                                {{ $statusLabels[$k->status_penanganan] ?? $k->status_penanganan }}
+                                <span class="inline-flex whitespace-nowrap px-2 py-1 text-white rounded text-xs bg-slate-500">
+                                    {{ $statusLabels[$k->status_penanganan] ?? $k->status_penanganan }}
+                                </span>
                             </td>
                         </tr>
                     @empty
@@ -386,69 +389,70 @@
 
         <!-- LAPORAN SIGNIFIKAN TABLE -->
         <div id="signifikanTableContainer" class="bg-white rounded-lg shadow overflow-x-auto mb-8 hidden">
-            <table class="min-w-full text-[10px] border-collapse" id="signifikanTable">
+            <table class="min-w-[3500px] text-xs border-collapse" id="signifikanTable">
                 <thead class="bg-red-600 text-white sticky top-0">
                     <tr>
-                        <th rowspan="3" class="border p-2">No</th>
-                        <th rowspan="3" class="border p-2">Kode Komponen</th>
-                        <th rowspan="3" class="border p-2">Kejadian Fraud Menurut Pelaku</th>
-                        <th rowspan="3" class="border p-2">ID Kejadian Fraud</th>
+                    <th rowspan="3" class="border p-2">No</th>
+                    <th rowspan="3" class="border p-2">Kode Komponen</th>
+                    <th rowspan="3" class="border p-2">Kejadian Fraud Menurut Pelaku</th>
+                    <th rowspan="3" class="border p-2">ID Kejadian Fraud</th>
 
-                        <th colspan="2" class="border p-2">Jenis Fraud</th>
+                    <th colspan="2" class="border p-2">Jenis Fraud</th>
 
-                        <th rowspan="3" class="border p-2">Aktivitas Terkait Fraud</th>
-                        <th rowspan="3" class="border p-2">Deskripsi Fraud / Modus Operandi</th>
+                    <th rowspan="3" class="border p-2">Aktivitas Terkait Fraud</th>
+                    <th rowspan="3" class="border p-2">Deskripsi Fraud / Modus Operandi</th>
 
-                        <th colspan="2" class="border p-2">Lokasi Fraud</th>
+                    <th colspan="2" class="border p-2">Lokasi Fraud</th>
 
-                        <th rowspan="3" class="border p-2">Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud</th>
-                        <th rowspan="3" class="border p-2">Pihak Yang Dirugikan</th>
-                        <th rowspan="3" class="border p-2">Jumlah Kerugian Potensial</th>
-                        <th rowspan="3" class="border p-2">Tindak Lanjut LJK</th>
+                    <th rowspan="3" class="border p-2">Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud</th>
+                    <th rowspan="3" class="border p-2">Pihak Yang Dirugikan</th>
+                    <th rowspan="3" class="border p-2">Jumlah Kerugian Potensial</th>
+                    <th rowspan="3" class="border p-2">Tindak Lanjut LJK</th>
 
-                        <th colspan="3" class="border p-2">Waktu</th>
-                        <th colspan="16" class="border p-2">Pelaku Fraud</th>
-                        <th rowspan="3" class="border p-2">Status Penanganan</th>
-                    </tr>
-                    <tr>
-                        <th rowspan="2" class="border p-2">Jenis Fraud</th>
-                        <th rowspan="2" class="border p-2">Keterangan Jenis Fraud</th>
+                    <th colspan="3" class="border p-2">Waktu</th>
+                    <th colspan="16" class="border p-2">Pelaku Fraud</th>
+                    <th rowspan="3" class="border p-2">Status Penanganan</th>
+                    <th rowspan="3" class="border p-2 text-center sticky-aksi">Aksi</th>
+                </tr>
+                <tr>
+                    <th rowspan="2" class="border p-2">Jenis Fraud</th>
+                    <th rowspan="2" class="border p-2">Keterangan Jenis Fraud</th>
 
-                        <th rowspan="2" class="border p-2">Lokasi Fraud</th>
-                        <th rowspan="2" class="border p-2">Keterangan Lokasi Fraud</th>
+                    <th rowspan="2" class="border p-2">Lokasi Fraud</th>
+                    <th rowspan="2" class="border p-2">Keterangan Lokasi Fraud</th>
 
-                        <th colspan="2" class="border p-2">Waktu Terjadi</th>
-                        <th rowspan="2" class="border p-2">Fraud Diketahui</th>
+                    <th colspan="2" class="border p-2">Waktu Terjadi</th>
+                    <th rowspan="2" class="border p-2">Fraud Diketahui</th>
 
-                        <th rowspan="2" class="border p-2">Internal/Eksternal</th>
-                        <th colspan="8" class="border p-2">Identitas Pelaku</th>
-                        <th colspan="4" class="border p-2">Jabatan Pelaku</th>
-                        <th rowspan="2" class="border p-2">Keterangan Pelaku</th>
-                        <th rowspan="2" class="border p-2">Status Pelaku</th>
-                        <th rowspan="2" class="border p-2">Pengenaan Sanksi</th>
-                    </tr>
-                    <tr>
-                        <th class="border p-2">Awal</th>
-                        <th class="border p-2">Akhir</th>
+                    <th rowspan="2" class="border p-2">Internal/Eksternal</th>
+                    <th colspan="8" class="border p-2">Identitas Pelaku</th>
+                    <th colspan="4" class="border p-2">Jabatan Pelaku</th>
+                    <th rowspan="2" class="border p-2">Keterangan Pelaku</th>
+                    <th rowspan="2" class="border p-2">Status Pelaku</th>
+                    <th rowspan="2" class="border p-2">Pengenaan Sanksi</th>
+                </tr>
+                <tr>
+                    <th class="border p-2">Awal</th>
+                    <th class="border p-2">Akhir</th>
 
-                        <th class="border p-2">Nama</th>
-                        <th class="border p-2">Jenis Identitas</th>
-                        <th class="border p-2">Nomor Identitas</th>
-                        <th class="border p-2">Jenis Kelamin</th>
-                        <th class="border p-2">Tempat Lahir</th>
-                        <th class="border p-2">Tanggal Lahir</th>
-                        <th class="border p-2">Alamat Identitas</th>
-                        <th class="border p-2">Alamat Domisili</th>
-                        <th class="border p-2">Pada Saat Fraud Terjadi</th>
-                        <th class="border p-2">Keterangan</th>
-                        <th class="border p-2">Pada Saat Fraud Diketahui</th>
-                        <th class="border p-2">Keterangan</th>
-                    </tr>
+                    <th class="border p-2">Nama</th>
+                    <th class="border p-2">Jenis Identitas</th>
+                    <th class="border p-2">Nomor Identitas</th>
+                    <th class="border p-2">Jenis Kelamin</th>
+                    <th class="border p-2">Tempat Lahir</th>
+                    <th class="border p-2">Tanggal Lahir</th>
+                    <th class="border p-2">Alamat Identitas</th>
+                    <th class="border p-2">Alamat Domisili</th>
+                    <th class="border p-2">Pada Saat Fraud Terjadi</th>
+                    <th class="border p-2">Keterangan</th>
+                    <th class="border p-2">Pada Saat Fraud Diketahui</th>
+                    <th class="border p-2">Keterangan</th>
+                </tr>
                 </thead>
                 <tbody class="bg-white">
                     @forelse($signifikanData['kasus'] as $k)
                         <tr class="hover:bg-gray-50 align-top">
-                            <td class="border p-2">{{ $k->id }}</td>
+                            <td class="border p-2">{{ $loop->iteration }}</td>
                             <td class="border p-2">{{ $k->kode_komponen }}</td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
@@ -484,7 +488,7 @@
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                                 {{ $formatRefLabel($k->pihakDirugikan) }}
                             </td>
-                            <td class="border p-2">{{ $k->kerugianFraud->ljk_potensial ?? 0 }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->ljk_potensial ?? 0) }}</td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">{{ $k->tindak_lanjut_ljk ?? '-' }}</td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                                 {{ $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '-' }}
@@ -509,7 +513,7 @@
                                 @foreach($k->pelakuFrauds as $p) {{ $p->nomor_identitas }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->jenis_kelamin }}<br>@endforeach
+                                @foreach($k->pelakuFrauds as $p) {{ $p->jenis_kelamin_label }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->tempat_lahir }}<br>@endforeach
@@ -549,7 +553,9 @@
                                 @endforelse
                             </td>
                             <td class="border p-2 text-center">
-                                {{ $statusLabels[$k->status_penanganan] ?? $k->status_penanganan }}
+                                <span class="inline-flex whitespace-nowrap px-2 py-1 text-white rounded text-xs bg-slate-500">
+                                    {{ $statusLabels[$k->status_penanganan] ?? $k->status_penanganan }}
+                                </span>
                             </td>
                         </tr>
                     @empty

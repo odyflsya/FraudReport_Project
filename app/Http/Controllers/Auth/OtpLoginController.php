@@ -55,6 +55,39 @@ class OtpLoginController extends Controller
         ]);
     }
 
+    public function resendOtp(Request $request): RedirectResponse
+    {
+        $email = $request->session()->get('otp_email');
+
+        if (! $email) {
+            return redirect()->route('verification.code')->withErrors(['email' => 'Sesi verifikasi telah berakhir. Silakan mulai ulang proses login.']);
+        }
+
+        $user = User::where('email', $email)->first();
+
+        if (! $user) {
+            return redirect()->route('verification.code')->withErrors(['email' => 'Email tidak ditemukan.']);
+        }
+
+        // Invalidate kode OTP lama yang belum digunakan
+        EmailOtp::where('email', $email)
+            ->whereNull('used_at')
+            ->update(['used_at' => now()]);
+
+        // Generate kode baru
+        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+        EmailOtp::create([
+            'email' => $user->email,
+            'code_hash' => Hash::make($code),
+            'expires_at' => now()->addMinutes(10),
+        ]);
+
+        Mail::to($user->email)->send(new SendOtpCode($code));
+
+        return redirect()->route('verification.code')->with('status', 'Kode verifikasi baru telah dikirim ke email Anda.');
+    }
+
     public function verifyOtp(Request $request): RedirectResponse
     {
         $request->validate([
