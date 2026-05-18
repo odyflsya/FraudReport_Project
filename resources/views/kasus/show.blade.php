@@ -5,7 +5,6 @@
     <!-- Header -->
     <div class="mb-6">
         <h1 class="text-3xl font-bold text-gray-800">Detail Kasus Fraud</h1>
-        <p class="text-gray-600 mt-1">ID: {{ $kasus->id }}</p>
     </div>
 
     <!-- Main Content Card -->
@@ -22,6 +21,12 @@
         '003' => '003 (Dalam proses penanganan aparat penegak hukum)',
         '004' => '004 (Berkekuatan hukum tetap)',
     ];
+        $jenisKelaminLabel = function ($value) {
+        $value = strtoupper(trim((string) ($value ?? '')));
+        if ($value === 'L') return 'L (Laki-laki)';
+        if ($value === 'P') return 'P (Perempuan)';
+        return $value !== '' ? $value : '-';
+    };
 @endphp
 
                 <!-- Kode Komponen -->
@@ -39,7 +44,7 @@
                                 <div class="bg-gray-50 p-3 rounded">
                                     <p class="font-medium">
                                         @if($kejadian->kode)
-                                            {{ $kejadian->kode }} - {{ $kejadian->nama }}
+                                            {{ $kejadian->kode }} ({{ $kejadian->nama }})
                                         @else
                                             {{ $kejadian->nama }}
                                         @endif
@@ -64,7 +69,7 @@
                                 <div class="bg-gray-50 p-3 rounded">
                                     <p class="font-medium">
                                         @if($jenis->kode)
-                                            {{ $jenis->kode }} - {{ $jenis->nama }}
+                                            {{ $jenis->kode }} ({{ $jenis->nama }})
                                         @else
                                             {{ $jenis->nama }}
                                         @endif
@@ -86,7 +91,7 @@
                     @if($kasus->aktivitasTerkait)
                         <p class="text-base font-medium text-gray-900 mt-2">
                             @if($kasus->aktivitasTerkait->kode)
-                                {{ $kasus->aktivitasTerkait->kode }} - {{ $kasus->aktivitasTerkait->nama }}
+                                {{ $kasus->aktivitasTerkait->kode }} ({{ $kasus->aktivitasTerkait->nama }})
                             @else
                                 {{ $kasus->aktivitasTerkait->nama }}
                             @endif
@@ -111,7 +116,7 @@
                                 <div class="bg-gray-50 p-3 rounded">
                                     <p class="font-medium">
                                         @if($lokasi->kode)
-                                            {{ $lokasi->kode }} - {{ $lokasi->nama }}
+                                            {{ $lokasi->kode }} ({{ $lokasi->nama }})
                                         @else
                                             {{ $lokasi->nama }}
                                         @endif
@@ -139,7 +144,7 @@
                     @if($kasus->pihakDirugikan)
                         <p class="text-base font-medium text-gray-900 mt-2">
                             @if($kasus->pihakDirugikan->kode)
-                                {{ $kasus->pihakDirugikan->kode }} - {{ $kasus->pihakDirugikan->nama }}
+                                {{ $kasus->pihakDirugikan->kode }} ({{ $kasus->pihakDirugikan->nama }})
                             @else
                                 {{ $kasus->pihakDirugikan->nama }}
                             @endif
@@ -172,7 +177,7 @@
                                 <p class="text-base text-gray-900">{{ $kasus->waktuFraud && $kasus->waktuFraud->waktu_akhir ? \Carbon\Carbon::parse($kasus->waktuFraud->waktu_akhir)->format('Y-m-d') : '-' }}</p>
                             </div>
                             <div>
-                                <p class="text-sm font-medium text-gray-700">Waktu Diketahui</p>
+                                <p class="text-sm font-medium text-gray-700">Waktu Fraud Diketahui</p>
                                 <p class="text-base text-gray-900">{{ $kasus->waktuFraud && $kasus->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($kasus->waktuFraud->waktu_diketahui)->format('Y-m-d') : '-' }}</p>
                             </div>
                         </div>
@@ -195,26 +200,43 @@
                                         <th class="border border-gray-300 px-4 py-2 text-right">Recovery</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    <tr>
-                                        <td class="border border-gray-300 px-4 py-2 font-medium">LJK</td>
-                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $kasus->jenis_laporan === 'signifikan' ? '-' : (optional($kasus->kerugianFraud)->ljk_rill !== null ? number_format(optional($kasus->kerugianFraud)->ljk_rill, 0, ',', '.') : '') }}</td>
-                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ optional($kasus->kerugianFraud)->ljk_potensial !== null ? number_format(optional($kasus->kerugianFraud)->ljk_potensial, 0, ',', '.') : '' }}</td>
-                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $kasus->jenis_laporan === 'signifikan' ? '-' : (optional($kasus->kerugianFraud)->ljk_recovery !== null ? number_format(optional($kasus->kerugianFraud)->ljk_recovery, 0, ',', '.') : '') }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="border border-gray-300 px-4 py-2 font-medium">Konsumen</td>
-                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $kasus->jenis_laporan === 'signifikan' ? '-' : (optional($kasus->kerugianFraud)->konsumen_rill !== null ? number_format(optional($kasus->kerugianFraud)->konsumen_rill, 0, ',', '.') : '') }}</td>
-                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ optional($kasus->kerugianFraud)->konsumen_potensial !== null ? number_format(optional($kasus->kerugianFraud)->konsumen_potensial, 0, ',', '.') : '' }}</td>
-                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $kasus->jenis_laporan === 'signifikan' ? '-' : (optional($kasus->kerugianFraud)->konsumen_recovery !== null ? number_format(optional($kasus->kerugianFraud)->konsumen_recovery, 0, ',', '.') : '') }}</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="border border-gray-300 px-4 py-2 font-medium">Pihak Lain</td>
-                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $kasus->jenis_laporan === 'signifikan' ? '-' : (optional($kasus->kerugianFraud)->pihak_lain_rill !== null ? number_format(optional($kasus->kerugianFraud)->pihak_lain_rill, 0, ',', '.') : '') }}</td>
-                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ optional($kasus->kerugianFraud)->pihak_lain_potensial !== null ? number_format(optional($kasus->kerugianFraud)->pihak_lain_potensial, 0, ',', '.') : '' }}</td>
-                                        <td class="border border-gray-300 px-4 py-2 text-right">{{ $kasus->jenis_laporan === 'signifikan' ? '-' : (optional($kasus->kerugianFraud)->pihak_lain_recovery !== null ? number_format(optional($kasus->kerugianFraud)->pihak_lain_recovery, 0, ',', '.') : '') }}</td>
-                                    </tr>
-                                </tbody>
+<tbody>
+    @php
+        $categories = [
+            'LJK' => ['rill' => 'ljk_rill', 'potensial' => 'ljk_potensial', 'recovery' => 'ljk_recovery'],
+            'Konsumen' => ['rill' => 'konsumen_rill', 'potensial' => 'konsumen_potensial', 'recovery' => 'konsumen_recovery'],
+            'Pihak Lain' => ['rill' => 'pihak_lain_rill', 'potensial' => 'pihak_lain_potensial', 'recovery' => 'pihak_lain_recovery'],
+        ];
+    @endphp
+
+    @foreach($categories as $label => $fields)
+    <tr>
+        <td class="border border-gray-300 px-4 py-2 font-medium">{{ $label }}</td>
+
+        <!-- Kolom Rill -->
+        <td class="border border-gray-300 px-4 py-2 text-right">
+            {{-- Menggunakan > 0 agar jika 0 atau null tetap kosong --}}
+            @if($kasus->jenis_laporan !== 'signifikan' && ($kasus->kerugianFraud->{$fields['rill']} ?? 0) > 0)
+                {{ number_format($kasus->kerugianFraud->{$fields['rill']}, 0, ',', '.') }}
+            @endif
+        </td>
+
+        <!-- Kolom Potensial -->
+        <td class="border border-gray-300 px-4 py-2 text-right">
+            @if(($kasus->kerugianFraud->{$fields['potensial']} ?? 0) > 0)
+                {{ number_format($kasus->kerugianFraud->{$fields['potensial']}, 0, ',', '.') }}
+            @endif
+        </td>
+
+        <!-- Kolom Recovery -->
+        <td class="border border-gray-300 px-4 py-2 text-right">
+            @if($kasus->jenis_laporan !== 'signifikan' && ($kasus->kerugianFraud->{$fields['recovery']} ?? 0) > 0)
+                {{ number_format($kasus->kerugianFraud->{$fields['recovery']}, 0, ',', '.') }}
+            @endif
+        </td>
+    </tr>
+    @endforeach
+</tbody>
                             </table>
                         </div>
                     @else
@@ -232,7 +254,7 @@
                                 <div class="bg-gray-50 p-3 rounded">
                                     <p class="font-medium">
                                         @if($kelemahan->kode)
-                                            {{ $kelemahan->kode }} - {{ $kelemahan->nama }}
+                                            {{ $kelemahan->kode }} ({{ $kelemahan->nama }})
                                         @else
                                             {{ $kelemahan->nama }}
                                         @endif
@@ -257,7 +279,7 @@
                                 <div class="bg-gray-50 p-3 rounded">
                                     <p class="font-medium">
                                         @if($penanganan->kode)
-                                            {{ $penanganan->kode }} - {{ $penanganan->nama }}
+                                            {{ $penanganan->kode }} ({{ $penanganan->nama }})
                                         @else
                                             {{ $penanganan->nama }}
                                         @endif
@@ -282,7 +304,7 @@
                                 <div class="bg-red-50 p-3 rounded border-l-4 border-red-400">
                                     <p class="font-medium">
                                         @if($pencegahan->refPencegahan && $pencegahan->refPencegahan->kode)
-                                            {{ $pencegahan->refPencegahan->kode }} - {{ $pencegahan->refPencegahan->nama }}
+                                            {{ $pencegahan->refPencegahan->kode }} ({{ $pencegahan->refPencegahan->nama }})
                                         @elseif($pencegahan->refPencegahan)
                                             {{ $pencegahan->refPencegahan->nama }}
                                         @else
@@ -330,7 +352,7 @@
                                                 <p class="text-xs font-semibold text-gray-600 uppercase">Jenis Identitas</p>
                                                 <p class="text-sm text-gray-900">
                                                     @if($pelaku->jenisIdentitas && $pelaku->jenisIdentitas->kode)
-                                                        {{ $pelaku->jenisIdentitas->kode }} - {{ $pelaku->jenisIdentitas->nama }}
+                                                        {{ $pelaku->jenisIdentitas->kode }} ({{ $pelaku->jenisIdentitas->nama }})
                                                     @elseif($pelaku->jenisIdentitas)
                                                         {{ $pelaku->jenisIdentitas->nama }}
                                                     @else
@@ -344,7 +366,7 @@
                                             </div>
                                             <div>
                                                 <p class="text-xs font-semibold text-gray-600 uppercase">Jenis Kelamin</p>
-                                                <p class="text-sm text-gray-900">{{ $pelaku->jenis_kelamin ?? '-' }}</p>
+                                                <p class="text-sm text-gray-900">{{ $jenisKelaminLabel($pelaku->jenis_kelamin) }}</p>
                                             </div>
                                             <div>
                                                 <p class="text-xs font-semibold text-gray-600 uppercase">Tempat Lahir</p>
@@ -368,7 +390,7 @@
                                                 <p class="text-xs font-semibold text-gray-600 uppercase">Jabatan Saat Kejadian</p>
                                                 <p class="text-sm text-gray-900">
                                                     @if($pelaku->jabatanKejadian && $pelaku->jabatanKejadian->kode)
-                                                        {{ $pelaku->jabatanKejadian->kode }} - {{ $pelaku->jabatanKejadian->nama }}
+                                                        {{ $pelaku->jabatanKejadian->kode }} ({{ $pelaku->jabatanKejadian->nama }})
                                                     @elseif($pelaku->jabatanKejadian)
                                                         {{ $pelaku->jabatanKejadian->nama }}
                                                     @else
@@ -381,7 +403,7 @@
                                                 <p class="text-xs font-semibold text-gray-600 uppercase">Jabatan Saat Diketahui</p>
                                                 <p class="text-sm text-gray-900">
                                                     @if($pelaku->jabatanDiketahui && $pelaku->jabatanDiketahui->kode)
-                                                        {{ $pelaku->jabatanDiketahui->kode }} - {{ $pelaku->jabatanDiketahui->nama }}
+                                                        {{ $pelaku->jabatanDiketahui->kode }} ({{ $pelaku->jabatanDiketahui->nama }})
                                                     @elseif($pelaku->jabatanDiketahui)
                                                         {{ $pelaku->jabatanDiketahui->nama }}
                                                     @else
@@ -398,7 +420,7 @@
                                                 <p class="text-xs font-semibold text-gray-600 uppercase">Status Pelaku</p>
                                                 <p class="text-sm text-gray-900">
                                                     @if($pelaku->statusPelaku && $pelaku->statusPelaku->kode)
-                                                        {{ $pelaku->statusPelaku->kode }} - {{ $pelaku->statusPelaku->nama }}
+                                                        {{ $pelaku->statusPelaku->kode }} ({{ $pelaku->statusPelaku->nama }})
                                                     @elseif($pelaku->statusPelaku)
                                                         {{ $pelaku->statusPelaku->nama }}
                                                     @else

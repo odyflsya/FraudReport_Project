@@ -14,7 +14,7 @@
     thead th.sticky-aksi {
         position: sticky;
         right: 0;
-        background-color: #dc2626;
+        background-color: #FF0000;
         box-shadow: -6px 0 12px -8px rgba(0,0,0,0.25);
         z-index: 11;
     }
@@ -138,8 +138,8 @@
         <table class="min-w-[3500px] text-xs border-collapse">
 
     <!-- HEADER -->
-    <thead class="bg-red-600 text-white">
-<style>
+<thead class="bg-[#FF0000] text-white">
+    <style>
     tbody td.sticky-aksi {
         position: sticky;
         right: 0;
@@ -151,7 +151,7 @@
     thead th.sticky-aksi {
         position: sticky;
         right: 0;
-        background-color: #dc2626;
+        background-color: #FF0000;
         box-shadow: -6px 0 12px -8px rgba(0,0,0,0.25);
         z-index: 11;
     }
@@ -235,9 +235,9 @@
 
                     <th rowspan="2" class="border p-2">Internal/Eksternal</th>
                     <th colspan="8" class="border p-2">Identitas Pelaku</th>
+                    <th rowspan="2" class="border p-2">Status Pelaku</th>
                     <th colspan="4" class="border p-2">Jabatan Pelaku</th>
                     <th rowspan="2" class="border p-2">Keterangan Pelaku</th>
-                    <th rowspan="2" class="border p-2">Status Pelaku</th>
                     <th rowspan="2" class="border p-2">Pengenaan Sanksi</th>
                 </tr>
                 <tr>
@@ -320,17 +320,17 @@
                             {{ $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '-' }}
                         </td>
 
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->ljk_rill) }}</td>
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->ljk_potensial) }}</td>
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->ljk_recovery) }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->kerugianFraud->ljk_rill) : '-' }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->kerugianFraud->ljk_potensial) : '-' }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->kerugianFraud->ljk_recovery) : '-' }}</td>
 
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->konsumen_rill) }}</td>
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->konsumen_potensial) }}</td>
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->konsumen_recovery) }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->kerugianFraud->konsumen_rill) : '-' }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->kerugianFraud->konsumen_potensial) : '-' }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->kerugianFraud->konsumen_recovery) : '-' }}</td>
 
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->pihak_lain_rill) }}</td>
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->pihak_lain_potensial) }}</td>
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->pihak_lain_recovery) }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->kerugianFraud->pihak_lain_rill) : '-' }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->kerugianFraud->pihak_lain_potensial) : '-' }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->kerugianFraud->pihak_lain_recovery) : '-' }}</td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->kelemahanFraud as $i) {{ $i->kode ? $i->kode . ' (' . $i->nama . ')' : $i->nama }}<br>@endforeach
@@ -401,6 +401,10 @@
                         </td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-' }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '-' }}<br>@endforeach
                         </td>
 
@@ -420,9 +424,6 @@
                             @foreach($k->pelakuFrauds as $p) {{ $p->keterangan }}<br>@endforeach
                         </td>
 
-                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                            @foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-' }}<br>@endforeach
-                        </td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @forelse($k->pelakuFrauds as $p)
@@ -466,7 +467,7 @@
 
     <div id="signifikanTableContainer" class="overflow-x-auto hidden">
         <table class="min-w-[3200px] text-xs border-collapse">
-            <thead class="bg-red-600 text-white">
+    <thead class="bg-[#FF0000] text-white">
                 <tr>
                     <th rowspan="3" class="border p-2">No</th>
                     <th rowspan="3" class="border p-2">Kode Komponen</th>
@@ -502,9 +503,9 @@
 
                     <th rowspan="2" class="border p-2">Internal/Eksternal</th>
                     <th colspan="8" class="border p-2">Identitas Pelaku</th>
+                    <th rowspan="2" class="border p-2">Status Pelaku</th>
                     <th colspan="4" class="border p-2">Jabatan Pelaku</th>
                     <th rowspan="2" class="border p-2">Keterangan Pelaku</th>
-                    <th rowspan="2" class="border p-2">Status Pelaku</th>
                     <th rowspan="2" class="border p-2">Pengenaan Sanksi</th>
                 </tr>
                 <tr>
@@ -565,7 +566,7 @@
                             {{ $formatRefLabel($k->pihakDirugikan) }}
                         </td>
 
-                        <td class="border p-2">{{ $formatCurrency($k->kerugianFraud->ljk_potensial) }}</td>
+                        <td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->getTotalKerugianPotensial()) : '-' }}</td>
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">{{ $k->tindak_lanjut_ljk ?? '-' }}</td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
@@ -581,6 +582,7 @@
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->kategori }}<br>@endforeach
                         </td>
+
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->nama }}<br>@endforeach
                         </td>
@@ -606,6 +608,9 @@
                             @foreach($k->pelakuFrauds as $p) {{ $p->alamat_domisili }}<br>@endforeach
                         </td>
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-' }}<br>@endforeach
+                        </td>
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '-' }}<br>@endforeach
                         </td>
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
@@ -619,9 +624,6 @@
                         </td>
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->keterangan }}<br>@endforeach
-                        </td>
-                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                            @foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-' }}<br>@endforeach
                         </td>
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @forelse($k->pelakuFrauds as $p)

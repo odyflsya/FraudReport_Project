@@ -8,12 +8,16 @@
             return '';
         }
 
-        // Jika sudah ada format titik sebagai ribuan, kembalikan apa adanya
         if (strpos($value, '.') !== false && strpos($value, ',') === false) {
+            if (preg_match('/\.\d{1,2}$/', $value)) {
+                $parts = explode('.', $value);
+                $decimalPart = array_pop($parts);
+                $integerPart = implode('', $parts);
+                return number_format((float) ($integerPart . '.' . $decimalPart), 0, ',', '.');
+            }
             return $value;
         }
 
-        // Jika ada koma (desimal), tangani sebagai format Eropa
         if (strpos($value, ',') !== false) {
             $parts = explode(',', $value);
             $integerPart = str_replace('.', '', $parts[0]);
@@ -21,7 +25,6 @@
             return number_format((float) ($integerPart . '.' . $decimalPart), 0, ',', '.');
         }
 
-        // Jika angka biasa, format sebagai ribuan
         if (is_numeric($value)) {
             return number_format((float) $value, 0, ',', '.');
         }
@@ -44,7 +47,7 @@
             </div>
 
             <!-- Content -->
-            <div class="px-6 py-8 sm:px-8">
+            <div class="px-2 pt-2 pb-6 sm:px-8">
                 @if(session('error'))
                     <div class="mb-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-4 text-sm text-red-700">
                         {{ session('error') }}
@@ -94,10 +97,10 @@
                                 @error('kejadian_fraud')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="id_kejadian" class="mb-2 block text-sm font-medium text-slate-700">ID Kejadian</label>
+                                <label for="id_kejadian" class="mb-2 block text-sm font-medium text-slate-700">ID Kejadian <span class="text-red-500">*</span></label>
                                 <input type="text" id="id_kejadian" name="id_kejadian" value="{{ old('id_kejadian') }}"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                    placeholder="Masukkan kode kejadian">
+                                    placeholder="Masukkan kode kejadian" required>
                                 @error('id_kejadian')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div id="kejadian_fraud_keterangan_wrapper" class="hidden">
@@ -176,8 +179,8 @@
                                 @error('lokasi_fraud')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div id="lokasi_fraud_keterangan_wrapper">
-                                <label for="lokasi_fraud_keterangan" class="mb-2 block text-sm font-medium text-slate-700">Keterangan</label>
-                                <input type="text" id="lokasi_fraud_keterangan" name="lokasi_fraud_keterangan" required placeholder="Masukkan keterangan lokasi"
+                                <label for="lokasi_fraud_keterangan" class="mb-2 block text-sm font-medium text-slate-700">Keterangan <span class="text-red-500">*</span></label>
+                                <input type="text" id="lokasi_fraud_keterangan" name="lokasi_fraud_keterangan" required placeholder="Masukkan keterangan lokasi" required
                                     class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                     value="{{ old('lokasi_fraud_keterangan', '') }}">
                                 @error('lokasi_fraud_keterangan')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
@@ -229,20 +232,20 @@
                         <h3 class="mb-4 text-lg font-semibold text-slate-900">Waktu </h3>
                         <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                             <div>
-                                <label for="waktu_awal" class="mb-2 block text-sm font-medium text-slate-700">Waktu Awal</label>
-                                <input type="date" id="waktu_awal" name="waktu_awal"
+                                <label for="waktu_awal" class="mb-2 block text-sm font-medium text-slate-700">Waktu Awal <span class="text-red-500">*</span></label>
+                                <input type="date" id="waktu_awal" name="waktu_awal" required
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                 @error('waktu_awal')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="waktu_akhir" class="mb-2 block text-sm font-medium text-slate-700">Waktu Akhir</label>
-                                <input type="date" id="waktu_akhir" name="waktu_akhir"
+                                <label for="waktu_akhir" class="mb-2 block text-sm font-medium text-slate-700">Waktu Akhir <span class="text-red-500">*</span></label>
+                                <input type="date" id="waktu_akhir" name="waktu_akhir" required
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                 @error('waktu_akhir')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="waktu_diketahui" class="mb-2 block text-sm font-medium text-slate-700">Waktu Fraud Diketahui</label>
-                                <input type="date" id="waktu_diketahui" name="waktu_diketahui"
+                                <label for="waktu_diketahui" class="mb-2 block text-sm font-medium text-slate-700">Waktu Fraud Diketahui <span class="text-red-500">*</span></label>
+                                <input type="date" id="waktu_diketahui" name="waktu_diketahui" required
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                 @error('waktu_diketahui')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
@@ -409,9 +412,9 @@
                                 @error('pencegahan_fraud.target_waktu')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="pencegahan_realisasi" class="mb-2 block text-sm font-medium text-slate-700">Realisasi</label>
+                                <label for="pencegahan_realisasi" class="mb-2 block text-sm font-medium text-slate-700">Realisasi <span class="text-red-500">*</span></label>
                                 <input type="date" id="pencegahan_realisasi" name="pencegahan_fraud[realisasi]" value="{{ old('pencegahan_fraud.realisasi') }}"
-                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" required>
                                 @error('pencegahan_fraud.realisasi')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                         </div>
@@ -468,16 +471,16 @@
                                 @error('pelaku_fraud.jenis_kelamin')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="tempat_lahir" class="mb-2 block text-sm font-medium text-slate-700">Tempat Lahir</label>
+                                <label for="tempat_lahir" class="mb-2 block text-sm font-medium text-slate-700">Tempat Lahir <span class="text-red-500">*</span></label>
                                 <input type="text" id="tempat_lahir" name="pelaku_fraud[tempat_lahir]" value="{{ old('pelaku_fraud.tempat_lahir') }}"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                    placeholder="Tempat lahir">
+                                    placeholder="Tempat lahir" required>
                                 @error('pelaku_fraud.tempat_lahir')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="tanggal_lahir" class="mb-2 block text-sm font-medium text-slate-700">Tanggal Lahir</label>
+                                <label for="tanggal_lahir" class="mb-2 block text-sm font-medium text-slate-700">Tanggal Lahir <span class="text-red-500">*</span></label>
                                 <input type="date" id="tanggal_lahir" name="pelaku_fraud[tanggal_lahir]" value="{{ old('pelaku_fraud.tanggal_lahir') }}"
-                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" required>
                                 @error('pelaku_fraud.tanggal_lahir')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
@@ -492,17 +495,17 @@
                                 @error('pelaku_fraud.status_pelaku_id')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div class="md:col-span-2">
-                                <label for="alamat_identitas" class="mb-2 block text-sm font-medium text-slate-700">Alamat Identitas</label>
+                                <label for="alamat_identitas" class="mb-2 block text-sm font-medium text-slate-700">Alamat Identitas <span class="text-red-500">*</span></label>
                                 <textarea id="alamat_identitas" name="pelaku_fraud[alamat_identitas]" rows="3"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                    placeholder="Alamat sesuai identitas">{{ old('pelaku_fraud.alamat_identitas') }}</textarea>
+                                    placeholder="Alamat sesuai identitas" required>{{ old('pelaku_fraud.alamat_identitas') }}</textarea>
                                 @error('pelaku_fraud.alamat_identitas')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div class="md:col-span-2">
-                                <label for="alamat_domisili" class="mb-2 block text-sm font-medium text-slate-700">Alamat Domisili</label>
+                                <label for="alamat_domisili" class="mb-2 block text-sm font-medium text-slate-700">Alamat Domisili <span class="text-red-500">*</span></label>
                                 <textarea id="alamat_domisili" name="pelaku_fraud[alamat_domisili]" rows="3"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                    placeholder="Alamat domisili">{{ old('pelaku_fraud.alamat_domisili') }}</textarea>
+                                    placeholder="Alamat domisili" required>{{ old('pelaku_fraud.alamat_domisili') }}</textarea>
                                 @error('pelaku_fraud.alamat_domisili')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
@@ -568,10 +571,10 @@
     @enderror
 </div>
                             <div class="md:col-span-2">
-                                <label for="sanksi" class="mb-2 block text-sm font-medium text-slate-700">Pengenaan Sanksi</label>
+                                <label for="sanksi" class="mb-2 block text-sm font-medium text-slate-700">Pengenaan Sanksi <span class="text-red-500">*</span></label>
                                 <textarea id="sanksi" name="pelaku_fraud[sanksi]" rows="3"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                    placeholder="Sanksi yang diberikan">{{ old('pelaku_fraud.sanksi') }}</textarea>
+                                    placeholder="Sanksi yang diberikan" required>{{ old('pelaku_fraud.sanksi') }}</textarea>
                                 @error('pelaku_fraud.sanksi')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                         </div>
@@ -594,9 +597,9 @@
 
                     <!-- BUTTONS -->
                     <div class="flex flex-col gap-3 border-t border-slate-200 pt-6 sm:flex-row sm:justify-end">
-                        <a href="{{ route('kasus.index') }}" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
+                        <button type="button" onclick="location.reload()" class="inline-flex items-center justify-center rounded-xl border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">
                             Reset
-                        </a>
+                        </button>
                         <button type="submit" class="inline-flex items-center justify-center rounded-xl bg-green-600 px-6 py-3 text-sm font-semibold text-white shadow-md transition hover:bg-green-700">
                             Simpan
                         </button>
@@ -674,10 +677,24 @@
 
     function formatCurrencyValue(value) {
         if (typeof value !== 'string' || value.trim() === '') {
-            return value;
+            return '';
         }
 
-        let cleaned = value.replace(/[^0-9,]/g, '');
+        const normalized = value.trim();
+
+        if (normalized.includes('.') && !normalized.includes(',')) {
+            if (/^[0-9]{1,3}(?:\.[0-9]{3})+$/.test(normalized)) {
+                return normalized;
+            }
+            const cleaned = normalized.replace(/\./g, '');
+            const parts = cleaned.split('.');
+            const integerPart = parts[0].replace(/^0+(?=\d)/, '') || '0';
+            const decimalPart = parts[1] || '';
+            const formattedInt = integerPart.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+            return decimalPart === '00' || decimalPart === '' ? formattedInt : `${formattedInt},${decimalPart}`;
+        }
+
+        let cleaned = normalized.replace(/[^0-9,]/g, '');
         const parts = cleaned.split(',');
         let integerPart = parts[0].replace(/^0+(?=\d)/, '');
         const decimalPart = parts[1] || '';

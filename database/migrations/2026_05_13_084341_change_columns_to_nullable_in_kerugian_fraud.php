@@ -30,15 +30,15 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('kerugian_fraud', function (Blueprint $table) {
-            $table->decimal('ljk_rill', 15, 2)->nullable(false)->default(0)->change();
-            $table->decimal('ljk_potensial', 15, 2)->nullable(false)->default(0)->change();
-            $table->decimal('ljk_recovery', 15, 2)->nullable(false)->default(0)->change();
-            $table->decimal('konsumen_rill', 15, 2)->nullable(false)->default(0)->change();
-            $table->decimal('konsumen_potensial', 15, 2)->nullable(false)->default(0)->change();
-            $table->decimal('konsumen_recovery', 15, 2)->nullable(false)->default(0)->change();
-            $table->decimal('pihak_lain_rill', 15, 2)->nullable(false)->default(0)->change();
-            $table->decimal('pihak_lain_potensial', 15, 2)->nullable(false)->default(0)->change();
-            $table->decimal('pihak_lain_recovery', 15, 2)->nullable(false)->default(0)->change();
+            $table->decimal('ljk_rill', 15, 2)->nullable(false)->default(null)->change();
+            $table->decimal('ljk_potensial', 15, 2)->nullable(false)->default(null)->change();
+            $table->decimal('ljk_recovery', 15, 2)->nullable(false)->default(null)->change();
+            $table->decimal('konsumen_rill', 15, 2)->nullable(false)->default(null)->change();
+            $table->decimal('konsumen_potensial', 15, 2)->nullable(false)->default(null)->change();
+            $table->decimal('konsumen_recovery', 15, 2)->nullable(false)->default(null)->change();
+            $table->decimal('pihak_lain_rill', 15, 2)->nullable(false)->default(null)->change();
+            $table->decimal('pihak_lain_potensial', 15, 2)->nullable(false)->default(null)->change();
+            $table->decimal('pihak_lain_recovery', 15, 2)->nullable(false)->default(null)->change();
         });
     }
 };

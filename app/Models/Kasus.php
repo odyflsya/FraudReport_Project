@@ -108,5 +108,21 @@ class Kasus extends Model
     {
         return $this->hasMany(PencegahanFraud::class);
     }
+
+    // Helper method untuk total kerugian potensial
+    public function getTotalKerugianPotensial()
+    {
+        if (!$this->kerugianFraud) {
+            return 0;
+        }
+        
+        return ($this->kerugianFraud->ljk_potensial ?? 0) +
+               ($this->kerugianFraud->konsumen_potensial ?? 0) +
+               ($this->kerugianFraud->pihak_lain_potensial ?? 0);
+    }
     
 }
+
+
+
+

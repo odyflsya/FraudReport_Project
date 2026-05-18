@@ -13,7 +13,7 @@
     thead th.sticky-aksi {
         position: sticky;
         right: 0;
-        background-color: #dc2626;
+        background-color: #FF0000;
         box-shadow: -6px 0 12px -8px rgba(0,0,0,0.25);
         z-index: 11;
     }
@@ -24,65 +24,122 @@
 @endphp
 
 <!-- CARD ATAS -->
-<div class="flex flex-wrap gap-6">
+<div class="flex flex-wrap items-start gap-4">
 
     <!-- TOTAL KASUS -->
-    <div class="bg-white p-6 rounded-xl shadow flex items-center gap-4 min-w-[240px]">
-        <div class="bg-blue-100 p-3 rounded-lg">
-            <!-- ICON -->
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 7h18M3 12h18M3 17h18"/>
-            </svg>
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3 w-fit hover:shadow-md transition">
+        <div class="bg-blue-100 text-blue-600 p-3 rounded-xl">
+            <i class="fas fa-folder-open text-xl"></i>
         </div>
         <div>
-            <p class="text-gray-500 text-sm">Total Kasus</p>
-            <h2 class="text-2xl font-bold">{{ $totalKasus }}</h2>
+            <p class="text-sm text-gray-500">Total Kasus</p>
+            <h2 class="text-2xl font-bold text-gray-800 leading-tight">
+                {{ $totalKasus }}
+            </h2>
         </div>
     </div>
 
     <!-- TOTAL KERUGIAN -->
-    <div class="bg-white p-6 rounded-xl shadow flex items-center gap-4 min-w-[280px]">
-        <div class="bg-green-100 p-3 rounded-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7H14a3.5 3.5 0 0 1 0 7H6"/>
-            </svg>
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3 w-fit hover:shadow-md transition">
+        <div class="bg-green-100 text-green-600 p-3 rounded-xl">
+            <i class="fas fa-money-bill-wave text-xl"></i>
         </div>
         <div>
-            <p class="text-gray-500 text-sm">Total Kerugian</p>
-            <h2 class="text-2xl font-bold whitespace-nowrap">
+            <p class="text-sm text-gray-500">Total Kerugian</p>
+            <h2 class="text-xl font-bold text-gray-800 whitespace-nowrap leading-tight">
                 Rp {{ number_format($totalKerugian,0,',','.') }}
             </h2>
         </div>
     </div>
 
-    <!-- OPEN -->
-    <div class="bg-white p-6 rounded-xl shadow flex items-center gap-4 min-w-[240px]">
-        <div class="bg-yellow-100 p-3 rounded-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M3 7h18v10H3z"/>
-            </svg>
+    <!-- TOTAL PELAKU -->
+    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center gap-3 w-fit hover:shadow-md transition">
+        <div class="bg-purple-100 text-purple-600 p-3 rounded-xl">
+            <i class="fas fa-user-secret text-xl"></i>
         </div>
         <div>
-            <p class="text-gray-500 text-sm">Open</p>
-            <h2 class="text-2xl font-bold">{{ $open }}</h2>
-        </div>
-    </div>
-
-    <!-- CLOSED -->
-    <div class="bg-white p-6 rounded-xl shadow flex items-center gap-4 min-w-[240px]">
-        <div class="bg-red-100 p-3 rounded-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M5 13l4 4L19 7"/>
-            </svg>
-        </div>
-        <div>
-            <p class="text-gray-500 text-sm">Closed</p>
-            <h2 class="text-2xl font-bold">{{ $closed }}</h2>
+            <p class="text-sm text-gray-500">Total Pelaku</p>
+            <h2 class="text-2xl font-bold text-gray-800 leading-tight">
+                {{ $totalPelaku }}
+            </h2>
         </div>
     </div>
 
 </div>
 
+<!-- STATUS DI BAWAH -->
+<div class="mt-4 bg-white p-5 rounded-xl shadow-sm border border-gray-100 max-w-3xl">
+
+    <!-- HEADER -->
+    <div class="flex items-center gap-3 mb-4">
+        <div class="bg-yellow-100 text-yellow-600 p-3 rounded-xl">
+            <i class="fas fa-chart-pie text-xl"></i>
+        </div>
+        <div>
+            <p class="text-sm text-gray-500">Status Penanganan</p>
+            <h2 class="text-lg font-bold text-gray-800">
+                Ringkasan Status Kasus
+            </h2>
+        </div>
+    </div>
+
+    <!-- STATUS GRID -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+
+        <!-- STATUS 001 -->
+        <div class="flex items-center justify-between bg-blue-50 border border-blue-100 rounded-xl px-4 py-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-blue-100 text-blue-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm">
+                    <i class="fas fa-spinner"></i>
+                </div>
+                <p class="text-sm font-medium text-gray-700">Proses internal LJK</p>
+            </div>
+            <span class="text-lg font-bold text-blue-600">
+                {{ $statusCounts['001'] ?? 0 }}
+            </span>
+        </div>
+
+        <!-- STATUS 002 -->
+        <div class="flex items-center justify-between bg-green-50 border border-green-100 rounded-xl px-4 py-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-green-100 text-green-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <p class="text-sm font-medium text-gray-700">Selesai diproses internal</p>
+            </div>
+            <span class="text-lg font-bold text-green-600">
+                {{ $statusCounts['002'] ?? 0 }}
+            </span>
+        </div>
+
+        <!-- STATUS 003 -->
+        <div class="flex items-center justify-between bg-yellow-50 border border-yellow-100 rounded-xl px-4 py-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-yellow-100 text-yellow-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm">
+                    <i class="fas fa-gavel"></i>
+                </div>
+                <p class="text-sm font-medium text-gray-700">Penanganan aparat hukum</p>
+            </div>
+            <span class="text-lg font-bold text-yellow-600">
+                {{ $statusCounts['003'] ?? 0 }}
+            </span>
+        </div>
+
+        <!-- STATUS 004 -->
+        <div class="flex items-center justify-between bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+            <div class="flex items-center gap-3">
+                <div class="bg-red-100 text-red-600 w-8 h-8 rounded-lg flex items-center justify-center text-sm">
+                    <i class="fas fa-scale-balanced"></i>
+                </div>
+                <p class="text-sm font-medium text-gray-700">Berkekuatan hukum tetap</p>
+            </div>
+            <span class="text-lg font-bold text-red-600">
+                {{ $statusCounts['004'] ?? 0 }}
+            </span>
+        </div>
+
+    </div>
+</div>
 
 <!-- TABLE -->
 <div class="bg-white p-6 rounded-xl shadow mt-8">
@@ -107,8 +164,7 @@
         <table class="min-w-[3500px] text-xs border-collapse">
 
     <!-- HEADER -->
-    <thead class="bg-red-600 text-white">
-
+<thead class="bg-[#FF0000] text-white">
     <!-- ROW 1 -->
     <tr>
         <th rowspan="3" class="border p-2">No</th>
@@ -170,9 +226,9 @@
         <!-- PELAKU ROW 2 -->
         <th rowspan="2" class="border p-2">Internal/Eksternal</th>
         <th colspan="8" class="border p-2">Identitas Pelaku</th>
+        <th rowspan="2" class="border p-2">Status Pelaku</th>
         <th colspan="4" class="border p-2">Jabatan Pelaku</th>
         <th rowspan="2" class="border p-2">Keterangan Pelaku</th>
-        <th rowspan="2" class="border p-2">Status Pelaku</th>
         <th rowspan="2" class="border p-2">Pengenaan Sanksi</th>
     </tr>
 
@@ -269,17 +325,17 @@
 <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
 {{ $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '-' }}</td>
 
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->ljk_rill) }}</td>
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->ljk_potensial) }}</td>
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->ljk_recovery) }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->kerugianFraud->ljk_rill) : '-' }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->kerugianFraud->ljk_potensial) : '-' }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->kerugianFraud->ljk_recovery) : '-' }}</td>
 
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->konsumen_rill) }}</td>
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->konsumen_potensial) }}</td>
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->konsumen_recovery) }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->kerugianFraud->konsumen_rill) : '-' }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->kerugianFraud->konsumen_potensial) : '-' }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->kerugianFraud->konsumen_recovery) : '-' }}</td>
 
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->pihak_lain_rill) }}</td>
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->pihak_lain_potensial) }}</td>
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->pihak_lain_recovery) }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->kerugianFraud->pihak_lain_rill) : '-' }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->kerugianFraud->pihak_lain_potensial) : '-' }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->kerugianFraud->pihak_lain_recovery) : '-' }}</td>
 
 <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
 @foreach($k->kelemahanFraud as $i) {{ $i->kode ? $i->kode . ' (' . $i->nama . ')' : $i->nama }}<br>@endforeach
@@ -350,6 +406,10 @@
 </td>
 
 <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+@foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-' }}<br>@endforeach
+</td>
+
+<td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
 @foreach($k->pelakuFrauds as $p) {{ $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '-' }}<br>@endforeach
 </td>
 
@@ -367,10 +427,6 @@
 
 <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
 @foreach($k->pelakuFrauds as $p) {{ $p->keterangan }}<br>@endforeach
-</td>
-
-<td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-@foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-' }}<br>@endforeach
 </td>
 
 <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
@@ -415,7 +471,7 @@
         <table class="min-w-[3200px] text-xs border-collapse">
 
     <!-- HEADER -->
-    <thead class="bg-red-600 text-white">
+<thead class="bg-[#FF0000] text-white">
 
     <!-- ROW 1 -->
     <tr>
@@ -455,9 +511,9 @@
 
         <th rowspan="2" class="border p-2">Internal/Eksternal</th>
         <th colspan="8" class="border p-2">Identitas Pelaku</th>
+        <th rowspan="2" class="border p-2">Status Pelaku</th>
         <th colspan="4" class="border p-2">Jabatan Pelaku</th>
         <th rowspan="2" class="border p-2">Keterangan Pelaku</th>
-        <th rowspan="2" class="border p-2">Status Pelaku</th>
         <th rowspan="2" class="border p-2">Pengenaan Sanksi</th>
     </tr>
 
@@ -525,7 +581,7 @@
 <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
 {{ $formatRefLabel($k->pihakDirugikan) }}</td>
 
-<td class="border p-2">{{ $formatCurrency($k->kerugianFraud->ljk_potensial) }}</td>
+<td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->getTotalKerugianPotensial()) : '-' }}</td>
 <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">{{ $k->tindak_lanjut_ljk ?? '-' }}</td>
 
 <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
@@ -563,6 +619,9 @@
 @foreach($k->pelakuFrauds as $p) {{ $p->alamat_domisili }}<br>@endforeach
 </td>
 <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+@foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-' }}<br>@endforeach
+</td>
+<td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
 @foreach($k->pelakuFrauds as $p) {{ $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '-' }}<br>@endforeach
 </td>
 <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
@@ -576,9 +635,6 @@
 </td>
 <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
 @foreach($k->pelakuFrauds as $p) {{ $p->keterangan }}<br>@endforeach
-</td>
-<td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-@foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-' }}<br>@endforeach
 </td>
 
 <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">

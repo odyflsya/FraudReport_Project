@@ -21,6 +21,7 @@
                     <input type="date" name="dari_tanggal" id="filterFromDate" 
                         value="{{ request('dari_tanggal') }}"
                         class="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <p class="text-xs text-gray-500 mt-1">Filter berdasarkan tanggal saat fraud diketahui.</p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium mb-2">Sampai Tanggal</label>
@@ -39,8 +40,8 @@
                         <option value="004" {{ request('status_penanganan') === '004' ? 'selected' : '' }}>004 (Berkekuatan hukum tetap)</option>
                     </select>
                 </div>
-                <div class="flex items-end">
-                    <button type="submit"
+<div class="flex items-start pt-7">
+                        <button type="submit"
                         class="w-full flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
@@ -81,14 +82,20 @@
             <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded">
                 <p class="text-sm text-blue-700">
                     <strong>Filter Aktif:</strong>
-                    @if(request('dari_tanggal'))
-                        Dari {{ \Carbon\Carbon::createFromFormat('Y-m-d', request('dari_tanggal'))->format('d-m-Y') }}
-                    @endif
-                    @if(request('sampai_tanggal'))
-                        sampai {{ \Carbon\Carbon::createFromFormat('Y-m-d', request('sampai_tanggal'))->format('d-m-Y') }}
+                    @if(request('dari_tanggal') || request('sampai_tanggal'))
+                        Waktu Fraud Diketahui:
+                        @if(request('dari_tanggal'))
+                            Dari {{ \Carbon\Carbon::createFromFormat('Y-m-d', request('dari_tanggal'))->format('d-m-Y') }}
+                        @endif
+                        @if(request('sampai_tanggal'))
+                            sampai {{ \Carbon\Carbon::createFromFormat('Y-m-d', request('sampai_tanggal'))->format('d-m-Y') }}
+                        @endif
                     @endif
                     @if(request('status_penanganan'))
-                        | Status: 
+                        @if(request('dari_tanggal') || request('sampai_tanggal'))
+                            | 
+                        @endif
+                        Status: 
                         @switch(request('status_penanganan'))
                             @case('001')
                                 001 (Proses internal LJK)
@@ -139,7 +146,7 @@
         <!-- LAPORAN SEMESTER TABLE -->
         <div id="semesterTableContainer" class="bg-white rounded-lg shadow overflow-x-auto mb-8">
             <table class="min-w-[3500px] text-xs border-collapse" id="semesterTable">
-                <thead class="bg-red-600 text-white sticky top-0">
+    <thead class="bg-[#FF0000] text-white">
                     <tr>
                     <th rowspan="3" class="border p-2">No</th>
                     <th rowspan="3" class="border p-2">Kode Komponen</th>
@@ -196,9 +203,9 @@
 
                     <th rowspan="2" class="border p-2">Internal/Eksternal</th>
                     <th colspan="8" class="border p-2">Identitas Pelaku</th>
+                    <th rowspan="2" class="border p-2">Status Pelaku</th>
                     <th colspan="4" class="border p-2">Jabatan Pelaku</th>
                     <th rowspan="2" class="border p-2">Keterangan Pelaku</th>
-                    <th rowspan="2" class="border p-2">Status Pelaku</th>
                     <th rowspan="2" class="border p-2">Pengenaan Sanksi</th>
                 </tr>
                 <tr>
@@ -281,17 +288,17 @@
                                 {{ $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '-' }}
                             </td>
 
-                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->ljk_rill ?? 0) }}</td>
-                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->ljk_potensial ?? 0) }}</td>
-                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->ljk_recovery ?? 0) }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->ljk_rill) }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->ljk_potensial) }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->ljk_recovery) }}</td>
 
-                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->konsumen_rill ?? 0) }}</td>
-                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->konsumen_potensial ?? 0) }}</td>
-                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->konsumen_recovery ?? 0) }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->konsumen_rill) }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->konsumen_potensial) }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->konsumen_recovery) }}</td>
 
-                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->pihak_lain_rill ?? 0) }}</td>
-                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->pihak_lain_potensial ?? 0) }}</td>
-                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->pihak_lain_recovery ?? 0) }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->pihak_lain_rill) }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->pihak_lain_potensial) }}</td>
+                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->pihak_lain_recovery) }}</td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                                 @foreach($k->kelemahanFraud as $i) {{ $i->kode ? $i->kode . ' (' . $i->nama . ')' : $i->nama }}<br>@endforeach
@@ -348,6 +355,9 @@
                                 @foreach($k->pelakuFrauds as $p) {{ $p->alamat_domisili }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                                @foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-' }}<br>@endforeach
+                            </td>
+                            <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '-' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
@@ -361,9 +371,6 @@
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->keterangan }}<br>@endforeach
-                            </td>
-                            <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                                 @forelse($k->pelakuFrauds as $p)
@@ -390,7 +397,7 @@
         <!-- LAPORAN SIGNIFIKAN TABLE -->
         <div id="signifikanTableContainer" class="bg-white rounded-lg shadow overflow-x-auto mb-8 hidden">
             <table class="min-w-[3500px] text-xs border-collapse" id="signifikanTable">
-                <thead class="bg-red-600 text-white sticky top-0">
+    <thead class="bg-[#FF0000] text-white">
                     <tr>
                     <th rowspan="3" class="border p-2">No</th>
                     <th rowspan="3" class="border p-2">Kode Komponen</th>
@@ -412,7 +419,6 @@
                     <th colspan="3" class="border p-2">Waktu</th>
                     <th colspan="16" class="border p-2">Pelaku Fraud</th>
                     <th rowspan="3" class="border p-2">Status Penanganan</th>
-                    <th rowspan="3" class="border p-2 text-center sticky-aksi">Aksi</th>
                 </tr>
                 <tr>
                     <th rowspan="2" class="border p-2">Jenis Fraud</th>
@@ -426,9 +432,9 @@
 
                     <th rowspan="2" class="border p-2">Internal/Eksternal</th>
                     <th colspan="8" class="border p-2">Identitas Pelaku</th>
+                    <th rowspan="2" class="border p-2">Status Pelaku</th>
                     <th colspan="4" class="border p-2">Jabatan Pelaku</th>
                     <th rowspan="2" class="border p-2">Keterangan Pelaku</th>
-                    <th rowspan="2" class="border p-2">Status Pelaku</th>
                     <th rowspan="2" class="border p-2">Pengenaan Sanksi</th>
                 </tr>
                 <tr>
@@ -488,7 +494,7 @@
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                                 {{ $formatRefLabel($k->pihakDirugikan) }}
                             </td>
-                            <td class="border p-2">{{ $formatCurrency($k->kerugianFraud?->ljk_potensial ?? 0) }}</td>
+                            <td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->getTotalKerugianPotensial()) : '-' }}</td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">{{ $k->tindak_lanjut_ljk ?? '-' }}</td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                                 {{ $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '-' }}
@@ -528,6 +534,9 @@
                                 @foreach($k->pelakuFrauds as $p) {{ $p->alamat_domisili }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                                @foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-' }}<br>@endforeach
+                            </td>
+                            <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '-' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
@@ -541,9 +550,6 @@
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->keterangan }}<br>@endforeach
-                            </td>
-                            <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                                 @forelse($k->pelakuFrauds as $p)
@@ -567,24 +573,6 @@
             </table>
         </div>
 
-        <!-- Summary Section -->
-        @if($summary)
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg shadow border-l-4 border-blue-600">
-                <h3 class="text-sm font-medium text-gray-600 mb-2">📌 Total Kasus</h3>
-                <p class="text-4xl font-bold text-blue-600">{{ $summary['total_kasus'] }}</p>
-            </div>
-            <div class="bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg shadow border-l-4 border-green-600">
-                <h3 class="text-sm font-medium text-gray-600 mb-2">✅ Status Penanganan</h3>
-                <p class="text-2xl font-bold"><span class="text-green-600">{{ $summary['selesai'] }} Selesai</span></p>
-                <p class="text-lg font-bold"><span class="text-yellow-600">{{ $summary['dalam_proses'] }} Proses</span></p>
-            </div>
-            <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg shadow border-l-4 border-purple-600">
-                <h3 class="text-sm font-medium text-gray-600 mb-2">👤 Total Pelaku</h3>
-                <p class="text-4xl font-bold text-purple-600">{{ $summary['total_pelaku'] }}</p>
-            </div>
-        </div>
-        @endif
     </div>
 </div>
 

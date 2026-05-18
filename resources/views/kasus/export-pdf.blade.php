@@ -281,15 +281,15 @@
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             {{ $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '-' }}
                         </td>
-                        <td class="border p-2">{{ $k->kerugianFraud->ljk_rill ?? 0 }}</td>
-                        <td class="border p-2">{{ $k->kerugianFraud->ljk_potensial ?? 0 }}</td>
-                        <td class="border p-2">{{ $k->kerugianFraud->ljk_recovery ?? 0 }}</td>
-                        <td class="border p-2">{{ $k->kerugianFraud->konsumen_rill ?? 0 }}</td>
-                        <td class="border p-2">{{ $k->kerugianFraud->konsumen_potensial ?? 0 }}</td>
-                        <td class="border p-2">{{ $k->kerugianFraud->konsumen_recovery ?? 0 }}</td>
-                        <td class="border p-2">{{ $k->kerugianFraud->pihak_lain_rill ?? 0 }}</td>
-                        <td class="border p-2">{{ $k->kerugianFraud->pihak_lain_potensial ?? 0 }}</td>
-                        <td class="border p-2">{{ $k->kerugianFraud->pihak_lain_recovery ?? 0 }}</td>
+                        <td class="border p-2">{{ $k->kerugianFraud->ljk_rill !== null ? number_format($k->kerugianFraud->ljk_rill, 0, ',', '.') : '' }}</td>
+                        <td class="border p-2">{{ $k->kerugianFraud->ljk_potensial !== null ? number_format($k->kerugianFraud->ljk_potensial, 0, ',', '.') : '' }}</td>
+                        <td class="border p-2">{{ $k->kerugianFraud->ljk_recovery !== null ? number_format($k->kerugianFraud->ljk_recovery, 0, ',', '.') : '' }}</td>
+                        <td class="border p-2">{{ $k->kerugianFraud->konsumen_rill !== null ? number_format($k->kerugianFraud->konsumen_rill, 0, ',', '.') : '' }}</td>
+                        <td class="border p-2">{{ $k->kerugianFraud->konsumen_potensial !== null ? number_format($k->kerugianFraud->konsumen_potensial, 0, ',', '.') : '' }}</td>
+                        <td class="border p-2">{{ $k->kerugianFraud->konsumen_recovery !== null ? number_format($k->kerugianFraud->konsumen_recovery, 0, ',', '.') : '' }}</td>
+                        <td class="border p-2">{{ $k->kerugianFraud->pihak_lain_rill !== null ? number_format($k->kerugianFraud->pihak_lain_rill, 0, ',', '.') : '' }}</td>
+                        <td class="border p-2">{{ $k->kerugianFraud->pihak_lain_potensial !== null ? number_format($k->kerugianFraud->pihak_lain_potensial, 0, ',', '.') : '' }}</td>
+                        <td class="border p-2">{{ $k->kerugianFraud->pihak_lain_recovery !== null ? number_format($k->kerugianFraud->pihak_lain_recovery, 0, ',', '.') : '' }}</td>
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->kelemahanFraud as $i) {{ $i->kode ? $i->kode . ' (' . $i->nama . ')' : $i->nama }}<br>@endforeach
                         </td>
@@ -453,7 +453,7 @@
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             {{ $k->pihakDirugikan ? ($k->pihakDirugikan->kode ? $k->pihakDirugikan->kode . ' (' . $k->pihakDirugikan->nama . ')' : $k->pihakDirugikan->nama) : '-' }}
                         </td>
-                        <td class="border p-2">{{ $k->kerugianFraud->ljk_potensial ?? 0 }}</td>
+                        <td class="border p-2">{{ $k->kerugianFraud->ljk_potensial !== null ? number_format($k->kerugianFraud->ljk_potensial, 0, ',', '.') : '' }}</td>
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">{{ $k->tindak_lanjut_ljk ?? '-' }}</td>
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             {{ $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '-' }}

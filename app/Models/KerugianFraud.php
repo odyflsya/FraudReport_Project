@@ -13,30 +13,21 @@ class KerugianFraud extends Model
 
     protected $fillable = [
         'kasus_id',
-        // LJK
         'ljk_rill',
         'ljk_potensial',
         'ljk_recovery',
-        // Konsumen
         'konsumen_rill',
         'konsumen_potensial',
         'konsumen_recovery',
-        // Pihak lain
         'pihak_lain_rill',
         'pihak_lain_potensial',
         'pihak_lain_recovery',
     ];
 
+    // Hapus atau komentari bagian ini jika masalah 0 tetap muncul
+    // Karena casting ke decimal:0 seringkali mengubah null menjadi "0"
     protected $casts = [
-        'ljk_rill' => 'decimal:0',
-        'ljk_potensial' => 'decimal:0',
-        'ljk_recovery' => 'decimal:0',
-        'konsumen_rill' => 'decimal:0',
-        'konsumen_potensial' => 'decimal:0',
-        'konsumen_recovery' => 'decimal:0',
-        'pihak_lain_rill' => 'decimal:0',
-        'pihak_lain_potensial' => 'decimal:0',
-        'pihak_lain_recovery' => 'decimal:0',
+        // 'ljk_rill' => 'decimal:0', 
     ];
 
     public function kasus()

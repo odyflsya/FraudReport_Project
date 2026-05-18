@@ -25,8 +25,17 @@ class DashboardController extends Controller
             });
 
         // ================= STATUS =================
-        $open = Kasus::where('user_id', Auth::id())->where('status_penanganan', 'Open')->count();
-        $closed = Kasus::where('user_id', Auth::id())->where('status_penanganan', 'Closed')->count();
+        $statusCounts = Kasus::where('user_id', Auth::id())
+            ->selectRaw('status_penanganan, count(*) as total')
+            ->groupBy('status_penanganan')
+            ->pluck('total', 'status_penanganan')
+            ->toArray();
+
+        // ================= TOTAL PELAKU =================
+        $totalPelaku = Kasus::where('user_id', Auth::id())
+            ->withCount('pelakuFrauds')
+            ->get()
+            ->sum('pelaku_frauds_count');
 
         // ================= SEMESTER (5 TERBARU) =================
         $semesterKasus = Kasus::with([
@@ -48,7 +57,7 @@ class DashboardController extends Controller
         ])
         ->where('user_id', Auth::id())
         ->where('jenis_laporan', 'semester')
-        ->latest()
+        ->orderBy('created_at', 'asc')
         ->limit(5)
         ->get();
 
@@ -67,7 +76,7 @@ class DashboardController extends Controller
         ])
         ->where('user_id', Auth::id())
         ->where('jenis_laporan', 'signifikan')
-        ->latest()
+        ->orderBy('created_at', 'asc')
         ->limit(5)
         ->get();
 
@@ -82,8 +91,8 @@ class DashboardController extends Controller
         return view('dashboard', compact(
             'totalKasus',
             'totalKerugian',
-            'open',
-            'closed',
+            'totalPelaku',
+            'statusCounts',
             'semesterKasus',
             'signifikanKasus'
         ));

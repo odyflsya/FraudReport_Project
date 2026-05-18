@@ -25,6 +25,7 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Models\RefJabatan;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -110,8 +111,8 @@ class KasusController extends Controller
             return $q->where('jenis_laporan', $jenis_laporan);
         });
 
-        // Pagination
-        $kasus = $query->latest()->paginate(10)->withQueryString();
+        // Pagination (urutkan dari kasus pertama yang dibuat ke yang paling baru)
+        $kasus = $query->orderBy('created_at', 'asc')->paginate(10)->withQueryString();
 
         // Data untuk filter dropdown
         $jenisFraudOptions = RefJenisFraud::orderBy('nama')->get();
@@ -188,7 +189,7 @@ class KasusController extends Controller
             return $q->where('jenis_laporan', $jenis_laporan);
         });
 
-        return $query;
+        return $query->orderBy('created_at', 'asc');
     }
 
     // ================= CREATE =================
@@ -208,6 +209,23 @@ class KasusController extends Controller
             'jabatanKejadian' => RefJabatan::all(),
             'jabatanSemua' => RefJabatan::all(),
         ]);
+    }
+
+    // Helper function untuk konversi nilai numerik dari form
+    private function parseNumericField($value)
+    {
+        if (is_null($value)) {
+            return null;
+        }
+
+        $value = trim((string) $value);
+        if ($value === '') {
+            return null;
+        }
+
+        // Remove formatting characters
+        $value = str_replace(['Rp', '.', ',', ' '], '', $value);
+        return is_numeric($value) ? (int) $value : null;
     }
 
     // ================= STORE =================
@@ -317,18 +335,23 @@ class KasusController extends Controller
             ]);
 
             // ================= KERUGIAN =================
-            KerugianFraud::create([
-                'kasus_id' => $kasus->id,
-                'ljk_rill' => $request->jenis_laporan === 'signifikan' ? 0 : $request->ljk_rill,
-                'ljk_potensial' => $request->ljk_potensial,
-                'ljk_recovery' => $request->jenis_laporan === 'signifikan' ? 0 : $request->ljk_recovery,
-                'konsumen_rill' => $request->jenis_laporan === 'signifikan' ? 0 : $request->konsumen_rill,
-                'konsumen_potensial' => $request->konsumen_potensial,
-                'konsumen_recovery' => $request->jenis_laporan === 'signifikan' ? 0 : $request->konsumen_recovery,
-                'pihak_lain_rill' => $request->jenis_laporan === 'signifikan' ? 0 : $request->pihak_lain_rill,
-                'pihak_lain_potensial' => $request->pihak_lain_potensial,
-                'pihak_lain_recovery' => $request->jenis_laporan === 'signifikan' ? 0 : $request->pihak_lain_recovery,
-            ]);
+// ================= KERUGIAN =================
+KerugianFraud::create([
+    'kasus_id' => $kasus->id,
+    
+    // Ganti semua angka 0 menjadi null
+    'ljk_rill' => $request->jenis_laporan === 'signifikan' ? null : $this->parseNumericField($request->ljk_rill),
+    'ljk_potensial' => $this->parseNumericField($request->ljk_potensial),
+    'ljk_recovery' => $request->jenis_laporan === 'signifikan' ? null : $this->parseNumericField($request->ljk_recovery),
+    
+    'konsumen_rill' => $request->jenis_laporan === 'signifikan' ? null : $this->parseNumericField($request->konsumen_rill),
+    'konsumen_potensial' => $this->parseNumericField($request->konsumen_potensial),
+    'konsumen_recovery' => $request->jenis_laporan === 'signifikan' ? null : $this->parseNumericField($request->konsumen_recovery),
+    
+    'pihak_lain_rill' => $request->jenis_laporan === 'signifikan' ? null : $this->parseNumericField($request->pihak_lain_rill),
+    'pihak_lain_potensial' => $this->parseNumericField($request->pihak_lain_potensial),
+    'pihak_lain_recovery' => $request->jenis_laporan === 'signifikan' ? null : $this->parseNumericField($request->pihak_lain_recovery),
+]);
 
             // ================= PELAKU =================
             if ($request->pelaku_fraud) {
@@ -414,6 +437,7 @@ class KasusController extends Controller
             'jabatanSemua' => RefJabatan::all(),
         ]);
     }
+
 
     // ================= UPDATE =================
     public function update(Request $request, $id)
@@ -526,33 +550,28 @@ class KasusController extends Controller
                 ]);
             }
 
-            // ================= KERUGIAN =================
-            if ($kasus->kerugianFraud) {
-                $kasus->kerugianFraud->update([
-                    'ljk_rill' => $request->jenis_laporan === 'signifikan' ? 0 : $request->ljk_rill,
-                    'ljk_potensial' => $request->ljk_potensial,
-                    'ljk_recovery' => $request->jenis_laporan === 'signifikan' ? 0 : $request->ljk_recovery,
-                    'konsumen_rill' => $request->jenis_laporan === 'signifikan' ? 0 : $request->konsumen_rill,
-                    'konsumen_potensial' => $request->konsumen_potensial,
-                    'konsumen_recovery' => $request->jenis_laporan === 'signifikan' ? 0 : $request->konsumen_recovery,
-                    'pihak_lain_rill' => $request->jenis_laporan === 'signifikan' ? 0 : $request->pihak_lain_rill,
-                    'pihak_lain_potensial' => $request->pihak_lain_potensial,
-                    'pihak_lain_recovery' => $request->jenis_laporan === 'signifikan' ? 0 : $request->pihak_lain_recovery,
-                ]);
-            } else {
-                KerugianFraud::create([
-                    'kasus_id' => $kasus->id,
-                    'ljk_rill' => $request->jenis_laporan === 'signifikan' ? 0 : $request->ljk_rill,
-                    'ljk_potensial' => $request->ljk_potensial,
-                    'ljk_recovery' => $request->jenis_laporan === 'signifikan' ? 0 : $request->ljk_recovery,
-                    'konsumen_rill' => $request->jenis_laporan === 'signifikan' ? 0 : $request->konsumen_rill,
-                    'konsumen_potensial' => $request->konsumen_potensial,
-                    'konsumen_recovery' => $request->jenis_laporan === 'signifikan' ? 0 : $request->konsumen_recovery,
-                    'pihak_lain_rill' => $request->jenis_laporan === 'signifikan' ? 0 : $request->pihak_lain_rill,
-                    'pihak_lain_potensial' => $request->pihak_lain_potensial,
-                    'pihak_lain_recovery' => $request->jenis_laporan === 'signifikan' ? 0 : $request->pihak_lain_recovery,
-                ]);
-            }
+// ================= KERUGIAN =================
+$kerugianData = [
+    'ljk_rill' => $request->jenis_laporan === 'signifikan' ? null : $this->parseNumericField($request->ljk_rill),
+    'ljk_potensial' => $this->parseNumericField($request->ljk_potensial),
+    'ljk_recovery' => $request->jenis_laporan === 'signifikan' ? null : $this->parseNumericField($request->ljk_recovery),
+    
+    'konsumen_rill' => $request->jenis_laporan === 'signifikan' ? null : $this->parseNumericField($request->konsumen_rill),
+    'konsumen_potensial' => $this->parseNumericField($request->konsumen_potensial),
+    'konsumen_recovery' => $request->jenis_laporan === 'signifikan' ? null : $this->parseNumericField($request->konsumen_recovery),
+    
+    'pihak_lain_rill' => $request->jenis_laporan === 'signifikan' ? null : $this->parseNumericField($request->pihak_lain_rill),
+    'pihak_lain_potensial' => $this->parseNumericField($request->pihak_lain_potensial),
+    'pihak_lain_recovery' => $request->jenis_laporan === 'signifikan' ? null : $this->parseNumericField($request->pihak_lain_recovery),
+];
+
+if ($kasus->kerugianFraud) {
+    $kasus->kerugianFraud->update($kerugianData);
+} else {
+    // Tambahkan kasus_id jika membuat data baru
+    $kerugianData['kasus_id'] = $kasus->id;
+    KerugianFraud::create($kerugianData);
+}
 
             // ================= PENCEGAHAN =================
             if ($request->jenis_laporan === 'signifikan') {
@@ -618,6 +637,7 @@ class KasusController extends Controller
         }
     }
 
+
     // ================= EXPORT =================
     public function export(Request $request)
     {
@@ -673,12 +693,14 @@ class KasusController extends Controller
 
         // Semester Sheet
         $sheet1 = $spreadsheet->getActiveSheet();
-        $sheet1->setTitle('Semester');
+        $sheet1->setTitle('01A');
         $this->createSemesterHeaders($sheet1);
+        $this->setSheetTitle($sheet1, '01A - Laporan Penerapan SAF yang mencakup informasi kejadian fraud dan informasi pelaku fraud', 'AW');
         $this->styleSemesterHeaders($sheet1);
+        $this->setSemesterColumnWidths($sheet1);
 
-        // Set data for Semester starting at row 4
-        $row = 4;
+        // Set data for Semester starting at row 6 (01A template has a blank row after header)
+        $row = 6;
         foreach ($semesterData['data'] as $dataRow) {
             $colIndex = 1;
             foreach ($dataRow as $value) {
@@ -690,12 +712,14 @@ class KasusController extends Controller
 
         // Signifikan Sheet
         $sheet2 = $spreadsheet->createSheet();
-        $sheet2->setTitle('Signifikan');
+        $sheet2->setTitle('01B');
         $this->createSignifikanHeaders($sheet2);
+        $this->setSheetTitle($sheet2, '01B - Laporan Penerapan SAF berdampak signifikan yang mencakup informasi kejadian fraud dan informasi pelaku fraud berdampak signifikan', 'AH');
         $this->styleSignifikanHeaders($sheet2);
+        $this->setSignifikanColumnWidths($sheet2);
 
-        // Set data for Signifikan starting at row 4
-        $row = 4;
+        // Set data for Signifikan starting at row 6
+        $row = 6;
         foreach ($signifikanData['data'] as $dataRow) {
             $colIndex = 1;
             foreach ($dataRow as $value) {
@@ -705,16 +729,35 @@ class KasusController extends Controller
             $row++;
         }
 
-        // Auto size columns for all sheets and wrap text on data rows
+        // Format numeric kerugian values in exported Excel (comma separator, no decimals)
+        $semesterLastRow = $sheet1->getHighestRow();
+        if ($semesterLastRow >= 6) {
+            $sheet1->getStyle('P6:X' . $semesterLastRow)
+                ->getNumberFormat()
+                ->setFormatCode('#,##0');
+        }
+
+        $signifikanLastRow = $sheet2->getHighestRow();
+        if ($signifikanLastRow >= 6) {
+            $sheet2->getStyle('M6:M' . $signifikanLastRow)
+                ->getNumberFormat()
+                ->setFormatCode('#,##0');
+        }
+
+        // Keep vertical top alignment on data rows and wrap text so rows grow with content.
         foreach ($spreadsheet->getAllSheets() as $sheet) {
             $lastRow = $sheet->getHighestRow();
-            for ($col = 1; $col <= max(count($semesterData['headers']), count($signifikanData['headers'])); $col++) {
-                $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($col))->setAutoSize(true);
-            }
-            $sheet->getStyle('A4:' . Coordinate::stringFromColumnIndex(max(count($semesterData['headers']), count($signifikanData['headers']))) . $lastRow)
+            $lastColumn = $sheet->getHighestColumn();
+
+            $sheet->getStyle('A6:' . $lastColumn . $lastRow)
                 ->getAlignment()
                 ->setWrapText(true)
-                ->setVertical(Alignment::VERTICAL_TOP);
+                ->setVertical(Alignment::VERTICAL_TOP)
+                ->setHorizontal(Alignment::HORIZONTAL_LEFT);
+
+            for ($i = 6; $i <= $lastRow; $i++) {
+                $sheet->getRowDimension($i)->setRowHeight(-1);
+            }
         }
 
         // Download
@@ -727,210 +770,268 @@ class KasusController extends Controller
     }
 
 
-    private function createSemesterHeaders($sheet)
-    {
-        $sheet->setCellValue('A1', 'No');
-        $sheet->setCellValue('B1', 'Kode Komponen');
-        $sheet->setCellValue('C1', 'Kejadian Fraud Menurut Pelaku');
-        $sheet->setCellValue('D1', 'ID Kejadian Fraud');
-        $sheet->setCellValue('E1', 'Jenis Fraud');
-        $sheet->setCellValue('H1', 'Deskripsi Fraud / Modus Operandi');
-        $sheet->setCellValue('I1', 'Lokasi Fraud');
-        $sheet->setCellValue('K1', 'Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud');
-        $sheet->setCellValue('L1', 'Pihak Yang Dirugikan');
-        $sheet->setCellValue('M1', 'Waktu');
-        $sheet->setCellValue('P1', 'Jumlah Kerugian');
-        $sheet->setCellValue('Y1', 'Kelemahan Penyebab Fraud');
-        $sheet->setCellValue('AA1', 'Tindakan untuk Penanganan Fraud');
-        $sheet->setCellValue('AC1', 'Tindakan Perbaikan untuk Pencegahan Fraud');
-        $sheet->setCellValue('AG1', 'Pelaku Fraud');
-        $sheet->setCellValue('AW1', 'Status Penanganan');
+ private function createSemesterHeaders($sheet)
+{
+    // --- ROW 2: Primary Headings ---
+    $sheet->setCellValue('A2', 'No');
+    $sheet->setCellValue('B2', 'Kode Komponen');
+    $sheet->setCellValue('C2', 'Kejadian Fraud Menurut Pelaku');
+    $sheet->setCellValue('D2', 'ID Kejadian Fraud');
+    $sheet->setCellValue('E2', 'Jenis Fraud');
+    $sheet->setCellValue('G2', 'Aktivitas Terkait Fraud');
+    $sheet->setCellValue('H2', 'Deskripsi Fraud / Modus Operandi');
+    $sheet->setCellValue('I2', 'Lokasi Fraud');
+    $sheet->setCellValue('K2', 'Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud');
+    $sheet->setCellValue('L2', 'Pihak Yang Dirugikan');
+    $sheet->setCellValue('M2', 'Waktu');
+    $sheet->setCellValue('P2', 'Jumlah Kerugian');
+    $sheet->setCellValue('Y2', 'Kelemahan Penyebab Fraud');
+    $sheet->setCellValue('AA2', 'Tindakan untuk Penanganan Fraud');
+    $sheet->setCellValue('AC2', 'Tindakan Perbaikan untuk Pencegahan Fraud');
 
-        // Row 2 - Sub categories
-        $sheet->setCellValue('E2', 'Jenis Fraud');
-        $sheet->setCellValue('F2', 'Keterangan Jenis Fraud');
-        $sheet->setCellValue('G1', 'Aktivitas Terkait Fraud');
-        $sheet->setCellValue('I2', 'Lokasi Fraud');
-        $sheet->setCellValue('J2', 'Keterangan Lokasi Fraud');
-        $sheet->setCellValue('M2', 'Waktu Terjadi');
-        $sheet->setCellValue('O2', 'Fraud Diketahui');
-        $sheet->setCellValue('P2', 'LJK');
-        $sheet->setCellValue('S2', 'Konsumen');
-        $sheet->setCellValue('V2', 'Pihak Lain');
-        $sheet->setCellValue('Y2', 'Kelemahan Penyebab Fraud');
-        $sheet->setCellValue('Z2', 'Keterangan');
-        $sheet->setCellValue('AA2', 'Tindakan untuk Penanganan Fraud');
-        $sheet->setCellValue('AB2', 'Keterangan');
-        $sheet->setCellValue('AC2', 'Tindakan Perbaikan untuk Pencegahan Fraud');
-        $sheet->setCellValue('AD2', 'Keterangan');
-        $sheet->setCellValue('AE2', 'Target Waktu Pelaksanaan');
-        $sheet->setCellValue('AF2', 'Realisasi Pelaksanaan');
-        $sheet->setCellValue('AG2', 'Internal/Eksternal');
-        $sheet->setCellValue('AH2', 'Identitas Pelaku');
-        $sheet->setCellValue('AP2', 'Jabatan Pelaku');
-        $sheet->setCellValue('AT2', 'Keterangan Pelaku');
-        $sheet->setCellValue('AU2', 'Status Pelaku');
-        $sheet->setCellValue('AV2', 'Pengenaan Sanksi');
+    // Pelaku Fraud sekarang membawahi AG sampai AV
+    $sheet->setCellValue('AG2', 'Pelaku Fraud'); 
+    
+    // Status Penanganan tetap di pojok kanan dari Baris 2
+    $sheet->setCellValue('AW2', 'Status Penanganan');
 
-        // Row 3 - Final headers
-        $sheet->setCellValue('M3', 'Awal');
-        $sheet->setCellValue('N3', 'Akhir');
-        $sheet->setCellValue('P3', 'Riil (incurred)');
-        $sheet->setCellValue('Q3', 'Potensial (Potential)');
-        $sheet->setCellValue('R3', 'Setelah Pengembalian (Recovery)');
-        $sheet->setCellValue('S3', 'Riil (incurred)');
-        $sheet->setCellValue('T3', 'Potensial (Potential)');
-        $sheet->setCellValue('U3', 'Setelah Pengembalian (Recovery)');
-        $sheet->setCellValue('V3', 'Riil (incurred)');
-        $sheet->setCellValue('W3', 'Potensial (Potential)');
-        $sheet->setCellValue('X3', 'Setelah Pengembalian (Recovery)');
-        $sheet->setCellValue('AH3', 'Nama');
-        $sheet->setCellValue('AI3', 'Jenis Identitas');
-        $sheet->setCellValue('AJ3', 'Nomor Identitas');
-        $sheet->setCellValue('AK3', 'Jenis Kelamin');
-        $sheet->setCellValue('AL3', 'Tempat Lahir');
-        $sheet->setCellValue('AM3', 'Tanggal Lahir');
-        $sheet->setCellValue('AN3', 'Alamat Identitas');
-        $sheet->setCellValue('AO3', 'Alamat Domisili');
-        $sheet->setCellValue('AP3', 'Pada Saat Fraud Terjadi');
-        $sheet->setCellValue('AQ3', 'Keterangan');
-        $sheet->setCellValue('AR3', 'Pada Saat Fraud Diketahui');
-        $sheet->setCellValue('AS3', 'Keterangan');
+    // --- ROW 3: Secondary Headings (Semua Sejajar) ---
+    $sheet->setCellValue('E3', 'Jenis Fraud');
+    $sheet->setCellValue('F3', 'Keterangan Jenis Fraud');
+    $sheet->setCellValue('I3', 'Lokasi Fraud');
+    $sheet->setCellValue('J3', 'Keterangan Lokasi Fraud');
+    $sheet->setCellValue('M3', 'Waktu Terjadi');
+    $sheet->setCellValue('O3', 'Fraud Diketahui');
+    $sheet->setCellValue('P3', 'LJK');
+    $sheet->setCellValue('S3', 'Konsumen');
+    $sheet->setCellValue('V3', 'Pihak Lain');
+    $sheet->setCellValue('Y3', 'Kelemahan Penyebab Fraud');
+    $sheet->setCellValue('Z3', 'Keterangan');
+    $sheet->setCellValue('AA3', 'Tindakan untuk Penanganan Fraud');
+    $sheet->setCellValue('AB3', 'Keterangan');
+    $sheet->setCellValue('AC3', 'Tindakan Perbaikan untuk Pencegahan Fraud');
+    $sheet->setCellValue('AD3', 'Keterangan');
+    $sheet->setCellValue('AE3', 'Target Waktu Pelaksanaan');
+    $sheet->setCellValue('AF3', 'Realisasi Pelaksanaan');
+    
+    // BAGIAN PELAKU (BARIS 3 SEJAJAR)
+    $sheet->setCellValue('AG3', 'Internal / Eksternal');
+    $sheet->setCellValue('AH3', 'Identitas Pelaku'); 
+    $sheet->setCellValue('AP3', 'Status Pelaku'); // Status Pelaku
+    $sheet->setCellValue('AQ3', 'Jabatan Pelaku'); // Sejajar Identitas
+    $sheet->setCellValue('AU3', 'Keterangan Pelaku'); // SEJAJAR Status Pelaku (Permintaan Anda)
+    $sheet->setCellValue('AV3', 'Pengenaan Sanksi'); // SEJAJAR Status Pelaku (Permintaan Anda)
 
-        // Merge cells for colspan/rowspan
-        $sheet->mergeCells('E1:F1'); // Jenis Fraud
-        $sheet->mergeCells('I1:J1'); // Lokasi Fraud
-        $sheet->mergeCells('M1:O1'); // Waktu
-        $sheet->mergeCells('P1:X1'); // Jumlah Kerugian
-        $sheet->mergeCells('Y1:Z1'); // Kelemahan Penyebab Fraud
-        $sheet->mergeCells('AA1:AB1'); // Tindakan untuk Penanganan Fraud
-        $sheet->mergeCells('AC1:AF1'); // Tindakan Perbaikan untuk Pencegahan Fraud
-        $sheet->mergeCells('AG1:AV1'); // Pelaku Fraud
+    // --- ROW 4: Final Detail Headings (Semua Sejajar) ---
+    $sheet->setCellValue('M4', 'Awal');
+    $sheet->setCellValue('N4', 'Akhir');
+    $sheet->setCellValue('P4', 'Riil (incurred)');
+    $sheet->setCellValue('Q4', 'Potensial (Potential)');
+    $sheet->setCellValue('R4', 'Setelah Pengembalian (Recovery)');
+    $sheet->setCellValue('S4', 'Riil (incurred)');
+    $sheet->setCellValue('T4', 'Potensial (Potential)');
+    $sheet->setCellValue('U4', 'Setelah Pengembalian (Recovery)');
+    $sheet->setCellValue('V4', 'Riil (incurred)');
+    $sheet->setCellValue('W4', 'Potensial (Potential)');
+    $sheet->setCellValue('X4', 'Setelah Pengembalian (Recovery)');
 
-        $sheet->mergeCells('A1:A3'); // No
-        $sheet->mergeCells('B1:B3'); // Kode Komponen
-        $sheet->mergeCells('C1:C3'); // Kejadian Fraud Menurut Pelaku
-        $sheet->mergeCells('D1:D3'); // ID Kejadian Fraud
-        $sheet->mergeCells('G1:G3'); // Aktivitas Terkait Fraud
-        $sheet->mergeCells('H1:H3'); // Deskripsi Fraud / Modus Operandi
-        $sheet->mergeCells('K1:K3'); // Divisi atau Unit Kerja...
-        $sheet->mergeCells('L1:L3'); // Pihak Yang Dirugikan
-        $sheet->mergeCells('AW1:AW3'); // Status Penanganan
+    // Detail Identitas
+    $sheet->setCellValue('AH4', 'Nama');
+    $sheet->setCellValue('AI4', 'Jenis Identitas');
+    $sheet->setCellValue('AJ4', 'Nomor Identitas');
+    $sheet->setCellValue('AK4', 'Jenis Kelamin');
+    $sheet->setCellValue('AL4', 'Alamat Identitas');
+    $sheet->setCellValue('AM4', 'Alamat Domisili');
+    $sheet->setCellValue('AN4', 'Tempat Lahir');
+    $sheet->setCellValue('AO4', 'Tanggal Lahir');
 
-        $sheet->mergeCells('M2:N2'); // Waktu Terjadi
-        $sheet->mergeCells('P2:R2'); // LJK
-        $sheet->mergeCells('S2:U2'); // Konsumen
-        $sheet->mergeCells('V2:X2'); // Pihak Lain
-        $sheet->mergeCells('AH2:AO2'); // Identitas Pelaku
-        $sheet->mergeCells('AP2:AS2'); // Jabatan Pelaku
-    }
+    // Detail Jabatan (Sejajar Tanggal Lahir)
+    $sheet->setCellValue('AQ4', 'Pada Saat Fraud Terjadi');
+    $sheet->setCellValue('AR4', 'Keterangan Jabatan');
+    $sheet->setCellValue('AS4', 'Pada Saat Fraud Diketahui');
+    $sheet->setCellValue('AT4', 'Keterangan Jabatan');
+
+    // --- MERGING CELLS ---
+    
+    // Kolom-kolom standar (A-AF)
+    $sheet->mergeCells('A2:A4'); $sheet->mergeCells('B2:B4');
+    $sheet->mergeCells('C2:C4'); $sheet->mergeCells('D2:D4');
+    $sheet->mergeCells('E2:F2'); $sheet->mergeCells('E3:E4'); $sheet->mergeCells('F3:F4');
+    $sheet->mergeCells('G2:G4'); $sheet->mergeCells('H2:H4');
+    $sheet->mergeCells('I2:J2'); $sheet->mergeCells('I3:I4'); $sheet->mergeCells('J3:J4');
+    $sheet->mergeCells('K2:K4'); $sheet->mergeCells('L2:L4');
+    $sheet->mergeCells('M2:O2'); $sheet->mergeCells('M3:N3'); $sheet->mergeCells('O3:O4');
+    $sheet->mergeCells('P2:X2'); $sheet->mergeCells('P3:R3'); $sheet->mergeCells('S3:U3'); $sheet->mergeCells('V3:X3');
+    $sheet->mergeCells('Y2:Z2'); $sheet->mergeCells('Y3:Y4'); $sheet->mergeCells('Z3:Z4');
+    $sheet->mergeCells('AA2:AB2'); $sheet->mergeCells('AA3:AA4'); $sheet->mergeCells('AB3:AB4');
+    $sheet->mergeCells('AC2:AF2'); $sheet->mergeCells('AC3:AC4'); $sheet->mergeCells('AD3:AD4'); $sheet->mergeCells('AE3:AE4'); $sheet->mergeCells('AF3:AF4');
+
+    // STRUKTUR PELAKU FRAUD (AG - AV)
+    $sheet->mergeCells('AG2:AV2'); // Header besar memayungi sampai Sanksi
+    $sheet->mergeCells('AG3:AG4'); // Internal/Eksternal vertikal
+    $sheet->mergeCells('AH3:AO3'); // Identitas Pelaku Group
+    $sheet->mergeCells('AP3:AP4'); // Status Pelaku vertikal
+    $sheet->mergeCells('AQ3:AT3'); // Jabatan Pelaku Group
+    $sheet->mergeCells('AU3:AU4'); // Keterangan Pelaku vertikal (Sejajar Status)
+    $sheet->mergeCells('AV3:AV4'); // Pengenaan Sanksi vertikal (Sejajar Status)
+
+    // KOLOM STATUS PENANGANAN (Paling Kanan)
+    $sheet->mergeCells('AW2:AW4');
+}
 
     private function createSignifikanHeaders($sheet)
-    {
-        // Row 1 - Main categories
-        $sheet->setCellValue('A1', 'No');
-        $sheet->setCellValue('B1', 'Kode Komponen');
-        $sheet->setCellValue('C1', 'Kejadian Fraud Menurut Pelaku');
-        $sheet->setCellValue('D1', 'ID Kejadian Fraud');
-        $sheet->setCellValue('E1', 'Jenis Fraud');
-        $sheet->setCellValue('G1', 'Aktivitas Terkait Fraud');
-        $sheet->setCellValue('H1', 'Deskripsi Fraud / Modus Operandi');
-        $sheet->setCellValue('I1', 'Lokasi Fraud');
-        $sheet->setCellValue('K1', 'Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud');
-        $sheet->setCellValue('L1', 'Pihak Yang Dirugikan');
-        $sheet->setCellValue('M1', 'Jumlah Kerugian Potensial');
-        $sheet->setCellValue('N1', 'Tindak Lanjut LJK');
-        $sheet->setCellValue('O1', 'Waktu');
-        $sheet->setCellValue('R1', 'Pelaku Fraud');
-        $sheet->setCellValue('AH1', 'Status Penanganan');
+{
+    // --- ROW 2: Primary Headings ---
+    $sheet->setCellValue('A2', 'No');
+    $sheet->setCellValue('B2', 'Kode Komponen');
+    $sheet->setCellValue('C2', 'Kejadian Fraud Menurut Pelaku');
+    $sheet->setCellValue('D2', 'ID Kejadian Fraud');
+    $sheet->setCellValue('E2', 'Jenis Fraud');
+    $sheet->setCellValue('G2', 'Aktivitas Terkait Fraud');
+    $sheet->setCellValue('H2', 'Deskripsi Fraud / Modus Operandi');
+    $sheet->setCellValue('I2', 'Lokasi Fraud');
+    $sheet->setCellValue('K2', 'Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud');
+    $sheet->setCellValue('L2', 'Pihak Yang Dirugikan');
+    $sheet->setCellValue('M2', 'Jumlah Kerugian Potensial');
+    $sheet->setCellValue('N2', 'Tindak Lanjut LJK');
+    $sheet->setCellValue('O2', 'Waktu');
+    $sheet->setCellValue('R2', 'Pelaku Fraud');
+    $sheet->setCellValue('AH2', 'Status Penanganan');
 
-        // Row 2 - Sub categories
-        $sheet->setCellValue('E2', 'Jenis Fraud');
-        $sheet->setCellValue('F2', 'Keterangan Jenis Fraud');
-        $sheet->setCellValue('I2', 'Lokasi Fraud');
-        $sheet->setCellValue('J2', 'Keterangan Lokasi Fraud');
-        $sheet->setCellValue('O2', 'Waktu Terjadi');
-        $sheet->setCellValue('Q2', 'Fraud Diketahui');
-        $sheet->setCellValue('R2', 'Internal/Eksternal');
-        $sheet->setCellValue('S2', 'Identitas Pelaku');
-        $sheet->setCellValue('AA2', 'Jabatan Pelaku');
-        $sheet->setCellValue('AE2', 'Keterangan Pelaku');
-        $sheet->setCellValue('AF2', 'Status Pelaku');
-        $sheet->setCellValue('AG2', 'Pengenaan Sanksi');
+    // --- ROW 3: Secondary Headings ---
+    $sheet->setCellValue('E3', 'Jenis Fraud');
+    $sheet->setCellValue('F3', 'Keterangan Jenis Fraud');
+    $sheet->setCellValue('I3', 'Lokasi Fraud');
+    $sheet->setCellValue('J3', 'Keterangan Lokasi Fraud');
+    $sheet->setCellValue('O3', 'Waktu Terjadi');
+    $sheet->setCellValue('Q3', 'Fraud Diketahui');
+    $sheet->setCellValue('R3', 'Internal / Eksternal');
+    $sheet->setCellValue('S3', 'Nama');
+    $sheet->setCellValue('T3', 'Jenis Identitas');
+    $sheet->setCellValue('U3', 'Nomor Identitas');
+    $sheet->setCellValue('V3', 'Jenis Kelamin');
+    $sheet->setCellValue('W3', 'Tempat Lahir');
+    $sheet->setCellValue('X3', 'Tanggal Lahir');
+    $sheet->setCellValue('Y3', 'Alamat Identitas');
+    $sheet->setCellValue('Z3', 'Alamat Domisili');
+    $sheet->setCellValue('AA3', 'Status Pelaku');
+    $sheet->setCellValue('AB3', 'Jabatan Pelaku');
+    $sheet->setCellValue('AF3', 'Keterangan Pelaku');
+    $sheet->setCellValue('AG3', 'Pengenaan Sanksi');
+    $sheet->setCellValue('AH3', 'Status Penanganan');
 
-        // Row 3 - Final headers
-        $sheet->setCellValue('O3', 'Awal');
-        $sheet->setCellValue('P3', 'Akhir');
-        $sheet->setCellValue('S3', 'Nama');
-        $sheet->setCellValue('T3', 'Jenis Identitas');
-        $sheet->setCellValue('U3', 'Nomor Identitas');
-        $sheet->setCellValue('V3', 'Jenis Kelamin');
-        $sheet->setCellValue('W3', 'Tempat Lahir');
-        $sheet->setCellValue('X3', 'Tanggal Lahir');
-        $sheet->setCellValue('Y3', 'Alamat Identitas');
-        $sheet->setCellValue('Z3', 'Alamat Domisili');
-        $sheet->setCellValue('AA3', 'Pada Saat Fraud Terjadi');
-        $sheet->setCellValue('AB3', 'Keterangan');
-        $sheet->setCellValue('AC3', 'Pada Saat Fraud Diketahui');
-        $sheet->setCellValue('AD3', 'Keterangan');
+    // --- ROW 4: Detail Headings ---
+    $sheet->setCellValue('O4', 'Awal');
+    $sheet->setCellValue('P4', 'Akhir');
+    $sheet->setCellValue('AB4', 'Pada Saat Fraud Terjadi');
+    $sheet->setCellValue('AC4', 'Keterangan Jabatan');
+    $sheet->setCellValue('AD4', 'Pada Saat Fraud Diketahui');
+    $sheet->setCellValue('AE4', 'Keterangan Jabatan');
 
-        // Merge cells for colspan/rowspan
-        $sheet->mergeCells('E1:F1'); // Jenis Fraud
-        $sheet->mergeCells('I1:J1'); // Lokasi Fraud
-        $sheet->mergeCells('O1:Q1'); // Waktu
-        $sheet->mergeCells('R1:AG1'); // Pelaku Fraud
-
-        $sheet->mergeCells('A1:A3'); // No
-        $sheet->mergeCells('B1:B3'); // Kode Komponen
-        $sheet->mergeCells('C1:C3'); // Kejadian Fraud Menurut Pelaku
-        $sheet->mergeCells('D1:D3'); // ID Kejadian Fraud
-        $sheet->mergeCells('G1:G3'); // Aktivitas Terkait Fraud
-        $sheet->mergeCells('H1:H3'); // Deskripsi Fraud / Modus Operandi
-        $sheet->mergeCells('K1:K3'); // Divisi atau Unit Kerja...
-        $sheet->mergeCells('L1:L3'); // Pihak Yang Dirugikan
-        $sheet->mergeCells('M1:M3'); // Jumlah Kerugian Potensial
-        $sheet->mergeCells('N1:N3'); // Tindak Lanjut LJK
-        $sheet->mergeCells('AH1:AH3'); // Status Penanganan
-
-        $sheet->mergeCells('O2:P2'); // Waktu Terjadi
-        $sheet->mergeCells('S2:Z2'); // Identitas Pelaku
-        $sheet->mergeCells('AA2:AD2'); // Jabatan Pelaku
-    }
+    // --- MERGE CELLS ---
+    $sheet->mergeCells('A2:A4');
+    $sheet->mergeCells('B2:B4');
+    $sheet->mergeCells('C2:C4');
+    $sheet->mergeCells('D2:D4');
+    $sheet->mergeCells('E2:F2');
+    $sheet->mergeCells('E3:E4');
+    $sheet->mergeCells('F3:F4');
+    $sheet->mergeCells('G2:G4');
+    $sheet->mergeCells('H2:H4');
+    $sheet->mergeCells('I2:J2');
+    $sheet->mergeCells('I3:I4');
+    $sheet->mergeCells('J3:J4');
+    $sheet->mergeCells('K2:K4');
+    $sheet->mergeCells('L2:L4');
+    $sheet->mergeCells('M2:M4');
+    $sheet->mergeCells('N2:N4');
+    $sheet->mergeCells('O2:Q2');
+    $sheet->mergeCells('O3:P3');
+    $sheet->mergeCells('Q3:Q4');
+    $sheet->mergeCells('R2:AG2');
+    $sheet->mergeCells('R3:R4');
+    $sheet->mergeCells('S3:S4');
+    $sheet->mergeCells('T3:T4');
+    $sheet->mergeCells('U3:U4');
+    $sheet->mergeCells('V3:V4');
+    $sheet->mergeCells('W3:W4');
+    $sheet->mergeCells('X3:X4');
+    $sheet->mergeCells('Y3:Y4');
+    $sheet->mergeCells('Z3:Z4');
+    $sheet->mergeCells('AA3:AA4');
+    $sheet->mergeCells('AB3:AE3');
+    $sheet->mergeCells('AF3:AF4');
+    $sheet->mergeCells('AG3:AG4');
+    $sheet->mergeCells('AH2:AH4');
+}
 
     private function styleSemesterHeaders($sheet)
-    {
-        // Style for all header rows
-        $headerStyle = [
-            'font' => [
-                'bold' => true,
-                'color' => ['rgb' => 'FFFFFF'],
+{
+    // Style untuk seluruh header (Baris 2 sampai 4)
+    $headerStyle = [
+        'font' => [
+            'bold' => true,
+            'color' => ['rgb' => 'FFFFFF'],
+        ],
+        'fill' => [
+            'fillType' => Fill::FILL_SOLID,
+            'startColor' => ['rgb' => 'FF0000'], 
+        ],
+        'alignment' => [
+            'horizontal' => Alignment::HORIZONTAL_CENTER,
+            'vertical' => Alignment::VERTICAL_CENTER,
+            'wrapText' => true,
+        ],
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
             ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['rgb' => 'DC2626'], // Red color like in the table
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER,
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                ],
-            ],
-        ];
+        ],
+    ];
 
-        $sheet->getStyle('A1:AW3')->applyFromArray($headerStyle);
+    // Terapkan style header hingga kolom AW
+    $sheet->getStyle('A2:AW4')->applyFromArray($headerStyle);
 
-        // Set row heights for better readability
-        $sheet->getRowDimension(1)->setRowHeight(30);
-        $sheet->getRowDimension(2)->setRowHeight(25);
-        $sheet->getRowDimension(3)->setRowHeight(25);
+    // Style untuk Baris Penomoran (Baris 5) - Diperluas hingga AW
+    $sheet->getStyle('A5:AW5')->applyFromArray([
+        'fill' => [
+            'fillType' => Fill::FILL_SOLID,
+            'startColor' => ['rgb' => 'BFBFBF'], // Abu-abu
+        ],
+        'alignment' => [
+            'horizontal' => Alignment::HORIZONTAL_CENTER,
+            'vertical' => Alignment::VERTICAL_CENTER,
+        ],
+        'borders' => [
+            'allBorders' => [
+                'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+            ],
+        ],
+    ]);
+    
+    // --- PENOMORAN KOLOM ---
+    // Kolom A (index 1) dibiarkan kosong sesuai permintaan
+    $sheet->setCellValue('A5', ''); 
+
+    // Perulangan dari kolom B (index 2) sampai AW (index 49)
+    // Penomoran dimulai dari angka 2
+    for ($col = 2; $col <= 49; $col++) {
+        $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
+        
+        // Menggunakan $col sebagai nilai karena ingin mulai dari 2 di kolom B
+        $sheet->setCellValue($colLetter . '5', (string)$col);
     }
+
+    // Set row heights agar proporsional
+    $sheet->getRowDimension(1)->setRowHeight(21);
+    $sheet->getRowDimension(2)->setRowHeight(15.6);
+    $sheet->getRowDimension(3)->setRowHeight(15.6);
+    $sheet->getRowDimension(4)->setRowHeight(46.8);
+    $sheet->getRowDimension(5)->setRowHeight(15);
+}
 
     private function styleSignifikanHeaders($sheet)
     {
-        // Style for all header rows
         $headerStyle = [
             'font' => [
                 'bold' => true,
@@ -938,7 +1039,25 @@ class KasusController extends Controller
             ],
             'fill' => [
                 'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['rgb' => 'DC2626'], // Red color like in the table
+                'startColor' => ['rgb' => 'FF0000'],
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
+                'wrapText' => true,
+            ],
+            'borders' => [
+                'allBorders' => [
+                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
+                ],
+            ],
+        ];
+
+        $sheet->getStyle('A2:AH4')->applyFromArray($headerStyle);
+        $sheet->getStyle('A5:AH5')->applyFromArray([
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => 'BFBFBF'],
             ],
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -949,14 +1068,138 @@ class KasusController extends Controller
                     'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
                 ],
             ],
+        ]);
+        
+        for ($col = 2; $col <= 34; $col++) {
+            $colLetter = Coordinate::stringFromColumnIndex($col);
+            $sheet->setCellValue($colLetter . '5', (string)$col);
+        }
+
+        $sheet->getRowDimension(1)->setRowHeight(21);
+        $sheet->getRowDimension(2)->setRowHeight(15.6);
+        $sheet->getRowDimension(3)->setRowHeight(15.6);
+        $sheet->getRowDimension(4)->setRowHeight(46.8);
+        $sheet->getRowDimension(5)->setRowHeight(15);
+    }
+
+    private function setSheetTitle($sheet, string $title, string $lastColumn)
+    {
+        $sheet->setCellValue('A1', $title);
+        $sheet->mergeCells(sprintf('A1:%s1', $lastColumn));
+        $sheet->getStyle(sprintf('A1:%s1', $lastColumn))->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'size' => 12,
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_LEFT,
+                'vertical' => Alignment::VERTICAL_CENTER,
+            ],
+        ]);
+    }
+
+    private function setSemesterColumnWidths($sheet)
+    {
+        $widths = [
+            'A' => 4.88671875,
+            'B' => 15.21875,
+            'C' => 48.77734375,
+            'D' => 24.5546875,
+            'E' => 36.21875,
+            'F' => 25.5546875,
+            'G' => 69,
+            'H' => 117.88671875,
+            'I' => 45.109375,
+            'J' => 33.6640625,
+            'K' => 39.88671875,
+            'L' => 15.44140625,
+            'M' => 11,
+            'N' => 11,
+            'O' => 21.88671875,
+            'P' => 14.21875,
+            'Q' => 15.44140625,
+            'R' => 18.109375,
+            'S' => 11.6640625,
+            'T' => 13.21875,
+            'U' => 18.109375,
+            'V' => 8.21875,
+            'W' => 13.21875,
+            'X' => 18.109375,
+            'Y' => 67.21875,
+            'Z' => 15.88671875,
+            'AA' => 47.21875,
+            'AB' => 15.88671875,
+            'AC' => 60.6640625,
+            'AD' => 116,
+            'AE' => 17.5546875,
+            'AF' => 19.5546875,
+            'AG' => 25.5546875,
+            'AH' => 22.109375,
+            'AI' => 39.33203125,
+            'AJ' => 20.5546875,
+            'AK' => 15.21875,
+            'AL' => 72.88671875,
+            'AM' => 72.88671875,
+            'AN' => 11.77734375,
+            'AO' => 10.6640625,
+            'AP' => 19.33203125,
+            'AQ' => 34.6640625,
+            'AR' => 48.21875,
+            'AS' => 34.6640625,
+            'AT' => 53.44140625,
+            'AU' => 21.5546875,
+            'AV' => 19.6640625,
+            'AW' => 24,
+            'AX' => 9.21875,
         ];
 
-        $sheet->getStyle('A1:AH3')->applyFromArray($headerStyle);
+        foreach ($widths as $column => $width) {
+            $sheet->getColumnDimension($column)->setWidth($width);
+        }
+    }
 
-        // Set row heights for better readability
-        $sheet->getRowDimension(1)->setRowHeight(30);
-        $sheet->getRowDimension(2)->setRowHeight(25);
-        $sheet->getRowDimension(3)->setRowHeight(25);
+    private function setSignifikanColumnWidths($sheet)
+    {
+        $widths = [
+            'A' => 4.88671875,
+            'B' => 15.21875,
+            'C' => 48.77734375,
+            'D' => 24.5546875,
+            'E' => 36.21875,
+            'F' => 25.5546875,
+            'G' => 69,
+            'H' => 117.88671875,
+            'I' => 45.109375,
+            'J' => 33.6640625,
+            'K' => 39.88671875,
+            'L' => 15.44140625,
+            'M' => 35,
+            'N' => 80,
+            'O' => 11,
+            'P' => 11,
+            'Q' => 21.88671875,
+            'R' => 25.5546875,
+            'S' => 22.109375,
+            'T' => 39.33203125,
+            'U' => 20.5546875,
+            'V' => 15.21875,
+            'W' => 11.77734375,
+            'X' => 10.6640625,
+            'Y' => 72.88671875,
+            'Z' => 72.88671875,
+            'AA' => 34.6640625,
+            'AB' => 34.6640625,
+            'AC' => 19.33203125,
+            'AD' => 48.21875,
+            'AE' => 21.5546875,
+            'AF' => 24,
+            'AG' => 24,
+            'AH' => 24,
+        ];
+
+        foreach ($widths as $column => $width) {
+            $sheet->getColumnDimension($column)->setWidth($width);
+        }
     }
 
     public function exportPdf(Request $request)
@@ -997,4 +1240,6 @@ class KasusController extends Controller
         $filename = 'laporan-kasus-fraud' . ($reportType ? '-' . $reportType : '') . '-' . now()->format('Ymd_His') . '.pdf';
         return $pdf->download($filename);
     }
+
+    
 }

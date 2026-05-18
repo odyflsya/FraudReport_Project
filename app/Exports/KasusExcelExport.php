@@ -13,6 +13,7 @@ use PhpOffice\PhpSpreadsheet\Style\Font;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 
+
 class KasusExcelExport implements WithMultipleSheets
 {
     protected array $semesterData;
@@ -28,11 +29,11 @@ class KasusExcelExport implements WithMultipleSheets
     {
         $sheets = [];
 
-        if (count($this->semesterData['data']) > 0) {
+        if (!empty($this->semesterData['data'])) {
             $sheets[] = new SemesterSheet($this->semesterData);
         }
 
-        if (count($this->signifikanData['data']) > 0) {
+        if (!empty($this->signifikanData['data'])) {
             $sheets[] = new SignifikanSheet($this->signifikanData);
         }
 
@@ -40,7 +41,11 @@ class KasusExcelExport implements WithMultipleSheets
     }
 }
 
-class SemesterSheet implements FromArray, WithHeadings, WithStyles, ShouldAutoSize, WithTitle
+/* =========================================================
+| SHEET 01A
+========================================================= */
+
+class SemesterSheet implements FromArray, WithEvents, WithTitle
 {
     protected array $data;
     protected array $headers;
@@ -51,86 +56,191 @@ class SemesterSheet implements FromArray, WithHeadings, WithStyles, ShouldAutoSi
         $this->headers = $semesterData['headers'];
     }
 
+    public function title(): string
+    {
+        return '01A';
+    }
+
     public function array(): array
     {
         return $this->data;
     }
 
-    public function headings(): array
+    public function registerEvents(): array
     {
-        return $this->headers;
-    }
+        return [
 
-    public function title(): string
-    {
-        return 'Laporan Semester';
-    }
+            AfterSheet::class => function (AfterSheet $event) {
 
-    public function styles($sheet)
-    {
-        // Style header row
-        $sheet->getStyle('1')->getFont()->setBold(true);
-        $sheet->getStyle('1')->getFont()->setSize(11);
-        $sheet->getStyle('1')->getFill()->setFillType(Fill::FILL_SOLID);
-        $sheet->getStyle('1')->getFill()->getStartColor()->setRGB('dc2626');
-        $sheet->getStyle('1')->getFont()->getColor()->setRGB('ffffff');
-        $sheet->getStyle('1')->getAlignment()->setWrapText(true);
-        $sheet->getStyle('1')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+                $sheet = $event->sheet->getDelegate();
+                $sheet->getDefaultStyle()
+                ->getAlignment()
+                ->setWrapText(true);
 
-        // Style all rows with wrap text and vertical alignment
-        for ($row = 1; $row <= count($this->data) + 1; $row++) {
-            $sheet->getStyle($row)->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
-            $sheet->getStyle($row)->getAlignment()->setWrapText(true);
-        }
+                /*
+                |--------------------------------------------------------------------------
+                | HEADER MANUAL
+                |--------------------------------------------------------------------------
+                */
 
-        return $sheet;
+                $column = 'A';
+
+                foreach ($this->headers as $header) {
+
+                    $sheet->mergeCells($column . '2:' . $column . '4');
+
+                    $sheet->setCellValue($column . '2', $header);
+
+                    $column++;
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | TOTAL ROW
+                |--------------------------------------------------------------------------
+                */
+
+                $lastColumn = $sheet->getHighestColumn();
+                $lastRow = count($this->data) + 4;
+
+                /*
+                |--------------------------------------------------------------------------
+                | HEADER STYLE
+                |--------------------------------------------------------------------------
+                */
+
+                $sheet->getStyle('A2:' . $lastColumn . '4')->applyFromArray([
+
+                    'font' => [
+                        'bold' => true,
+                        'size' => 11,
+                        'name' => 'Calibri',
+                        'color' => [
+                            'rgb' => 'FFFFFF'
+                        ]
+                    ],
+
+                    'alignment' => [
+                        'horizontal' => Alignment::HORIZONTAL_CENTER,
+                        'vertical' => Alignment::VERTICAL_CENTER,
+                        'wrapText' => true,
+                    ],
+
+                    'fill' => [
+                        'fillType' => Fill::FILL_SOLID,
+                        'startColor' => [
+                            'rgb' => 'FF0000'
+                        ]
+                    ],
+
+                    'borders' => [
+                        'allBorders' => [
+                            'borderStyle' => Border::BORDER_THIN,
+                            'color' => [
+                                'rgb' => '000000'
+                            ]
+                        ]
+                    ]
+                ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | DATA STYLE
+                |--------------------------------------------------------------------------
+                */
+
+                $sheet->getStyle('A5:' . $lastColumn . $lastRow)
+                    ->applyFromArray([
+
+                        'font' => [
+                            'name' => 'Calibri',
+                            'size' => 11,
+                        ],
+
+                        'alignment' => [
+                            'vertical' => Alignment::VERTICAL_TOP,
+                            'horizontal' => Alignment::HORIZONTAL_LEFT,
+                            'wrapText' => true,
+                        ],
+
+                        'borders' => [
+                            'allBorders' => [
+                                'borderStyle' => Border::BORDER_THIN,
+                                'color' => [
+                                    'rgb' => '000000'
+                                ]
+                            ]
+                        ]
+                    ]);
+
+                /*
+                |--------------------------------------------------------------------------
+                | AUTO HEIGHT ROW
+                |--------------------------------------------------------------------------
+                */
+
+                for ($i = 5; $i <= $lastRow; $i++) {
+
+                    $sheet->getRowDimension($i)->setRowHeight(-1);
+                }
+
+                /*
+                |--------------------------------------------------------------------------
+                | HEADER HEIGHT
+                |--------------------------------------------------------------------------
+                */
+
+                $sheet->getRowDimension(2)->setRowHeight(28);
+                $sheet->getRowDimension(3)->setRowHeight(28);
+                $sheet->getRowDimension(4)->setRowHeight(45);
+
+                /*
+                |--------------------------------------------------------------------------
+                | AUTO WIDTH SEMUA KOLOM
+                |--------------------------------------------------------------------------
+                */
+
+foreach (range('A', $lastColumn) as $columnID) {
+
+    $sheet->getColumnDimension($columnID)
+        ->setWidth(25);
+}
+
+                /*
+                |--------------------------------------------------------------------------
+                | KHUSUS KOLOM DESKRIPSI BIAR LEBAR
+                |--------------------------------------------------------------------------
+                */
+
+                $sheet->getColumnDimension('H')->setWidth(80);
+                $sheet->getColumnDimension('AK')->setWidth(40); // Alamat
+                $sheet->getColumnDimension('AL')->setWidth(40);
+
+                /*
+                |--------------------------------------------------------------------------
+                | FREEZE HEADER
+                |--------------------------------------------------------------------------
+                */
+
+                $sheet->freezePane('A5');
+            },
+        ];
     }
 }
 
-class SignifikanSheet implements FromArray, WithHeadings, WithStyles, ShouldAutoSize, WithTitle
-{
-    protected array $data;
-    protected array $headers;
+/* =========================================================
+| SHEET 01B
+========================================================= */
 
+class SignifikanSheet extends SemesterSheet
+{
     public function __construct(array $signifikanData)
     {
-        $this->data = $signifikanData['data'];
-        $this->headers = $signifikanData['headers'];
-    }
-
-    public function array(): array
-    {
-        return $this->data;
-    }
-
-    public function headings(): array
-    {
-        return $this->headers;
+        parent::__construct($signifikanData);
     }
 
     public function title(): string
     {
-        return 'Laporan Signifikan';
-    }
-
-    public function styles($sheet)
-    {
-        // Style header row
-        $sheet->getStyle('1')->getFont()->setBold(true);
-        $sheet->getStyle('1')->getFont()->setSize(11);
-        $sheet->getStyle('1')->getFill()->setFillType(Fill::FILL_SOLID);
-        $sheet->getStyle('1')->getFill()->getStartColor()->setRGB('dc2626');
-        $sheet->getStyle('1')->getFont()->getColor()->setRGB('ffffff');
-        $sheet->getStyle('1')->getAlignment()->setWrapText(true);
-        $sheet->getStyle('1')->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
-
-        // Style all rows with wrap text and vertical alignment
-        for ($row = 1; $row <= count($this->data) + 1; $row++) {
-            $sheet->getStyle($row)->getAlignment()->setVertical(Alignment::VERTICAL_TOP);
-            $sheet->getStyle($row)->getAlignment()->setWrapText(true);
-        }
-
-        return $sheet;
+        return '01B';
     }
 }
-

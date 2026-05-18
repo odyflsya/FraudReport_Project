@@ -108,7 +108,7 @@ class ProfileController extends Controller
 
         $request->session()->regenerateToken();
 
-        return Redirect::to('/')->with('status', 'logged-out');
+        return Redirect::route('login')->with('status', 'logged-out');
     }
 }
 
