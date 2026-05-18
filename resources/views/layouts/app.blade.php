@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Fraud Report</title>
+    <link rel="icon" type="image/png" href="{{ asset('assets/img/logo.png') }}">
     @vite('resources/css/app.css')
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 </head>
@@ -67,7 +68,6 @@
                     <path stroke-width="2"
                         d="M12 16v-8m0 0l-3 3m3-3l3 3M4 20h16"/>
                 </svg>
-
                 Export Laporan
             </a>
 
@@ -116,18 +116,6 @@
 
         <!-- RIGHT -->
         <div class="flex items-center gap-6">
-
-            <!-- Search -->
-            <svg class="w-5 h-5 text-gray-600 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-width="2"
-                    d="M21 21l-4.35-4.35M10 18a8 8 0 100-16 8 8 0 000 16z"/>
-            </svg>
-
-            <!-- Notification -->
-            <svg class="w-5 h-5 text-gray-600 cursor-pointer" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-width="2"
-                    d="M15 17h5l-1.4-1.4A2 2 0 0118 14V11a6 6 0 10-12 0v3a2 2 0 01-.6 1.6L4 17h5m6 0a3 3 0 11-6 0"/>
-            </svg>
 
             <!-- User -->
             <a href="{{ route('pengaturan.index') }}" class="flex items-center gap-2 hover:opacity-75 transition">
