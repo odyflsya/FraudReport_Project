@@ -51,6 +51,17 @@ class PelakuFraud extends Model
         return $value !== '' ? $value : '-';
     }
 
+    public function getKategoriLabelAttribute()
+    {
+        $value = strtolower(trim((string) ($this->kategori ?? '')));
+
+        return match ($value) {
+            'internal' => '001 (Internal)',
+            'eksternal' => '002 (Eksternal)',
+            default => $this->kategori ?: '-',
+        };
+    }
+
     public function kasus()
     {
         return $this->belongsTo(Kasus::class);

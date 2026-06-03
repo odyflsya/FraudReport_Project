@@ -70,17 +70,17 @@
                     @csrf
                     @method('PUT')
                     @php
-                        $isSignifikanEdit = old('jenis_laporan', $kasus->jenis_laporan) === 'signifikan';
+                        $isSignifikanEdit = in_array(old('jenis_laporan', $kasus->jenis_laporan), ['signifikan', 'non-signifikan']);
                     @endphp
 
                     <!-- SECTION: KODE KOMPONEN -->
                     <div>
                         <h3 class="mb-4 text-lg font-semibold text-slate-900">Kode Komponen</h3>
                         <div>
-                            <label for="kode_komponen" class="mb-2 block text-sm font-medium text-slate-700">Kode Komponen <span class="text-red-500">*</span></label>
+                            <label for="kode_komponen" class="mb-2 block text-sm font-medium text-slate-700">Kode Komponen</label>
                             <input type="text" id="kode_komponen" name="kode_komponen" value="{{ old('kode_komponen', $kasus->kode_komponen) }}"
                                 class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                placeholder="Contoh: 0101000000" required>
+                                placeholder="Contoh: 0101000000">
                             @error('kode_komponen')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                         </div>
                     </div>
@@ -90,8 +90,8 @@
                         <h3 class="mb-4 text-lg font-semibold text-slate-900">Kejadian Fraud Menurut Pelaku</h3>
                         <div class="space-y-3">
                             <div>
-                                <label for="kejadian_fraud" class="mb-2 block text-sm font-medium text-slate-700">Pilih Kejadian Fraud <span class="text-red-500">*</span></label>
-                                <select id="kejadian_fraud" name="kejadian_fraud" required
+                                <label for="kejadian_fraud" class="mb-2 block text-sm font-medium text-slate-700">Pilih Kejadian Fraud</label>
+                                <select id="kejadian_fraud" name="kejadian_fraud"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                     onchange="validateDuplicateOptionValue(this); toggleKeteranganField(this, 'kejadian_fraud_keterangan_wrapper')">
                                     <option value="">Pilih Kejadian Fraud</option>
@@ -102,10 +102,10 @@
                                 @error('kejadian_fraud')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="id_kejadian" class="mb-2 block text-sm font-medium text-slate-700">ID Kejadian <span class="text-red-500">*</span></label>
+                                <label for="id_kejadian" class="mb-2 block text-sm font-medium text-slate-700">ID Kejadian</label>
                                 <input type="text" id="id_kejadian" name="id_kejadian" value="{{ old('id_kejadian', $kasus->kejadianFraud->first()?->pivot?->kode_kejadian ?? '') }}"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                    placeholder="Masukkan kode kejadian" required>
+                                    placeholder="Masukkan kode kejadian">
                                 @error('id_kejadian')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                         </div>
@@ -116,8 +116,8 @@
                         <h3 class="mb-4 text-lg font-semibold text-slate-900">Jenis Fraud</h3>
                         <div class="space-y-3">
                             <div>
-                                <label for="jenis_fraud" class="mb-2 block text-sm font-medium text-slate-700">Pilih Jenis Fraud <span class="text-red-500">*</span></label>
-                                <select id="jenis_fraud" name="jenis_fraud" required
+                                <label for="jenis_fraud" class="mb-2 block text-sm font-medium text-slate-700">Pilih Jenis Fraud</label>
+                                <select id="jenis_fraud" name="jenis_fraud"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                     onchange="toggleKeteranganField(this, 'jenis_fraud_keterangan_wrapper')">
                                     <option value="">Pilih Jenis Fraud</option>
@@ -139,8 +139,8 @@
 
                     <!-- SECTION: AKTIVITAS TERKAIT -->
                         <div>
-                            <label for="aktivitas_terkait_id" class="mb-2 block text-sm font-medium text-slate-700">Aktivitas Terkait Fraud <span class="text-red-500">*</span></label>
-                            <select id="aktivitas_terkait_id" name="aktivitas_terkait_id" required
+                            <label for="aktivitas_terkait_id" class="mb-2 block text-sm font-medium text-slate-700">Aktivitas Terkait Fraud</label>
+                            <select id="aktivitas_terkait_id" name="aktivitas_terkait_id"
                                 class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                 <option value="">Pilih Aktivitas Terkait Fraud</option>
                                 @foreach($aktivitasTerkait as $at)
@@ -154,10 +154,10 @@
                     <!-- SECTION: DESKRIPSI FRAUD -->
                     <div>
                         <h3 class="mb-4 text-lg font-semibold text-slate-900">Deskripsi Fraud / Modus Operandi</h3>
-                        <label for="deskripsi_fraud" class="mb-2 block text-sm font-medium text-slate-700">Deskripsi Fraud <span class="text-red-500">*</span></label>
+                        <label for="deskripsi_fraud" class="mb-2 block text-sm font-medium text-slate-700">Deskripsi Fraud</label>
                         <textarea id="deskripsi_fraud" name="deskripsi_fraud" rows="4"
                             class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                            placeholder="Deskripsi lengkap tentang kasus fraud / modus operandi" required>{{ old('deskripsi_fraud', $kasus->deskripsi_fraud) }}</textarea>
+                            placeholder="Deskripsi lengkap tentang kasus fraud / modus operandi">{{ old('deskripsi_fraud', $kasus->deskripsi_fraud) }}</textarea>
                         @error('deskripsi_fraud')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                     </div>
 
@@ -166,8 +166,8 @@
                         <h3 class="mb-4 text-lg font-semibold text-slate-900">Lokasi Fraud</h3>
                         <div class="space-y-3">
                             <div>
-                                <label for="lokasi_fraud" class="mb-2 block text-sm font-medium text-slate-700">Pilih Lokasi Fraud <span class="text-red-500">*</span></label>
-                                <select id="lokasi_fraud" name="lokasi_fraud" required
+                                <label for="lokasi_fraud" class="mb-2 block text-sm font-medium text-slate-700">Pilih Lokasi Fraud</label>
+                                <select id="lokasi_fraud" name="lokasi_fraud"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                     <option value="">Pilih Lokasi Fraud</option>
                                     @foreach($lokasiFraud as $lf)
@@ -177,8 +177,8 @@
                                 @error('lokasi_fraud')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div id="lokasi_fraud_keterangan_wrapper">
-                                <label for="lokasi_fraud_keterangan" class="mb-2 block text-sm font-medium text-slate-700">Keterangan <span class="text-red-500">*</span></label>
-                                <input type="text" id="lokasi_fraud_keterangan" name="lokasi_fraud_keterangan" placeholder="Masukkan keterangan" required
+                                <label for="lokasi_fraud_keterangan" class="mb-2 block text-sm font-medium text-slate-700">Keterangan</label>
+                                <input type="text" id="lokasi_fraud_keterangan" name="lokasi_fraud_keterangan" placeholder="Masukkan keterangan"
                                     class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                     value="{{ old('lokasi_fraud_keterangan', $kasus->lokasiFraud->first()?->pivot?->keterangan ?? '') }}">
                                 @error('lokasi_fraud_keterangan')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
@@ -187,18 +187,18 @@
                     </div>
 
                         <div>
-                            <label for="divisi_unit" class="mb-2 block text-sm font-medium text-slate-700">Divisi/Unit <span class="text-red-500">*</span></label>
+                            <label for="divisi_unit" class="mb-2 block text-sm font-medium text-slate-700">Divisi/Unit</label>
                             <input type="text" id="divisi_unit" name="divisi_unit" value="{{ old('divisi_unit', $kasus->divisi_unit) }}"
                                 class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                placeholder="Contoh: Divisi Operasional" required>
+                                placeholder="Contoh: Divisi Operasional">
                             @error('divisi_unit')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                         </div>
 
                     <!-- SECTION: PIHAK YANG DIRUGIKAN -->
                     <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <div>
-                            <label for="pihak_dirugikan_id" class="mb-2 block text-sm font-medium text-slate-700">Pihak Dirugikan <span class="text-red-500">*</span></label>
-                            <select id="pihak_dirugikan_id" name="pihak_dirugikan_id" required
+                            <label for="pihak_dirugikan_id" class="mb-2 block text-sm font-medium text-slate-700">Pihak Dirugikan</label>
+                            <select id="pihak_dirugikan_id" name="pihak_dirugikan_id"
                                 class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                 <option value="">Pilih Pihak yang Dirugikan</option>
                                 @foreach($pihakDirugikan as $pd)
@@ -208,16 +208,17 @@
                             @error('pihak_dirugikan_id')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                         </div>
                         <div>
-                            <label for="jenis_laporan" class="mb-2 block text-sm font-medium text-slate-700">Jenis Laporan <span class="text-red-500">*</span></label>
-                            <select id="jenis_laporan" name="jenis_laporan" required
+                            <label for="jenis_laporan" class="mb-2 block text-sm font-medium text-slate-700">Jenis Laporan</label>
+                            <select id="jenis_laporan" name="jenis_laporan"
                                 class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                 <option value="semester" {{ old('jenis_laporan', $kasus->jenis_laporan ?: 'semester') == 'semester' ? 'selected' : '' }}>Semester</option>
                                 <option value="signifikan" {{ old('jenis_laporan', $kasus->jenis_laporan) == 'signifikan' ? 'selected' : '' }}>Signifikan</option>
+                                <option value="non-signifikan" {{ old('jenis_laporan', $kasus->jenis_laporan) == 'non-signifikan' ? 'selected' : '' }}>Non-Signifikan</option>
                             </select>
                             @error('jenis_laporan')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                         </div>
                         <div id="tindak_lanjut_ljk_wrapper" class="{{ $isSignifikanEdit ? '' : 'hidden' }}">
-                            <label for="tindak_lanjut_ljk" class="mb-2 block text-sm font-medium text-slate-700">Tindak Lanjut LJK <span class="text-red-500">*</span></label>
+                            <label for="tindak_lanjut_ljk" class="mb-2 block text-sm font-medium text-slate-700">Tindak Lanjut LJK</label>
                             <textarea id="tindak_lanjut_ljk" name="tindak_lanjut_ljk" rows="4"
                                 class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                 placeholder="Jelaskan tindak lanjut yang diambil oleh LJK">{{ old('tindak_lanjut_ljk', $kasus->tindak_lanjut_ljk) }}</textarea>
@@ -230,22 +231,22 @@
                         <h3 class="mb-4 text-lg font-semibold text-slate-900">Waktu </h3>
                         <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                             <div>
-                                <label for="waktu_awal" class="mb-2 block text-sm font-medium text-slate-700">Waktu Awal <span class="text-red-500">*</span></label>
-                                <input type="date" id="waktu_awal" name="waktu_awal" required
+                                <label for="waktu_awal" class="mb-2 block text-sm font-medium text-slate-700">Waktu Awal</label>
+                                <input type="date" id="waktu_awal" name="waktu_awal"
                                     value="{{ old('waktu_awal', $kasus->waktuFraud ? \Carbon\Carbon::parse($kasus->waktuFraud->waktu_awal)->format('Y-m-d') : '') }}"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                 @error('waktu_awal')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="waktu_akhir" class="mb-2 block text-sm font-medium text-slate-700">Waktu Akhir <span class="text-red-500">*</span></label>
-                                <input type="date" id="waktu_akhir" name="waktu_akhir" required
+                                <label for="waktu_akhir" class="mb-2 block text-sm font-medium text-slate-700">Waktu Akhir</label>
+                                <input type="date" id="waktu_akhir" name="waktu_akhir"
                                     value="{{ old('waktu_akhir', $kasus->waktuFraud ? \Carbon\Carbon::parse($kasus->waktuFraud->waktu_akhir)->format('Y-m-d') : '') }}"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                 @error('waktu_akhir')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="waktu_diketahui" class="mb-2 block text-sm font-medium text-slate-700">Waktu Fraud Diketahui <span class="text-red-500">*</span></label>
-                                <input type="date" id="waktu_diketahui" name="waktu_diketahui" required
+                                <label for="waktu_diketahui" class="mb-2 block text-sm font-medium text-slate-700">Waktu Fraud Diketahui</label>
+                                <input type="date" id="waktu_diketahui" name="waktu_diketahui"
                                     value="{{ old('waktu_diketahui', $kasus->waktuFraud ? \Carbon\Carbon::parse($kasus->waktuFraud->waktu_diketahui)->format('Y-m-d') : '') }}"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                 @error('waktu_diketahui')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
@@ -275,11 +276,13 @@
                                             placeholder="">
                                     </div>
                                     <div class="signifikan-hidden {{ $isSignifikanEdit ? 'hidden' : '' }}">
-                                        <label class="mb-2 block text-sm font-medium text-slate-700">Recovery (Rp)</label>
+                                        <label class="mb-2 block text-sm font-medium text-slate-700">Tambah Recovery Baru (Rp)</label>
                                         <input type="text" name="ljk_recovery" inputmode="decimal" autocomplete="off"
-                                            value="{{ $formatCurrencyInput(old('ljk_recovery', $kasus->kerugianFraud?->ljk_recovery ?? '')) }}"
+                                            value="{{ old('ljk_recovery', '') }}"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            placeholder="">
+                                            placeholder="0">
+                                        <p class="mt-1 text-sm text-slate-600">Total recovery saat ini: Rp {{ number_format($kasus->kerugianFraud?->ljk_recovery ?? 0, 0, ',', '.') }}</p>
+                                        <p class="mt-1 text-xs text-slate-500">Masukkan nominal baru untuk menambah entry recovery LJK.</p>
                                     </div>
                                 </div>
                             </div>
@@ -302,11 +305,13 @@
                                             placeholder="">
                                     </div>
                                     <div class="signifikan-hidden {{ $isSignifikanEdit ? 'hidden' : '' }}">
-                                        <label class="mb-2 block text-sm font-medium text-slate-700">Recovery (Rp)</label>
+                                        <label class="mb-2 block text-sm font-medium text-slate-700">Tambah Recovery Baru (Rp)</label>
                                         <input type="text" name="konsumen_recovery" inputmode="decimal" autocomplete="off"
-                                            value="{{ $formatCurrencyInput(old('konsumen_recovery', $kasus->kerugianFraud?->konsumen_recovery ?? '')) }}"
+                                            value="{{ old('konsumen_recovery', '') }}"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            placeholder="">
+                                            placeholder="0">
+                                        <p class="mt-1 text-sm text-slate-600">Total recovery saat ini: Rp {{ number_format($kasus->kerugianFraud?->konsumen_recovery ?? 0, 0, ',', '.') }}</p>
+                                        <p class="mt-1 text-xs text-slate-500">Masukkan nominal baru untuk menambah entry recovery Konsumen.</p>
                                     </div>
                                 </div>
                             </div>
@@ -329,14 +334,56 @@
                                             placeholder="">
                                     </div>
                                     <div class="signifikan-hidden {{ $isSignifikanEdit ? 'hidden' : '' }}">
-                                        <label class="mb-2 block text-sm font-medium text-slate-700">Recovery (Rp)</label>
+                                        <label class="mb-2 block text-sm font-medium text-slate-700">Tambah Recovery Baru (Rp)</label>
                                         <input type="text" name="pihak_lain_recovery" inputmode="decimal" autocomplete="off"
-                                            value="{{ $formatCurrencyInput(old('pihak_lain_recovery', $kasus->kerugianFraud?->pihak_lain_recovery ?? '')) }}"
+                                            value="{{ old('pihak_lain_recovery', '') }}"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            placeholder="">
+                                            placeholder="0">
+                                        <p class="mt-1 text-sm text-slate-600">Total recovery saat ini: Rp {{ number_format($kasus->kerugianFraud?->pihak_lain_recovery ?? 0, 0, ',', '.') }}</p>
+                                        <p class="mt-1 text-xs text-slate-500">Masukkan nominal baru untuk menambah entry recovery Pihak Lain.</p>
                                     </div>
                                 </div>
                             </div>
+                        </div>
+
+                        <div>
+                            <h3 class="mb-4 text-lg font-semibold text-slate-900">Rincian Recovery</h3>
+                            @php
+                                $recoveryEntries = $kasus->kerugianFraud?->recoveries ?? collect();
+                            @endphp
+                            @if($recoveryEntries->isNotEmpty())
+                                <div class="space-y-4">
+                                    @foreach($recoveryEntries->sortByDesc('created_at') as $rec)
+                                        <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
+                                            <div class="grid gap-4 md:grid-cols-[1.5fr_1fr] md:items-end">
+                                                <div>
+                                                    <p class="text-sm font-semibold text-slate-900">{{ strtoupper($rec->kategori) }}</p>
+                                                    <p class="mt-1 text-sm text-slate-600">Dibuat: {{ $rec->created_at->format('Y-m-d H:i') }}@if($rec->user_id) • User #{{ $rec->user_id }}@endif</p>
+                                                    <p class="mt-2 text-sm text-slate-500">{{ $rec->keterangan ?? 'Rincian recovery sebelumnya' }}</p>
+                                                </div>
+                                                <div class="space-y-3">
+                                                    <div>
+                                                        <label class="mb-2 block text-sm font-medium text-slate-700">Nominal Recovery (Rp)</label>
+                                                        <input type="text" name="recovery[{{ $rec->id }}]" inputmode="decimal" autocomplete="off"
+                                                            value="{{ old('recovery.' . $rec->id, $formatCurrencyInput($rec->amount)) }}"
+                                                            class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
+                                                            placeholder="0">
+                                                    </div>
+                                                    <div class="flex items-center justify-between gap-3">
+                                                        <button type="button" data-recovery-id="{{ $rec->id }}" class="delete-recovery-button text-sm font-semibold text-red-600 hover:text-red-800">
+                                                            Hapus
+                                                        </button>
+                                                        <span class="text-xs text-slate-500">Klik untuk hapus entry recovery ini.</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                                <p class="mt-3 text-sm text-slate-500">Ubah nominal per entry recovery untuk memperbarui rincian yang sudah disubmit.</p>
+                            @else
+                                <p class="text-sm text-slate-600">Belum ada rincian recovery. Masukkan recovery di masing-masing kategori di atas.</p>
+                            @endif
                         </div>
                     </div>
 
@@ -346,8 +393,8 @@
                             <h3 class="mb-4 text-lg font-semibold text-slate-900">Kelemahan Penyebab Fraud</h3>
                         <div class="space-y-3">
                             <div>
-                                <label for="kelemahan_fraud" class="mb-2 block text-sm font-medium text-slate-700">Pilih Kelemahan Fraud <span class="text-red-500">*</span></label>
-                                <select id="kelemahan_fraud" name="kelemahan_fraud" @if(!$isSignifikanEdit) required @endif
+                                <label for="kelemahan_fraud" class="mb-2 block text-sm font-medium text-slate-700">Pilih Kelemahan Fraud</label>
+                                <select id="kelemahan_fraud" name="kelemahan_fraud" @if(!$isSignifikanEdit) @endif
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                     onchange="toggleKeteranganField(this, 'kelemahan_fraud_keterangan_wrapper')">
                                     <option value="">Pilih Kelemahan Fraud</option>
@@ -372,8 +419,8 @@
                         <h3 class="mb-4 text-lg font-semibold text-slate-900">Tindakan Penanganan Fraud</h3>
                         <div class="space-y-3">
                             <div>
-                                <label for="penanganan_fraud" class="mb-2 block text-sm font-medium text-slate-700">Pilih Tindakan Penanganan <span class="text-red-500">*</span></label>
-                                <select id="penanganan_fraud" name="penanganan_fraud" @if(!$isSignifikanEdit) required @endif
+                                <label for="penanganan_fraud" class="mb-2 block text-sm font-medium text-slate-700">Pilih Tindakan Penanganan</label>
+                                <select id="penanganan_fraud" name="penanganan_fraud" @if(!$isSignifikanEdit) @endif
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                     onchange="toggleKeteranganField(this, 'penanganan_fraud_keterangan_wrapper')">
                                     <option value="">Pilih Tindakan Penanganan</option>
@@ -398,8 +445,8 @@
                         <h3 class="mb-4 text-lg font-semibold text-slate-900">Tindakan Perbaikan untuk Pencegahan Fraud</h3>
                         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
-                                <label for="pencegahan_id" class="mb-2 block text-sm font-medium text-slate-700">Pilih Tindakan Perbaikan<span class="text-red-500">*</span></label>
-                                <select id="pencegahan_id" name="pencegahan_fraud[pencegahan_id]" @if(!$isSignifikanEdit) required @endif
+                                <label for="pencegahan_id" class="mb-2 block text-sm font-medium text-slate-700">Pilih Tindakan Perbaikan</label>
+                                <select id="pencegahan_id" name="pencegahan_fraud[pencegahan_id]" @if(!$isSignifikanEdit) @endif
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                     <option value="">Pilih Tindakan Perbaikan</option>
                                     @foreach($pencegahanFraud as $pf)
@@ -409,22 +456,22 @@
                                 @error('pencegahan_fraud.pencegahan_id')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="pencegahan_keterangan" class="mb-2 block text-sm font-medium text-slate-700">Keterangan <span class="text-red-500">*</span></label>
+                                <label for="pencegahan_keterangan" class="mb-2 block text-sm font-medium text-slate-700">Keterangan</label>
                                 <input type="text" id="pencegahan_keterangan" name="pencegahan_fraud[keterangan]" value="{{ old('pencegahan_fraud.keterangan', $kasus->pencegahanFraud->first()?->keterangan ?? '') }}"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                    placeholder="Keterangan pencegahan" @if(!$isSignifikanEdit) required @endif>
+                                    placeholder="Keterangan pencegahan" @if(!$isSignifikanEdit) @endif>
                                 @error('pencegahan_fraud.keterangan')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="pencegahan_target_waktu" class="mb-2 block text-sm font-medium text-slate-700">Target Waktu <span class="text-red-500">*</span></label>
+                                <label for="pencegahan_target_waktu" class="mb-2 block text-sm font-medium text-slate-700">Target Waktu</label>
                                 <input type="date" id="pencegahan_target_waktu" name="pencegahan_fraud[target_waktu]" value="{{ old('pencegahan_fraud.target_waktu', $kasus->pencegahanFraud->first()?->target_waktu ? \Carbon\Carbon::parse($kasus->pencegahanFraud->first()?->target_waktu)->format('Y-m-d') : '') }}"
-                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" @if(!$isSignifikanEdit) required @endif>
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" @if(!$isSignifikanEdit) @endif>
                                 @error('pencegahan_fraud.target_waktu')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="pencegahan_realisasi" class="mb-2 block text-sm font-medium text-slate-700">Realisasi <span class="text-red-500">*</span></label>
+                                <label for="pencegahan_realisasi" class="mb-2 block text-sm font-medium text-slate-700">Realisasi</label>
                                 <input type="date" id="pencegahan_realisasi" name="pencegahan_fraud[realisasi]" value="{{ old('pencegahan_fraud.realisasi', $kasus->pencegahanFraud->first()?->realisasi ? \Carbon\Carbon::parse($kasus->pencegahanFraud->first()?->realisasi)->format('Y-m-d') : '') }}"
-                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" @if(!$isSignifikanEdit) required @endif>
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" @if(!$isSignifikanEdit) @endif>
                                 @error('pencegahan_fraud.realisasi')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                         </div>
@@ -436,43 +483,43 @@
                         <h3 class="mb-4 text-lg font-semibold text-slate-900">Data Pelaku Fraud</h3>
                         <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
                             <div>
-                                <label for="kategori" class="mb-2 block text-sm font-medium text-slate-700">Internal/Eksternal <span class="text-red-500">*</span></label>
-                                <select id="kategori" name="pelaku_fraud[kategori]" required
+                                <label for="kategori" class="mb-2 block text-sm font-medium text-slate-700">Internal/Eksternal</label>
+                                <select id="kategori" name="pelaku_fraud[kategori]"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                     <option value="">Pilih Kategori</option>
-                                    <option value="internal" {{ $kasus->pelakuFrauds->first()?->kategori == 'internal' ? 'selected' : '' }}>Internal</option>
-                                    <option value="eksternal" {{ $kasus->pelakuFrauds->first()?->kategori == 'eksternal' ? 'selected' : '' }}>Eksternal</option>
+                                    <option value="internal" {{ old('pelaku_fraud.kategori', $kasus->pelakuFrauds->first()?->kategori) == 'internal' ? 'selected' : '' }}>001 (Internal)</option>
+                                    <option value="eksternal" {{ old('pelaku_fraud.kategori', $kasus->pelakuFrauds->first()?->kategori) == 'eksternal' ? 'selected' : '' }}>002 (Eksternal)</option>
                                 </select>
                                 @error('pelaku_fraud.kategori')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="nama" class="mb-2 block text-sm font-medium text-slate-700">Nama <span class="text-red-500">*</span></label>
+                                <label for="nama" class="mb-2 block text-sm font-medium text-slate-700">Nama</label>
                                 <input type="text" id="nama" name="pelaku_fraud[nama]" value="{{ old('pelaku_fraud.nama', $kasus->pelakuFrauds->first()?->nama ?? '') }}"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                    placeholder="Nama pelaku" required>
+                                    placeholder="Nama pelaku">
                                 @error('pelaku_fraud.nama')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="jenis_identitas_id" class="mb-2 block text-sm font-medium text-slate-700">Jenis Identitas <span class="text-red-500">*</span></label>
-                                <select id="jenis_identitas_id" name="pelaku_fraud[jenis_identitas_id]" required
+                                <label for="jenis_identitas_id" class="mb-2 block text-sm font-medium text-slate-700">Jenis Identitas</label>
+                                <select id="jenis_identitas_id" name="pelaku_fraud[jenis_identitas_id]"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                     <option value="">Pilih Jenis Identitas</option>
                                     @foreach($jenisIdentitas as $ji)
-                                        <option value="{{ $ji->id }}" {{ $kasus->pelakuFrauds->first()?->jenis_identitas_id == $ji->id ? 'selected' : '' }}>{{ $ji->nama }}</option>
+                                        <option value="{{ $ji->id }}" {{ $kasus->pelakuFrauds->first()?->jenis_identitas_id == $ji->id ? 'selected' : '' }}>{{ $ji->kode }} ({{ $ji->nama }})</option>
                                     @endforeach
                                 </select>
                                 @error('pelaku_fraud.jenis_identitas_id')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="nomor_identitas" class="mb-2 block text-sm font-medium text-slate-700">Nomor Identitas <span class="text-red-500">*</span></label>
+                                <label for="nomor_identitas" class="mb-2 block text-sm font-medium text-slate-700">Nomor Identitas</label>
                                 <input type="text" id="nomor_identitas" name="pelaku_fraud[nomor_identitas]" value="{{ old('pelaku_fraud.nomor_identitas', $kasus->pelakuFrauds->first()?->nomor_identitas ?? '') }}"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                    placeholder="Nomor identitas" required>
+                                    placeholder="Nomor identitas">
                                 @error('pelaku_fraud.nomor_identitas')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="jenis_kelamin" class="mb-2 block text-sm font-medium text-slate-700">Jenis Kelamin <span class="text-red-500">*</span></label>
-                                <select id="jenis_kelamin" name="pelaku_fraud[jenis_kelamin]" required
+                                <label for="jenis_kelamin" class="mb-2 block text-sm font-medium text-slate-700">Jenis Kelamin</label>
+                                <select id="jenis_kelamin" name="pelaku_fraud[jenis_kelamin]"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                     <option value="">Pilih Jenis Kelamin</option>
                                     <option value="L" {{ $kasus->pelakuFrauds->first()?->jenis_kelamin == 'L' ? 'selected' : '' }}>Laki-laki</option>
@@ -481,39 +528,39 @@
                                 @error('pelaku_fraud.jenis_kelamin')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="tempat_lahir" class="mb-2 block text-sm font-medium text-slate-700">Tempat Lahir <span class="text-red-500">*</span></label>
+                                <label for="tempat_lahir" class="mb-2 block text-sm font-medium text-slate-700">Tempat Lahir</label>
                                 <input type="text" id="tempat_lahir" name="pelaku_fraud[tempat_lahir]" value="{{ old('pelaku_fraud.tempat_lahir', $kasus->pelakuFrauds->first()?->tempat_lahir ?? '') }}"
-                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" required>
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                 @error('pelaku_fraud.tempat_lahir')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="tanggal_lahir" class="mb-2 block text-sm font-medium text-slate-700">Tanggal Lahir <span class="text-red-500">*</span></label>
+                                <label for="tanggal_lahir" class="mb-2 block text-sm font-medium text-slate-700">Tanggal Lahir</label>
                                 <input type="date" id="tanggal_lahir" name="pelaku_fraud[tanggal_lahir]" value="{{ old('pelaku_fraud.tanggal_lahir', $kasus->pelakuFrauds->first()?->tanggal_lahir ? \Carbon\Carbon::parse($kasus->pelakuFrauds->first()?->tanggal_lahir)->format('Y-m-d') : '') }}"
-                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" required>
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                 @error('pelaku_fraud.tanggal_lahir')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div>
-                                <label for="status_pelaku_id" class="mb-2 block text-sm font-medium text-slate-700">Status Pelaku <span class="text-red-500">*</span></label>
-                                <select id="status_pelaku_id" name="pelaku_fraud[status_pelaku_id]" required
+                                <label for="status_pelaku_id" class="mb-2 block text-sm font-medium text-slate-700">Status Pelaku</label>
+                                <select id="status_pelaku_id" name="pelaku_fraud[status_pelaku_id]"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                     <option value="">Pilih Status Pelaku</option>
                                     @foreach($statusPelaku as $sp)
-                                        <option value="{{ $sp->id }}" {{ $kasus->pelakuFrauds->first()?->status_pelaku_id == $sp->id ? 'selected' : '' }}>{{ $sp->nama }}</option>
+                                        <option value="{{ $sp->id }}" {{ $kasus->pelakuFrauds->first()?->status_pelaku_id == $sp->id ? 'selected' : '' }}>{{ $sp->kode }} ({{ $sp->nama }})</option>
                                     @endforeach
                                 </select>
                                 @error('pelaku_fraud.status_pelaku_id')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div class="md:col-span-2">
-                                <label for="alamat_identitas" class="mb-2 block text-sm font-medium text-slate-700">Alamat Identitas <span class="text-red-500">*</span></label>
+                                <label for="alamat_identitas" class="mb-2 block text-sm font-medium text-slate-700">Alamat Identitas</label>
                                 <textarea id="alamat_identitas" name="pelaku_fraud[alamat_identitas]" rows="3"
-                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" required
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                     placeholder="Alamat sesuai identitas">{{ old('pelaku_fraud.alamat_identitas', $kasus->pelakuFrauds->first()?->alamat_identitas ?? '') }}</textarea>
                                 @error('pelaku_fraud.alamat_identitas')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                             <div class="md:col-span-2">
-                                <label for="alamat_domisili" class="mb-2 block text-sm font-medium text-slate-700">Alamat Domisili <span class="text-red-500">*</span></label>
+                                <label for="alamat_domisili" class="mb-2 block text-sm font-medium text-slate-700">Alamat Domisili</label>
                                 <textarea id="alamat_domisili" name="pelaku_fraud[alamat_domisili]" rows="3"
-                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200" required
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                     placeholder="Alamat domisili">{{ old('pelaku_fraud.alamat_domisili', $kasus->pelakuFrauds->first()?->alamat_domisili ?? '') }}</textarea>
                                 @error('pelaku_fraud.alamat_domisili')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
@@ -523,7 +570,7 @@
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                     <option value="">Pilih Jabatan</option>
                                     @foreach($jabatanKejadian as $jk)
-                                        <option value="{{ $jk->id }}" {{ $kasus->pelakuFrauds->first()?->jabatan_saat_kejadian_id == $jk->id ? 'selected' : '' }}>{{ $jk->nama }} ({{ $jk->nama }})</option>
+                                        <option value="{{ $jk->id }}" {{ $kasus->pelakuFrauds->first()?->jabatan_saat_kejadian_id == $jk->id ? 'selected' : '' }}>{{ $jk->kode }} ({{ $jk->nama }})</option>
                                     @endforeach
                                 </select>
                                 @error('pelaku_fraud.jabatan_saat_kejadian_id')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
@@ -541,7 +588,7 @@
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                                     <option value="">Pilih Jabatan</option>
                                     @foreach($jabatanSemua as $js)
-                                        <option value="{{ $js->id }}" {{ $kasus->pelakuFrauds->first()?->jabatan_saat_diketahui_id == $js->id ? 'selected' : '' }}>{{ $js->nama }} ({{ $js->nama }})</option>
+                                        <option value="{{ $js->id }}" {{ $kasus->pelakuFrauds->first()?->jabatan_saat_diketahui_id == $js->id ? 'selected' : '' }}>{{ $js->kode }} ({{ $js->nama }})</option>
                                     @endforeach
                                 </select>
                                 @error('pelaku_fraud.jabatan_saat_diketahui_id')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
@@ -580,17 +627,17 @@
     @enderror
 </div>
                             <div class="md:col-span-2">
-                                <label for="sanksi" class="mb-2 block text-sm font-medium text-slate-700">Pengenaan Sanksi <span class="text-red-500">*</span></label>
+                                <label for="sanksi" class="mb-2 block text-sm font-medium text-slate-700">Pengenaan Sanksi</label>
                                 <textarea id="sanksi" name="pelaku_fraud[sanksi]" rows="3"
                                     class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                    placeholder="Sanksi yang diberikan" required>{{ old('pelaku_fraud.sanksi', $kasus->pelakuFrauds->first()?->sanksi ?? '') }}</textarea>
+                                    placeholder="Sanksi yang diberikan">{{ old('pelaku_fraud.sanksi', $kasus->pelakuFrauds->first()?->sanksi ?? '') }}</textarea>
                                 @error('pelaku_fraud.sanksi')<span class="text-red-500 text-sm">{{ $message }}</span>@enderror
                             </div>
                                                 <!-- SECTION: TINDAKAN PERBAIKAN / PENCEGAHAN FRAUD -->
                     <div>
                         <h3 class="mb-4 text-lg font-semibold text-slate-900">Status Penanganan</h3>
-                        <label for="status_penanganan" class="mb-2 block text-sm font-medium text-slate-700">Status Penanganan <span class="text-red-500">*</span></label>
-                        <select id="status_penanganan" name="status_penanganan" required
+                        <label for="status_penanganan" class="mb-2 block text-sm font-medium text-slate-700">Status Penanganan</label>
+                        <select id="status_penanganan" name="status_penanganan"
                             class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200">
                             <option value="">Pilih Status Penanganan</option>
                             <option value="001" {{ $kasus->status_penanganan == '001' ? 'selected' : '' }}>001 (Proses internal LJK)</option>
@@ -642,6 +689,12 @@
 
     function toggleKeteranganField(selectElement, wrapperId) {
         const wrapper = document.getElementById(wrapperId);
+        
+        // Safety check - wrapper might not exist
+        if (!wrapper) {
+            return;
+        }
+        
         const selectedOption = selectElement.options[selectElement.selectedIndex];
         const selectedCode = selectedOption.getAttribute('data-keterangan-code');
         const keteranganInput = wrapper.querySelector('input, textarea');
@@ -746,6 +799,64 @@
         }
     }
 
+    // Store deleted recovery IDs
+    const deletedRecoveryIds = new Set();
+
+    function initRecoveryDeleteButtons() {
+        document.querySelectorAll('.delete-recovery-button').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const recoveryId = parseInt(button.getAttribute('data-recovery-id'), 10);
+                console.log('Delete button clicked for recovery ID:', recoveryId);
+                
+                // Show confirmation dialog
+                if (confirm('Yakin ingin menghapus entry recovery ini?')) {
+                    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                    console.log('CSRF Token found:', !!csrfToken);
+                    
+                    // Send AJAX DELETE request
+                    fetch(`/recovery/${recoveryId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        }
+                    })
+                    .then(response => {
+                        console.log('Response status:', response.status);
+                        if (!response.ok) {
+                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Response data:', data);
+                        if (data.success) {
+                            // Remove card from UI
+                            const wrapper = button.closest('.rounded-3xl');
+                            if (wrapper) {
+                                wrapper.remove();
+                                console.log('Card removed from UI');
+                            }
+                            alert('✓ Entry recovery berhasil dihapus!');
+                        } else {
+                            alert('❌ Gagal menghapus: ' + (data.message || 'Unknown error'));
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Delete error:', error);
+                        alert('❌ Terjadi kesalahan saat menghapus:\n' + error.message);
+                    });
+                }
+            });
+        });
+        
+        console.log('Delete recovery buttons initialized:', document.querySelectorAll('.delete-recovery-button').length);
+    }
+
     function toggleJenisLaporanFields() {
         const jenisLaporanSelect = document.getElementById('jenis_laporan');
         const wrapper = document.getElementById('tindak_lanjut_ljk_wrapper');
@@ -757,7 +868,7 @@
             return;
         }
 
-        if (jenisLaporanSelect.value === 'signifikan') {
+        if (jenisLaporanSelect.value === 'signifikan' || jenisLaporanSelect.value === 'non-signifikan') {
             wrapper.classList.remove('hidden');
             textarea.required = true;
 
@@ -832,6 +943,7 @@
         });
 
         initCurrencyInputs();
+        initRecoveryDeleteButtons();
         checkFormValidity();
     });
 </script>

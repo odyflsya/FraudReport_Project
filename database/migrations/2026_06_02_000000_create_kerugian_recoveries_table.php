@@ -1,0 +1,28 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    public function up()
+    {
+        Schema::create('kerugian_recoveries', function (Blueprint $table) {
+            $table->id();
+            $table->unsignedBigInteger('kerugian_fraud_id');
+            $table->string('kategori')->nullable();
+            $table->bigInteger('amount')->default(0);
+            $table->text('keterangan')->nullable();
+            $table->unsignedBigInteger('user_id')->nullable();
+            $table->timestamps();
+
+            $table->foreign('kerugian_fraud_id')->references('id')->on('kerugian_fraud')->onDelete('cascade');
+        });
+    }
+
+    public function down()
+    {
+        Schema::dropIfExists('kerugian_recoveries');
+    }
+};

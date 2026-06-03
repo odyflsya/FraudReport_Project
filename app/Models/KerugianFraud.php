@@ -34,4 +34,9 @@ class KerugianFraud extends Model
     {
         return $this->belongsTo(Kasus::class);
     }
+
+    public function recoveries()
+    {
+        return $this->hasMany(KerugianRecovery::class);
+    }
 }

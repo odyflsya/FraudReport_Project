@@ -158,7 +158,7 @@
                 <div class="mb-6">
                     <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">Jenis Laporan</h3>
                     <p class="text-base font-medium text-gray-900 mt-2">{{ ucfirst($kasus->jenis_laporan ?? 'semester') }}</p>
-                    @if($kasus->jenis_laporan === 'signifikan')
+                    @if(in_array($kasus->jenis_laporan, ['signifikan', 'non-signifikan']))
                         <p class="text-sm text-gray-600 mt-2"><strong>Tindak Lanjut LJK:</strong> {{ $kasus->tindak_lanjut_ljk ?? '-' }}</p>
                     @endif
                 </div>
@@ -216,7 +216,7 @@
         <!-- Kolom Rill -->
         <td class="border border-gray-300 px-4 py-2 text-right">
             {{-- Menggunakan > 0 agar jika 0 atau null tetap kosong --}}
-            @if($kasus->jenis_laporan !== 'signifikan' && ($kasus->kerugianFraud->{$fields['rill']} ?? 0) > 0)
+            @if($kasus->jenis_laporan === 'semester' && ($kasus->kerugianFraud->{$fields['rill']} ?? 0) > 0)
                 {{ number_format($kasus->kerugianFraud->{$fields['rill']}, 0, ',', '.') }}
             @endif
         </td>
@@ -230,8 +230,10 @@
 
         <!-- Kolom Recovery -->
         <td class="border border-gray-300 px-4 py-2 text-right">
-            @if($kasus->jenis_laporan !== 'signifikan' && ($kasus->kerugianFraud->{$fields['recovery']} ?? 0) > 0)
-                {{ number_format($kasus->kerugianFraud->{$fields['recovery']}, 0, ',', '.') }}
+            @if($kasus->jenis_laporan === 'semester' && ($kasus->kerugianFraud->{$fields['recovery']} ?? 0) > 0)
+                <button type="button" class="text-right text-blue-700 hover:text-blue-900" onclick="document.getElementById('recoveryDetailsModal').classList.remove('hidden'); document.getElementById('recoveryDetailsModal').classList.add('flex');">
+                    {{ number_format($kasus->kerugianFraud->{$fields['recovery']}, 0, ',', '.') }}
+                </button>
             @endif
         </td>
     </tr>
@@ -239,12 +241,95 @@
 </tbody>
                             </table>
                         </div>
+                        @php
+                            $ljk_rill = $kasus->kerugianFraud->ljk_rill ?? 0;
+                            $konsumen_rill = $kasus->kerugianFraud->konsumen_rill ?? 0;
+                            $pihak_lain_rill = $kasus->kerugianFraud->pihak_lain_rill ?? 0;
+
+                            $ljk_pot = $kasus->kerugianFraud->ljk_potensial ?? 0;
+                            $konsumen_pot = $kasus->kerugianFraud->konsumen_potensial ?? 0;
+                            $pihak_lain_pot = $kasus->kerugianFraud->pihak_lain_potensial ?? 0;
+
+                            $recovery_sum = 0;
+                            if ($kasus->kerugianFraud) {
+                                $recovery_sum = $kasus->kerugianFraud->recoveries->sum('amount') ?? 0;
+                                if ($recovery_sum == 0) {
+                                    $recovery_sum = ($kasus->kerugianFraud->ljk_recovery ?? 0) + ($kasus->kerugianFraud->konsumen_recovery ?? 0) + ($kasus->kerugianFraud->pihak_lain_recovery ?? 0);
+                                }
+                            }
+
+                            $total_rill = $ljk_rill + $konsumen_rill + $pihak_lain_rill;
+                            $total_pot = $ljk_pot + $konsumen_pot + $pihak_lain_pot;
+                            $total_all = $total_rill + $total_pot - $recovery_sum;
+                        @endphp
+
+                        <div class="mt-4 rounded bg-gray-50 p-4">
+                            <p class="text-sm text-gray-600">Total Kerugian (Riil + Potensial - Recovery)</p>
+                            <p class="text-xl font-semibold text-gray-900">Rp {{ number_format($total_all, 0, ',', '.') }}</p>
+                        </div>
+
+                        <!-- Recovery Details Modal -->
+                        <div id="recoveryDetailsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-6">
+                            <div class="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+                                <div class="flex items-center justify-between border-b border-slate-200 px-6 py-5">
+                                    <div>
+                                        <h3 class="text-xl font-semibold text-slate-900">Rincian Recovery</h3>
+                                        <p class="text-sm text-slate-500">Riwayat nominal recovery yang sudah disubmit user.</p>
+                                    </div>
+                                    <button id="closeRecoveryModal" type="button" class="rounded-full border border-slate-300 bg-white px-3 py-2 text-slate-700 hover:bg-slate-100">Tutup</button>
+                                </div>
+                                <div class="max-h-[60vh] overflow-y-auto px-6 py-5">
+                                    @if($kasus->kerugianFraud && $kasus->kerugianFraud->recoveries->count() > 0)
+                                        <div class="space-y-3">
+                                            @foreach($kasus->kerugianFraud->recoveries->sortByDesc('created_at') as $rec)
+                                                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
+                                                    <div class="flex items-start justify-between gap-4">
+                                                        <div>
+                                                            <p class="text-sm font-semibold text-slate-900">{{ strtoupper($rec->kategori) }}</p>
+                                                            <p class="mt-1 text-sm text-slate-600">{{ $rec->keterangan ?? '-' }}</p>
+                                                            <p class="mt-2 text-xs uppercase tracking-[0.16em] text-slate-500">{{ $rec->created_at->format('Y-m-d H:i') }}@if($rec->user_id) • User #{{ $rec->user_id }}@endif</p>
+                                                        </div>
+                                                        <div class="text-right">
+                                                            <p class="text-lg font-semibold text-slate-900">Rp {{ number_format($rec->amount, 0, ',', '.') }}</p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endforeach
+                                        </div>
+                                    @else
+                                        <p class="text-sm text-slate-600">Belum ada riwayat recovery.</p>
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <script>
+                            document.addEventListener('DOMContentLoaded', function () {
+                                var modal = document.getElementById('recoveryDetailsModal');
+                                var closeModal = document.getElementById('closeRecoveryModal');
+
+                                if (modal && closeModal) {
+                                    closeModal.addEventListener('click', function () {
+                                        modal.classList.add('hidden');
+                                        modal.classList.remove('flex');
+                                    });
+                                }
+
+                                if (modal) {
+                                    modal.addEventListener('click', function (event) {
+                                        if (event.target === modal) {
+                                            modal.classList.add('hidden');
+                                            modal.classList.remove('flex');
+                                        }
+                                    });
+                                }
+                            });
+                        </script>
                     @else
                         <p class="text-gray-400 mt-2">-</p>
                     @endif
                 </div>
 
-                @if($kasus->jenis_laporan !== 'signifikan')
+                @if($kasus->jenis_laporan === 'semester')
                 <!-- Kelemahan Penyebab Fraud -->
                 <div class="mb-6">
                     <h3 class="text-lg font-semibold text-gray-900 border-b pb-2">Kelemahan Penyebab Fraud</h3>
@@ -342,7 +427,7 @@
                                         <div class="space-y-2">
                                             <div>
                                                 <p class="text-xs font-semibold text-gray-600 uppercase">Kategori</p>
-                                                <p class="text-sm text-gray-900">{{ $pelaku->kategori ?? '-' }}</p>
+                                                <p class="text-sm text-gray-900">{{ $pelaku->kategori_label ?? '-' }}</p>
                                             </div>
                                             <div>
                                                 <p class="text-xs font-semibold text-gray-600 uppercase">Nama</p>
@@ -454,13 +539,13 @@
                         <div>
                             <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">Dibuat Pada</h3>
                             <p class="text-base font-medium text-gray-900">
-                                {{ \Carbon\Carbon::parse($kasus->created_at)->format('d F Y, H:i') }} WIB
+                                {{ \Carbon\Carbon::make($kasus->created_at)->setTimezone(config('app.timezone'))->format('d F Y, H:i') }} WIB
                             </p>
                         </div>
                         <div>
                             <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">Diupdate Pada</h3>
                             <p class="text-base font-medium text-gray-900">
-                                {{ \Carbon\Carbon::parse($kasus->updated_at)->format('d F Y, H:i') }} WIB
+                                {{ \Carbon\Carbon::make($kasus->updated_at)->setTimezone(config('app.timezone'))->format('d F Y, H:i') }} WIB
                             </p>
                         </div>
                     </div>
