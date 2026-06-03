@@ -57,6 +57,12 @@ class ExportService
             $query->where('jenis_laporan', $filters['jenis_laporan']);
         }
 
+        if (!empty($filters['tahun'])) {
+            $query->whereHas('waktuFraud', function($waktuQuery) use ($filters) {
+                $waktuQuery->whereYear('waktu_diketahui', $filters['tahun']);
+            });
+        }
+
         if (!empty($filters['tanggal_awal']) || !empty($filters['tanggal_akhir'])) {
             $query->whereHas('waktuFraud', function($waktuQuery) use ($filters) {
                 if (!empty($filters['tanggal_awal']) && !empty($filters['tanggal_akhir'])) {
@@ -157,9 +163,11 @@ class ExportService
         ];
 
         $data = [];
-        foreach ($semesterKasus as $index => $k) {
+        $counter = 0;
+        foreach ($semesterKasus as $k) {
+            $counter++;
             $data[] = [
-                'no' => $index + 1,
+                'no' => $counter,
                 'kode_komponen' => $k->kode_komponen ?? '-',
                 'kejadian_fraud' => $k->kejadianFraud?->count() ? $k->kejadianFraud->map(function($item) {
                     return $item->kode ? $item->kode . ' (' . $item->nama . ')' : $item->nama;
@@ -287,9 +295,11 @@ class ExportService
         ];
 
         $data = [];
-        foreach ($signifikanKasus as $index => $k) {
+        $counter = 0;
+        foreach ($signifikanKasus as $k) {
+            $counter++;
             $data[] = [
-                'no' => $index + 1,
+                'no' => $counter,
                 'kode_komponen' => $k->kode_komponen ?? '-',
                 'kejadian_fraud' => $k->kejadianFraud?->map(function($item) {
                     return $item->kode ? $item->kode . ' (' . $item->nama . ')' : $item->nama;

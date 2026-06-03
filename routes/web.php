@@ -26,7 +26,9 @@ Route::middleware('auth')->group(function () {
     Route::resource('kasus', KasusController::class);
     Route::get('/kasus-export', [KasusController::class, 'export'])->name('kasus.export');
     Route::get('/kasus-export-excel', [KasusController::class, 'exportExcel'])->name('kasus.export-excel');
-    Route::get('/kasus-export-pdf', [KasusController::class, 'exportPdf'])->name('kasus.export-pdf');
+    Route::get('/kasus-import', [KasusController::class, 'showImportForm'])->name('kasus.import-form');
+    Route::post('/kasus-import', [KasusController::class, 'import'])->name('kasus.import');
+    Route::get('/kasus-import-template', [KasusController::class, 'downloadTemplate'])->name('kasus.import-template');
 });
 
 require __DIR__.'/auth.php';

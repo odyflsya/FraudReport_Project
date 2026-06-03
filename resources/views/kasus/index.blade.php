@@ -30,10 +30,28 @@
 
         <h2 class="text-lg font-semibold">Data Kasus</h2>
 
-        <div class="flex items-center gap-3">
+        <div class="flex items-center gap-3 flex-wrap">
             <a href="{{ route('kasus.create') }}"
-                class="bg-orange-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-orange-600 whitespace-nowrap">
-                + Tambah Kasus
+                class="flex items-center gap-2 bg-orange-500 text-white px-4 py-2 rounded-lg text-sm hover:bg-orange-600 whitespace-nowrap">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Tambah Kasus
+            </a>
+            <a href="{{ route('kasus.import-form') }}"
+                class="flex items-center justify-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-green-700 whitespace-nowrap">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Import Excel
+            </a>
+            <a href="{{ route('kasus.import-template') }}"
+                class="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg text-sm hover:bg-blue-700 whitespace-nowrap"
+                title="Download template Excel kosong">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+                Template
             </a>
         </div>
 
@@ -43,7 +61,7 @@
 <!-- FILTER FORM -->
 <div class="mb-4">
     <div class="bg-white p-4 rounded-xl shadow">
-        <form method="GET" action="{{ route('kasus.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        <form method="GET" action="{{ route('kasus.index') }}" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <!-- Search Input -->
             <div>
                 <label for="search" class="block text-sm font-medium text-gray-700 mb-1">Pencarian Global</label>
@@ -90,6 +108,18 @@
                 </select>
             </div>
 
+            <!-- Tahun -->
+            <div>
+                <label for="tahun" class="block text-sm font-medium text-gray-700 mb-1">Tahun</label>
+                <select id="tahun" name="tahun"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:ring-blue-500 focus:border-blue-500">
+                    <option value="">Semua Tahun</option>
+                    @foreach($yearOptions ?? [] as $year)
+                        <option value="{{ $year }}" {{ request('tahun') == $year ? 'selected' : '' }}>{{ $year }}</option>
+                    @endforeach
+                </select>
+            </div>
+
             <!-- Tanggal Awal -->
             <div>
                 <label for="tanggal_awal" class="block text-sm font-medium text-gray-700 mb-1">Tanggal Awal</label>
@@ -105,7 +135,7 @@
             </div>
 
             <!-- Buttons -->
-            <div class="flex gap-2 md:col-span-2 lg:col-span-5">
+            <div class="flex gap-2 md:col-span-2 lg:col-span-6">
                 <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded-md text-sm hover:bg-blue-600">
                     <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -129,8 +159,8 @@
     <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold"></h2>
         <select id="reportTypeSelector" class="px-7 py-2 border border-gray-300 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500">
-            <option value="semester">Laporan Semester</option>
-            <option value="signifikan">Laporan Signifikan</option>
+            <option value="semester" {{ request('jenis_laporan') == 'semester' || !request('jenis_laporan') ? 'selected' : '' }}>Laporan Semester</option>
+            <option value="signifikan" {{ request('jenis_laporan') == 'signifikan' ? 'selected' : '' }}>Laporan Signifikan</option>
         </select>
     </div>
 
@@ -174,8 +204,11 @@
         if ($value === 'P') return 'P (Perempuan)';
         return $value !== '' ? $value : '-';
     };
-    $semesterKasus = $kasus->getCollection()->where('jenis_laporan', 'semester');
-    $signifikanKasus = $kasus->getCollection()->where('jenis_laporan', 'signifikan');
+    
+    // Calculate starting numbers for each type (semester continues, signifikan restarts)
+    $perPage = 10; // Must match pagination items per page
+    $semesterStartNumber = ($semesterKasus->currentPage() - 1) * $perPage + 1;
+    $signifikanStartNumber = ($signifikanKasus->currentPage() - 1) * $perPage + 1;
 @endphp
 
                 <tr>
@@ -273,7 +306,7 @@
             <tbody class="bg-white">
                 @forelse($semesterKasus as $k)
                     <tr class="hover:bg-gray-50 align-top">
-                        <td class="border p-2">{{ $loop->iteration }}</td>
+                        <td class="border p-2">{{ $semesterStartNumber + $loop->index }}</td>
                         <td class="border p-2">{{ $k->kode_komponen }}</td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
@@ -529,7 +562,7 @@
             <tbody class="bg-white">
                 @forelse($signifikanKasus as $k)
                     <tr class="hover:bg-gray-50 align-top">
-                        <td class="border p-2">{{ $loop->iteration }}</td>
+                        <td class="border p-2">{{ $signifikanStartNumber + $loop->index }}</td>
                         <td class="border p-2">{{ $k->kode_komponen }}</td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
@@ -651,7 +684,7 @@
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                     </button>
                                 </form>
-                            </div>
+                            </div> 
                         </td>
                     </tr>
                 @empty
@@ -664,25 +697,98 @@
     </div>
 </div>
 
-<script>
-    document.getElementById('reportTypeSelector').addEventListener('change', function(e) {
-        const selectedType = e.target.value;
-        const semesterContainer = document.getElementById('semesterTableContainer');
-        const signifikanContainer = document.getElementById('signifikanTableContainer');
-        
-        if (selectedType === 'semester') {
-            semesterContainer.classList.remove('hidden');
-            signifikanContainer.classList.add('hidden');
-        } else {
-            semesterContainer.classList.add('hidden');
-            signifikanContainer.classList.remove('hidden');
-        }
-    });
-</script>
-
 <!-- PAGINATION -->
 <div class="mt-4">
-    {{ $kasus->links() }}
+    <!-- Semester Pagination -->
+    <div id="semesterPaginationContainer">
+        {{ $semesterKasus->links() }}
+    </div>
+    
+    <!-- Signifikan Pagination -->
+    <div id="signifikanPaginationContainer" class="hidden">
+        {{ $signifikanKasus->links() }}
+    </div>
 </div>
+
+<script>
+    // Helper function to get all current filter parameters
+    function getFilterParams() {
+        const params = new URLSearchParams(window.location.search);
+        const filters = {};
+        
+        // Preserve all filter parameters except jenis_laporan and pagination params
+        for (const [key, value] of params.entries()) {
+            if (key !== 'jenis_laporan' && !key.includes('_page')) {
+                filters[key] = value;
+            }
+        }
+        
+        return filters;
+    }
+
+    // Build URL with filter parameters
+    function buildFilterUrl(jeniLaporan) {
+        const params = new URLSearchParams();
+        
+        // Add the selected jenis_laporan
+        params.append('jenis_laporan', jeniLaporan);
+        
+        // Add all other filter parameters
+        const filters = getFilterParams();
+        for (const [key, value] of Object.entries(filters)) {
+            params.append(key, value);
+        }
+        
+        return '{{ route("kasus.index") }}?' + params.toString();
+    }
+
+    // Update table visibility when switching tables
+    function updateTableVisibility(jeniLaporan) {
+        const semesterTableContainer = document.getElementById('semesterTableContainer');
+        const signifikanTableContainer = document.getElementById('signifikanTableContainer');
+        const semesterPaginationContainer = document.getElementById('semesterPaginationContainer');
+        const signifikanPaginationContainer = document.getElementById('signifikanPaginationContainer');
+
+        if (jeniLaporan === 'signifikan') {
+            semesterTableContainer.classList.add('hidden');
+            signifikanTableContainer.classList.remove('hidden');
+            semesterPaginationContainer.classList.add('hidden');
+            signifikanPaginationContainer.classList.remove('hidden');
+        } else {
+            semesterTableContainer.classList.remove('hidden');
+            signifikanTableContainer.classList.add('hidden');
+            semesterPaginationContainer.classList.remove('hidden');
+            signifikanPaginationContainer.classList.add('hidden');
+        }
+    }
+
+    // Get the current jenis_laporan from URL parameter
+    function getCurrentJeniLaporan() {
+        const params = new URLSearchParams(window.location.search);
+        return params.get('jenis_laporan') || 'semester';
+    }
+
+    // Initialize page on load
+    document.addEventListener('DOMContentLoaded', function() {
+        const currentJeniLaporan = getCurrentJeniLaporan();
+        
+        // Update dropdown to show selected type
+        const reportTypeSelector = document.getElementById('reportTypeSelector');
+        reportTypeSelector.value = currentJeniLaporan;
+        
+        // Show correct table
+        updateTableVisibility(currentJeniLaporan);
+    });
+
+    // Handle dropdown change
+    const reportTypeSelector = document.getElementById('reportTypeSelector');
+    reportTypeSelector.addEventListener('change', function(e) {
+        const selectedType = e.target.value;
+        const redirectUrl = buildFilterUrl(selectedType);
+        
+        // Redirect to maintain all filter parameters
+        window.location.href = redirectUrl;
+    });
+</script>
 
 @endsection

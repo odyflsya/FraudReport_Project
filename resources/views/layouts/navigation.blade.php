@@ -16,6 +16,42 @@
                    class="text-sm font-medium {{ request()->routeIs('dashboard') ? 'text-blue-600' : 'text-gray-600 hover:text-blue-600' }}">
                     Dashboard
                 </a>
+                <a href="#"
+                   class="text-sm font-medium text-gray-600 hover:text-blue-600">
+                    Pencegahan
+                </a>
+                <a href="#"
+                   class="text-sm font-medium text-gray-600 hover:text-blue-600">
+                    Deteksi
+                </a>
+
+                <div x-data="{ investigasiOpen: false }" class="relative">
+                    <button @click="investigasiOpen = !investigasiOpen"
+                            class="text-sm font-medium text-gray-600 hover:text-blue-600 flex items-center gap-1">
+                        Investigasi
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-width="2" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+                    <div x-show="investigasiOpen"
+                         @click.away="investigasiOpen = false"
+                         x-transition
+                         class="absolute left-0 mt-2 w-48 bg-white rounded-xl shadow-lg border z-50">
+                        <a href="{{ route('kasus.index') }}"
+                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            Manajemen Kasus
+                        </a>
+                        <a href="{{ route('kasus.create') }}"
+                           class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">
+                            Input Kasus
+                        </a>
+                    </div>
+                </div>
+
+                <a href="#"
+                   class="text-sm font-medium text-gray-600 hover:text-blue-600">
+                    Pemantauan
+                </a>
             </div>
 
             <!-- RIGHT -->
@@ -100,6 +136,29 @@
         <a href="{{ route('dashboard') }}"
            class="block py-2 text-gray-700">
             Dashboard
+        </a>
+        <a href="#"
+           class="block py-2 text-gray-700">
+            Pencegahan
+        </a>
+        <a href="#"
+           class="block py-2 text-gray-700">
+            Deteksi
+        </a>
+        <div class="mt-2 border-t border-gray-200 pt-2">
+            <span class="block py-2 text-gray-500 uppercase tracking-wide text-xs">Investigasi</span>
+            <a href="{{ route('kasus.index') }}"
+               class="block pl-3 py-2 text-gray-700 hover:bg-gray-50">
+                Manajemen Kasus
+            </a>
+            <a href="{{ route('kasus.create') }}"
+               class="block pl-3 py-2 text-gray-700 hover:bg-gray-50">
+                Input Kasus
+            </a>
+        </div>
+        <a href="#"
+           class="block py-2 text-gray-700">
+            Pemantauan
         </a>
     </div>
 

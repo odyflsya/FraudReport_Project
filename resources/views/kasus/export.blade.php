@@ -52,7 +52,7 @@
             </div>
 
             <!-- Export Buttons -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4 pt-4 border-t">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-4 pt-4 border-t">
                 <button type="button" onclick="resetFilters()"
                     class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition font-medium">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -66,13 +66,6 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                     </svg>
                     Excel
-                </button>
-                <button type="button" onclick="exportToPdf()"
-                    class="w-full flex items-center justify-center gap-2 px-4 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition font-medium">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                    </svg>
-                    PDF
                 </button>
             </div>
         </form>
@@ -633,14 +626,6 @@ function exportToExcel() {
     const params = getFilterParams();
     const queryString = params.toString();
     const url = "{{ route('kasus.export-excel') }}" + (queryString ? '?' + queryString : '');
-    window.location.href = url;
-}
-
-function exportToPdf() {
-    const params = getFilterParams();
-    params.append('report_type', reportTypeSelector.value);
-    const queryString = params.toString();
-    const url = "{{ route('kasus.export-pdf') }}" + (queryString ? '?' + queryString : '');
     window.location.href = url;
 }
 </script>
