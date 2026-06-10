@@ -27,7 +27,7 @@
             <tr>
                 <td>{{ $p->id }}</td>
                 <td>{{ $p->kasus ? $p->kasus->kode_komponen : '' }}</td>
-                <td>{{ $p->kategori }}</td>
+                <td>{{ $p->kategori_label }}</td>
                 <td>{{ $p->nama }}</td>
                 <td>{{ $p->jenisIdentitas ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : '' }}</td>
                 <td>{{ $p->nomor_identitas }}</td>

@@ -342,7 +342,7 @@
                                         <div class="space-y-2">
                                             <div>
                                                 <p class="text-xs font-semibold text-gray-600 uppercase">Kategori</p>
-                                                <p class="text-sm text-gray-900">{{ $pelaku->kategori ?? '-' }}</p>
+                                                <p class="text-sm text-gray-900">{{ $pelaku->kategori_label }}</p>
                                             </div>
                                             <div>
                                                 <p class="text-xs font-semibold text-gray-600 uppercase">Nama</p>
