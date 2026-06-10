@@ -20,7 +20,7 @@ class ExportService
             'lokasiFraud',
             'pihakDirugikan',
             'waktuFraud',
-            'kerugianFraud',
+            'kerugianFraud' => function($q) { $q->with(['recoveries','details']); },
             'kelemahanFraud',
             'penangananFraud',
             'pencegahanFraud' => function($q) {
@@ -29,7 +29,7 @@ class ExportService
             'pelakuFrauds' => function($q) {
                 $q->with(['jenisIdentitas', 'statusPelaku', 'jabatanKejadian', 'jabatanDiketahui']);
             }
-        ])->where('user_id', auth()->id());
+        ]);
 
         if (!empty($filters['search'])) {
             $search = $filters['search'];
@@ -55,6 +55,12 @@ class ExportService
 
         if (!empty($filters['jenis_laporan'])) {
             $query->where('jenis_laporan', $filters['jenis_laporan']);
+        }
+
+        if (!empty($filters['tahun'])) {
+            $query->whereHas('waktuFraud', function($waktuQuery) use ($filters) {
+                $waktuQuery->whereYear('waktu_diketahui', $filters['tahun']);
+            });
         }
 
         if (!empty($filters['tanggal_awal']) || !empty($filters['tanggal_akhir'])) {
@@ -203,14 +209,12 @@ class ExportService
         return number_format($value, 0, '.', ',');
     }
 
-    private function formatExportNumberBlank(?int $value): string
-    {
-        if ($value === null) {
-            return '';
-        }
-
-        return number_format($value, 0, '.', ',');
-    }
+private function formatExportNumberBlank($value): string
+{
+    return ($value ?? 0) > 0
+        ? number_format($value, 0, '.', ',')
+        : '';
+}
 
     public function prepareExportDataSemester(Collection $kasus): array
     {
@@ -233,7 +237,6 @@ class ExportService
             'Waktu Terjadi Awal',
             'Waktu Terjadi Akhir',
             'Fraud Diketahui',
-            'Kategori Pelaku',
             'LJK Rill',
             'LJK Potensial',
             'LJK Recovery',
@@ -272,9 +275,11 @@ class ExportService
         $keys = $this->getSemesterColumnKeys();
 
         $data = [];
-        foreach ($semesterKasus as $index => $k) {
+        $counter = 0;
+        foreach ($semesterKasus as $k) {
+            $counter++;
             $data[] = [
-                'no' => $index + 1,
+                'no' => $counter,
                 'kode_komponen' => $k->kode_komponen ?? '-',
                 'kejadian_fraud' => $k->kejadianFraud?->count() ? $k->kejadianFraud->map(function($item) {
                     return $item->kode ? $item->kode . ' (' . $item->nama . ')' : $item->nama;
@@ -298,13 +303,13 @@ class ExportService
                 'kategori_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('kategori_label')->join("\n") : '-',
                 'ljk_rill' => $this->formatExportNumberBlank($k->kerugianFraud?->ljk_rill),
                 'ljk_potensial' => $this->formatExportNumberBlank($k->kerugianFraud?->ljk_potensial),
-                'ljk_recovery' => $this->formatExportNumberBlank($k->kerugianFraud?->ljk_recovery),
+                'ljk_recovery' => $this->formatExportNumberBlank($k->kerugianFraud?->getOutstandingForKategori('ljk')),
                 'konsumen_rill' => $this->formatExportNumberBlank($k->kerugianFraud?->konsumen_rill),
                 'konsumen_potensial' => $this->formatExportNumberBlank($k->kerugianFraud?->konsumen_potensial),
-                'konsumen_recovery' => $this->formatExportNumberBlank($k->kerugianFraud?->konsumen_recovery),
+                'konsumen_recovery' => $this->formatExportNumberBlank($k->kerugianFraud?->getOutstandingForKategori('konsumen')),
                 'pihak_lain_rill' => $this->formatExportNumberBlank($k->kerugianFraud?->pihak_lain_rill),
                 'pihak_lain_potensial' => $this->formatExportNumberBlank($k->kerugianFraud?->pihak_lain_potensial),
-                'pihak_lain_recovery' => $this->formatExportNumberBlank($k->kerugianFraud?->pihak_lain_recovery),
+                'pihak_lain_recovery' => $this->formatExportNumberBlank($k->kerugianFraud?->getOutstandingForKategori('pihak_lain')),
                 'kelemahan' => $k->kelemahanFraud?->count() ? $k->kelemahanFraud->map(function($item) {
                     return $item->kode ? $item->kode . ' (' . $item->nama . ')' : $item->nama;
                 })->join("\n") : '-',
@@ -406,9 +411,11 @@ class ExportService
         $keys = $this->getSignifikanColumnKeys();
 
         $data = [];
-        foreach ($signifikanKasus as $index => $k) {
+        $counter = 0;
+        foreach ($signifikanKasus as $k) {
+            $counter++;
             $data[] = [
-                'no' => $index + 1,
+                'no' => $counter,
                 'kode_komponen' => $k->kode_komponen ?? '-',
                 'kejadian_fraud' => $k->kejadianFraud?->map(function($item) {
                     return $item->kode ? $item->kode . ' (' . $item->nama . ')' : $item->nama;
@@ -632,12 +639,13 @@ class ExportService
     public function getSummary(Collection $kasus): array
     {
         $totalKerugian = $kasus->sum(function($k) {
-            return ($k->kerugianFraud?->ljk_rill ?? 0) +
-                   ($k->kerugianFraud?->ljk_potensial ?? 0) +
-                   ($k->kerugianFraud?->konsumen_rill ?? 0) +
-                   ($k->kerugianFraud?->konsumen_potensial ?? 0) +
-                   ($k->kerugianFraud?->pihak_lain_rill ?? 0) +
-                   ($k->kerugianFraud?->pihak_lain_potensial ?? 0);
+            $kf = $k->kerugianFraud;
+            if (!$kf) return 0;
+            $total = ($kf->ljk_rill ?? 0) + ($kf->ljk_potensial ?? 0)
+                + ($kf->konsumen_rill ?? 0) + ($kf->konsumen_potensial ?? 0)
+                + ($kf->pihak_lain_rill ?? 0) + ($kf->pihak_lain_potensial ?? 0);
+            $recovery = $kf->recoveries?->sum('amount') ?? 0;
+            return $total - $recovery;
         });
 
         return [

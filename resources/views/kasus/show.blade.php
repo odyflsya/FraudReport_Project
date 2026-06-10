@@ -1,5 +1,18 @@
 @extends('layouts.app')
 
+@php
+    $formatTanggal = function ($value) {
+        if (!$value) {
+            return '-';
+        }
+        try {
+            return \Carbon\Carbon::parse($value)->format('Y-m-d');
+        } catch (\Exception $e) {
+            return '-';
+        }
+    };
+@endphp
+
 @section('content')
 <div class="min-h-screen bg-gray-100 p-4">
     <!-- Header -->
@@ -170,15 +183,15 @@
                         <div class="mt-2 grid grid-cols-3 gap-4">
                             <div>
                                 <p class="text-sm font-medium text-gray-700">Waktu Awal</p>
-                                <p class="text-base text-gray-900">{{ $kasus->waktuFraud && $kasus->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($kasus->waktuFraud->waktu_awal)->format('Y-m-d') : '-' }}</p>
+                                <p class="text-base text-gray-900">{{ $formatTanggal($kasus->waktuFraud?->waktu_awal) }}</p>
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-700">Waktu Akhir</p>
-                                <p class="text-base text-gray-900">{{ $kasus->waktuFraud && $kasus->waktuFraud->waktu_akhir ? \Carbon\Carbon::parse($kasus->waktuFraud->waktu_akhir)->format('Y-m-d') : '-' }}</p>
+                                <p class="text-base text-gray-900">{{ $formatTanggal($kasus->waktuFraud?->waktu_akhir) }}</p>
                             </div>
                             <div>
                                 <p class="text-sm font-medium text-gray-700">Waktu Fraud Diketahui</p>
-                                <p class="text-base text-gray-900">{{ $kasus->waktuFraud && $kasus->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($kasus->waktuFraud->waktu_diketahui)->format('Y-m-d') : '-' }}</p>
+                                <p class="text-base text-gray-900">{{ $formatTanggal($kasus->waktuFraud?->waktu_diketahui) }}</p>
                             </div>
                         </div>
                     @else
@@ -195,17 +208,17 @@
                                 <thead>
                                     <tr class="bg-gray-100">
                                         <th class="border border-gray-300 px-4 py-2 text-left">Kategori</th>
-                                        <th class="border border-gray-300 px-4 py-2 text-right">Rill</th>
-                                        <th class="border border-gray-300 px-4 py-2 text-right">Potensial</th>
-                                        <th class="border border-gray-300 px-4 py-2 text-right">Recovery</th>
+                                        <th class="border border-gray-300 px-4 py-2 text-right">Riil (incurred)</th>
+                                        <th class="border border-gray-300 px-4 py-2 text-right">Potensial (Potential)</th>
+                                        <th class="border border-gray-300 px-4 py-2 text-right">Setelah Pengembalian (Recovery)</th>
                                     </tr>
                                 </thead>
 <tbody>
     @php
         $categories = [
-            'LJK' => ['rill' => 'ljk_rill', 'potensial' => 'ljk_potensial', 'recovery' => 'ljk_recovery'],
-            'Konsumen' => ['rill' => 'konsumen_rill', 'potensial' => 'konsumen_potensial', 'recovery' => 'konsumen_recovery'],
-            'Pihak Lain' => ['rill' => 'pihak_lain_rill', 'potensial' => 'pihak_lain_potensial', 'recovery' => 'pihak_lain_recovery'],
+            'LJK' => ['key' => 'ljk','rill' => 'ljk_rill', 'potensial' => 'ljk_potensial', 'recovery' => 'ljk_recovery'],
+            'Konsumen' => ['key' => 'konsumen','rill' => 'konsumen_rill', 'potensial' => 'konsumen_potensial', 'recovery' => 'konsumen_recovery'],
+            'Pihak Lain' => ['key' => 'pihak_lain','rill' => 'pihak_lain_rill', 'potensial' => 'pihak_lain_potensial', 'recovery' => 'pihak_lain_recovery'],
         ];
     @endphp
 
@@ -215,25 +228,32 @@
 
         <!-- Kolom Rill -->
         <td class="border border-gray-300 px-4 py-2 text-right">
-            {{-- Menggunakan > 0 agar jika 0 atau null tetap kosong --}}
-            @if($kasus->jenis_laporan === 'semester' && ($kasus->kerugianFraud->{$fields['rill']} ?? 0) > 0)
-                {{ number_format($kasus->kerugianFraud->{$fields['rill']}, 0, ',', '.') }}
+            @php $rillVal = $kasus->kerugianFraud->{$fields['rill']} ?? 0; @endphp
+            @if($kasus->jenis_laporan === 'semester' && $rillVal > 0)
+                <button type="button" class="text-right text-blue-700 hover:text-blue-900" onclick="openKerugianDetailsModal('{{ $fields['key'] }}','riil')">{{ number_format($rillVal, 0, ',', '.') }}</button>
             @endif
         </td>
 
         <!-- Kolom Potensial -->
         <td class="border border-gray-300 px-4 py-2 text-right">
-            @if(($kasus->kerugianFraud->{$fields['potensial']} ?? 0) > 0)
-                {{ number_format($kasus->kerugianFraud->{$fields['potensial']}, 0, ',', '.') }}
+            @php $potVal = $kasus->kerugianFraud->{$fields['potensial']} ?? 0; @endphp
+            @if($potVal > 0)
+                <button type="button" class="text-right text-blue-700 hover:text-blue-900" onclick="openKerugianDetailsModal('{{ $fields['key'] }}','potensial')">{{ number_format($potVal, 0, ',', '.') }}</button>
             @endif
         </td>
 
-        <!-- Kolom Recovery -->
+        <!-- Kolom Setelah Recovery -->
         <td class="border border-gray-300 px-4 py-2 text-right">
-            @if($kasus->jenis_laporan === 'semester' && ($kasus->kerugianFraud->{$fields['recovery']} ?? 0) > 0)
-                <button type="button" class="text-right text-blue-700 hover:text-blue-900" onclick="document.getElementById('recoveryDetailsModal').classList.remove('hidden'); document.getElementById('recoveryDetailsModal').classList.add('flex');">
-                    {{ number_format($kasus->kerugianFraud->{$fields['recovery']}, 0, ',', '.') }}
+            @php
+                $outstandingVal = $kasus->kerugianFraud->getOutstandingForKategori($fields['key']);
+                $hasRecoveryHistory = $kasus->kerugianFraud->getRecoveryTotalForKategori($fields['key']) > 0;
+            @endphp
+            @if($kasus->jenis_laporan === 'semester' && ($outstandingVal > 0 || $hasRecoveryHistory))
+                <button type="button" class="text-right text-blue-700 hover:text-blue-900" onclick="openRecoveryDetailsModal()">
+                    {{ number_format($outstandingVal, 0, ',', '.') }}
                 </button>
+            @else
+                {{ $outstandingVal > 0 ? number_format($outstandingVal, 0, ',', '.') : '' }}
             @endif
         </td>
     </tr>
@@ -250,52 +270,68 @@
                             $konsumen_pot = $kasus->kerugianFraud->konsumen_potensial ?? 0;
                             $pihak_lain_pot = $kasus->kerugianFraud->pihak_lain_potensial ?? 0;
 
-                            $recovery_sum = 0;
-                            if ($kasus->kerugianFraud) {
-                                $recovery_sum = $kasus->kerugianFraud->recoveries->sum('amount') ?? 0;
-                                if ($recovery_sum == 0) {
-                                    $recovery_sum = ($kasus->kerugianFraud->ljk_recovery ?? 0) + ($kasus->kerugianFraud->konsumen_recovery ?? 0) + ($kasus->kerugianFraud->pihak_lain_recovery ?? 0);
-                                }
-                            }
-
-                            $total_rill = $ljk_rill + $konsumen_rill + $pihak_lain_rill;
-                            $total_pot = $ljk_pot + $konsumen_pot + $pihak_lain_pot;
-                            $total_all = $total_rill + $total_pot - $recovery_sum;
+                            $total_all = $kasus->kerugianFraud->getTotalOutstanding();
+                            $recoveryHistory = $kasus->kerugianFraud->getRecoveryHistoryWithRunningTotals();
                         @endphp
 
                         <div class="mt-4 rounded bg-gray-50 p-4">
-                            <p class="text-sm text-gray-600">Total Kerugian (Riil + Potensial - Recovery)</p>
-                            <p class="text-xl font-semibold text-gray-900">Rp {{ number_format($total_all, 0, ',', '.') }}</p>
+                            <p class="text-sm text-gray-600">Total Kerugian Tersisa (Riil + Potensial - Recovery)</p>
+                            <p class="text-xl font-semibold text-gray-900">
+                                @if($kasus->kerugianFraud->getTotalRecovery() > 0)
+                                    <button type="button" class="text-blue-700 hover:text-blue-900" onclick="openRecoveryDetailsModal()">
+                                        Rp {{ number_format($total_all, 0, ',', '.') }}
+                                    </button>
+                                @else
+                                    Rp {{ number_format($total_all, 0, ',', '.') }}
+                                @endif
+                            </p>
                         </div>
 
-                        <!-- Recovery Details Modal -->
+                        <!-- Recovery History Modal -->
                         <div id="recoveryDetailsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-6">
-                            <div class="w-full max-w-2xl overflow-hidden rounded-3xl bg-white shadow-2xl">
+                            <div class="w-full max-w-3xl overflow-hidden rounded-3xl bg-white shadow-2xl">
                                 <div class="flex items-center justify-between border-b border-slate-200 px-6 py-5">
                                     <div>
-                                        <h3 class="text-xl font-semibold text-slate-900">Rincian Recovery</h3>
-                                        <p class="text-sm text-slate-500">Riwayat nominal recovery yang sudah disubmit user.</p>
+                                        <h3 class="text-xl font-semibold text-slate-900">Histori Recovery</h3>
+                                        <p class="text-sm text-slate-500">Perkembangan kerugian setelah setiap pengembalian dana.</p>
                                     </div>
                                     <button id="closeRecoveryModal" type="button" class="rounded-full border border-slate-300 bg-white px-3 py-2 text-slate-700 hover:bg-slate-100">Tutup</button>
                                 </div>
                                 <div class="max-h-[60vh] overflow-y-auto px-6 py-5">
-                                    @if($kasus->kerugianFraud && $kasus->kerugianFraud->recoveries->count() > 0)
-                                        <div class="space-y-3">
-                                            @foreach($kasus->kerugianFraud->recoveries->sortByDesc('created_at') as $rec)
-                                                <div class="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                                                    <div class="flex items-start justify-between gap-4">
-                                                        <div>
-                                                            <p class="text-sm font-semibold text-slate-900">{{ strtoupper($rec->kategori) }}</p>
-                                                            <p class="mt-1 text-sm text-slate-600">{{ $rec->keterangan ?? '-' }}</p>
-                                                            <p class="mt-2 text-xs uppercase tracking-[0.16em] text-slate-500">{{ $rec->created_at->format('Y-m-d H:i') }}@if($rec->user_id) • User #{{ $rec->user_id }}@endif</p>
-                                                        </div>
-                                                        <div class="text-right">
-                                                            <p class="text-lg font-semibold text-slate-900">Rp {{ number_format($rec->amount, 0, ',', '.') }}</p>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endforeach
+                                    @if(count($recoveryHistory) > 0)
+                                        <div class="overflow-x-auto">
+                                            <table class="min-w-full text-sm border-collapse">
+                                                <thead>
+                                                    <tr class="bg-gray-100">
+                                                        <th class="border border-gray-200 px-3 py-2 text-left">Tanggal</th>
+                                                        <th class="border border-gray-200 px-3 py-2 text-left">Kategori</th>
+                                                        <th class="border border-gray-200 px-3 py-2 text-left">Nomor Rekening</th>
+                                                        <th class="border border-gray-200 px-3 py-2 text-right">Nominal Recovery</th>
+                                                        <th class="border border-gray-200 px-3 py-2 text-right">Total Kerugian Setelah Recovery</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @foreach($recoveryHistory as $row)
+                                                        <tr>
+                                                            <td class="border border-gray-200 px-3 py-2">
+                                                                {{ $formatTanggal($row['tanggal'] ?? null) }}
+                                                            </td>
+                                                            <td class="border border-gray-200 px-3 py-2">{{ strtoupper($row['kategori'] ?? '-') }}</td>
+                                                            <td class="border border-gray-200 px-3 py-2">{{ $row['no_rekening'] ?? '-' }}</td>
+                                                            <td class="border border-gray-200 px-3 py-2 text-right font-medium">
+                                                                Rp {{ number_format($row['amount'], 0, ',', '.') }}
+                                                            </td>
+                                                            <td class="border border-gray-200 px-3 py-2 text-right font-semibold text-red-700">
+                                                                Rp {{ number_format($row['total_outstanding'], 0, ',', '.') }}
+                                                            </td>
+                                                        </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
                                         </div>
+                                        <p class="mt-4 text-xs text-slate-500">
+                                            Total Kerugian = (Kerugian Riil + Kerugian Potensial) - Akumulasi Recovery
+                                        </p>
                                     @else
                                         <p class="text-sm text-slate-600">Belum ada riwayat recovery.</p>
                                     @endif
@@ -303,18 +339,21 @@
                             </div>
                         </div>
                         <script>
+                            function openRecoveryDetailsModal() {
+                                var modal = document.getElementById('recoveryDetailsModal');
+                                if (modal) {
+                                    modal.classList.remove('hidden');
+                                    modal.classList.add('flex');
+                                }
+                            }
                             document.addEventListener('DOMContentLoaded', function () {
                                 var modal = document.getElementById('recoveryDetailsModal');
                                 var closeModal = document.getElementById('closeRecoveryModal');
-
                                 if (modal && closeModal) {
                                     closeModal.addEventListener('click', function () {
                                         modal.classList.add('hidden');
                                         modal.classList.remove('flex');
                                     });
-                                }
-
-                                if (modal) {
                                     modal.addEventListener('click', function (event) {
                                         if (event.target === modal) {
                                             modal.classList.add('hidden');
@@ -324,6 +363,158 @@
                                 }
                             });
                         </script>
+
+                        <!-- Kerugian Details Modal (read-only) -->
+                        <div id="kerugianDetailsModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-6">
+                            <div class="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+                                <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                                    <h3 id="kerugianDetailsTitle" class="text-lg font-semibold text-slate-900">Rincian Kerugian</h3>
+                                    <button id="closeKerugianModal" type="button" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Tutup</button>
+                                </div>
+                                <div class="max-h-[60vh] overflow-y-auto px-5 py-4">
+                                    <div class="overflow-x-auto rounded-lg border border-slate-200">
+                                        <table class="min-w-full text-sm">
+                                            <thead class="bg-slate-50">
+                                                <tr>
+                                                    <th class="border border-gray-200 px-3 py-2 text-left">No</th>
+                                                    <th class="border border-gray-200 px-3 py-2 text-left">Nominal</th>
+                                                    <th class="border border-gray-200 px-3 py-2 text-left">Nomor Rekening</th>
+                                                    <th class="border border-gray-200 px-3 py-2 text-left">Tanggal Dibuat</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="kerugianDetailsTableBody">
+                                                <tr>
+                                                    <td colspan="4" class="px-3 py-6 text-center text-slate-500">Belum ada rincian.</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                    <p id="kerugianDetailsTotal" class="mt-4 text-right text-sm font-semibold text-slate-800"></p>
+                                </div>
+                            </div>
+                        </div>
+
+@php
+    $kerugianDetailsData = ($kasus->kerugianFraud ? $kasus->kerugianFraud->details : collect())
+        ->map(function ($d) {
+            return [
+                'kategori' => $d->kategori,
+                'tipe' => $d->tipe,
+                'nominal' => $d->nominal,
+                'no_rekening' => $d->no_rekening,
+                'created_at' => $d->created_at?->format('Y-m-d H:i'),
+
+                
+            ];
+        })
+        ->values()
+        ->toArray();
+@endphp
+
+                          <script>
+    // Data rincian kerugian dari Laravel ke Javascript
+    window.kerugianDetailsData = @json($kerugianDetailsData);
+
+    // Event modal
+    document.addEventListener('DOMContentLoaded', function () {
+        const kModal = document.getElementById('kerugianDetailsModal');
+        const kClose = document.getElementById('closeKerugianModal');
+
+        if (kClose) {
+            kClose.addEventListener('click', function () {
+                kModal.classList.add('hidden');
+                kModal.classList.remove('flex');
+            });
+        }
+
+        if (kModal) {
+            kModal.addEventListener('click', function (e) {
+                if (e.target === kModal) {
+                    kModal.classList.add('hidden');
+                    kModal.classList.remove('flex');
+                }
+            });
+        }
+    });
+
+    // HARUS GLOBAL supaya bisa dipanggil dari onclick=""
+    function openKerugianDetailsModal(kategori, tipe) {
+
+        const modal = document.getElementById('kerugianDetailsModal');
+        const title = document.getElementById('kerugianDetailsTitle');
+        const tbody = document.getElementById('kerugianDetailsTableBody');
+        const totalEl = document.getElementById('kerugianDetailsTotal');
+
+        const tipeLabel =
+            tipe === 'riil'
+                ? 'Riil'
+                : (tipe === 'potensial'
+                    ? 'Potensial'
+                    : tipe);
+
+        title.textContent =
+            'Rincian Kerugian ' +
+            (kategori || '').toUpperCase() +
+            ' (' +
+            tipeLabel +
+            ')';
+
+        tbody.innerHTML = '';
+
+        const list = (window.kerugianDetailsData || []).filter(function (item) {
+            return item.kategori === kategori && item.tipe === tipe;
+        });
+
+        if (list.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="px-3 py-6 text-center text-slate-500">
+                        Belum ada rincian untuk kategori ini.
+                    </td>
+                </tr>
+            `;
+
+            totalEl.textContent = '';
+        } else {
+
+            let total = 0;
+
+            list.forEach(function (item, index) {
+
+                const nominal = parseInt(item.nominal || 0);
+
+                total += nominal;
+
+                tbody.innerHTML += `
+                    <tr class="hover:bg-slate-50">
+                        <td class="border-b px-3 py-2">
+                            ${index + 1}
+                        </td>
+
+                        <td class="border-b px-3 py-2 text-right font-medium">
+                            Rp ${new Intl.NumberFormat('id-ID').format(nominal)}
+                        </td>
+
+                        <td class="border-b px-3 py-2">
+                            ${item.no_rekening ?? '-'}
+                        </td>
+
+                        <td class="border-b px-3 py-2">
+                        ${item.created_at ?? '-'}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            totalEl.textContent =
+                'Total Keseluruhan: Rp ' +
+                new Intl.NumberFormat('id-ID').format(total);
+        }
+
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+    }
+</script>
                     @else
                         <p class="text-gray-400 mt-2">-</p>
                     @endif
@@ -401,10 +592,10 @@
                                             <strong>Keterangan:</strong> {{ $pencegahan->keterangan ?? '-' }}
                                         </div>
                                         <div>
-                                            <strong>Target Waktu:</strong> {{ $pencegahan->target_waktu ? \Carbon\Carbon::parse($pencegahan->target_waktu)->format('Y-m-d') : '-' }}
+                                            <strong>Target Waktu:</strong> {{ $formatTanggal($pencegahan->target_waktu) }}
                                         </div>
                                         <div>
-                                            <strong>Realisasi:</strong> {{ $pencegahan->realisasi ? \Carbon\Carbon::parse($pencegahan->realisasi)->format('Y-m-d') : '-' }}
+                                            <strong>Realisasi:</strong> {{ $formatTanggal($pencegahan->realisasi) }}
                                         </div>
                                     </div>
                                 </div>
@@ -459,7 +650,7 @@
                                             </div>
                                             <div>
                                                 <p class="text-xs font-semibold text-gray-600 uppercase">Tanggal Lahir</p>
-                                                <p class="text-sm text-gray-900">{{ $pelaku->tanggal_lahir ? \Carbon\Carbon::parse($pelaku->tanggal_lahir)->format('Y-m-d') : '-' }}</p>
+                                                <p class="text-sm text-gray-900">{{ $formatTanggal($pelaku->tanggal_lahir) }}</p>
                                             </div>
                                         </div>
                                         <div class="space-y-2">
@@ -539,13 +730,13 @@
                         <div>
                             <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">Dibuat Pada</h3>
                             <p class="text-base font-medium text-gray-900">
-                                {{ \Carbon\Carbon::make($kasus->created_at)->setTimezone(config('app.timezone'))->format('d F Y, H:i') }} WIB
+                                {{ $formatTanggal($kasus->created_at) }}
                             </p>
                         </div>
                         <div>
                             <h3 class="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-2">Diupdate Pada</h3>
                             <p class="text-base font-medium text-gray-900">
-                                {{ \Carbon\Carbon::make($kasus->updated_at)->setTimezone(config('app.timezone'))->format('d F Y, H:i') }} WIB
+                                {{ $formatTanggal($kasus->updated_at) }}
                             </p>
                         </div>
                     </div>

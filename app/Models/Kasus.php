@@ -22,6 +22,8 @@ class Kasus extends Model
         'status_penanganan',
         'jenis_laporan',
         'tindak_lanjut_ljk',
+        'source',
+        'import_batch_id',
     ];
 
     public function user()

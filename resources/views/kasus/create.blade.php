@@ -80,6 +80,8 @@
                         </div>
                     </div>
 
+                    @include('kasus.partials.kerugian-detail-manager', ['kerugianDetailsJson' => ''])
+
                     <!-- SECTION: KEJADIAN FRAUD MENURUT PELAKU -->
                     <div>
                         <h3 class="mb-4 text-lg font-semibold text-slate-900">Kejadian Fraud Menurut Pelaku</h3>
@@ -265,18 +267,26 @@
                                         <input type="text" name="ljk_rill" inputmode="decimal" autocomplete="off"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                             placeholder="" value="{{ $formatCurrencyInput(old('ljk_rill', '')) }}">
+                                        <div class="mt-2"><button type="button" onclick="openDetailModal('ljk','riil')" class="text-xs text-blue-700">Kelola Rincian Riil</button></div>
                                     </div>
                                     <div>
                                         <label class="mb-2 block text-sm font-medium text-slate-700">Kerugian Potensial (Rp)</label>
                                         <input type="text" name="ljk_potensial" inputmode="decimal" autocomplete="off"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                             placeholder="" value="{{ $formatCurrencyInput(old('ljk_potensial', '')) }}">
+                                        <div class="mt-2"><button type="button" onclick="openDetailModal('ljk','potensial')" class="text-xs text-blue-700">Kelola Rincian Potensial</button></div>
                                     </div>
                                     <div class="signifikan-hidden">
-                                        <label class="mb-2 block text-sm font-medium text-slate-700">Recovery (Rp)</label>
+                                        <label class="mb-2 block text-sm font-medium text-slate-700">Setelah Pengembalian (Recovery) (Rp)</label>
                                         <input type="text" name="ljk_recovery" inputmode="decimal" autocomplete="off"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            placeholder="" value="{{ $formatCurrencyInput(old('ljk_recovery', '')) }}">
+                                            placeholder="0" value="{{ $formatCurrencyInput(old('ljk_recovery', '')) }}">
+                                        <input type="date" name="ljk_recovery_tanggal" value="{{ old('ljk_recovery_tanggal', now()->toDateString()) }}"
+                                            class="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                        <input type="text" name="ljk_recovery_no_rekening" value="{{ old('ljk_recovery_no_rekening', '') }}" placeholder="Nomor Rekening (opsional)"
+                                            class="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                        <p class="mt-1 text-xs text-slate-500">Kosongkan jika belum ada pengembalian dana. Tambahkan nominal setiap kali ada recovery baru, total recovery akan terhitung otomatis.</p>
+
                                     </div>
                                 </div>
                             </div>
@@ -289,18 +299,26 @@
                                         <input type="text" name="konsumen_rill" inputmode="decimal" autocomplete="off"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                             placeholder="" value="{{ $formatCurrencyInput(old('konsumen_rill', '')) }}">
+                                        <div class="mt-2"><button type="button" onclick="openDetailModal('konsumen','riil')" class="text-xs text-blue-700">Kelola Rincian Riil</button></div>
                                     </div>
                                     <div>
                                         <label class="mb-2 block text-sm font-medium text-slate-700">Kerugian Potensial (Rp)</label>
                                         <input type="text" name="konsumen_potensial" inputmode="decimal" autocomplete="off"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                             placeholder="" value="{{ $formatCurrencyInput(old('konsumen_potensial', '')) }}">
+                                        <div class="mt-2"><button type="button" onclick="openDetailModal('konsumen','potensial')" class="text-xs text-blue-700">Kelola Rincian Potensial</button></div>
                                     </div>
                                     <div class="signifikan-hidden">
-                                        <label class="mb-2 block text-sm font-medium text-slate-700">Recovery (Rp)</label>
+                                        <label class="mb-2 block text-sm font-medium text-slate-700">Setelah Pengembalian (Recovery) (Rp)</label>
                                         <input type="text" name="konsumen_recovery" inputmode="decimal" autocomplete="off"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            placeholder="" value="{{ $formatCurrencyInput(old('konsumen_recovery', '')) }}">
+                                            placeholder="0" value="{{ $formatCurrencyInput(old('konsumen_recovery', '')) }}">
+                                        <input type="date" name="konsumen_recovery_tanggal" value="{{ old('konsumen_recovery_tanggal', now()->toDateString()) }}"
+                                            class="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                        <input type="text" name="konsumen_recovery_no_rekening" value="{{ old('konsumen_recovery_no_rekening', '') }}" placeholder="Nomor Rekening (opsional)"
+                                            class="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                        <p class="mt-1 text-xs text-slate-500">Kosongkan jika belum ada pengembalian dana. Tambahkan nominal setiap kali ada recovery baru, total recovery akan terhitung otomatis.</p>
+
                                     </div>
                                 </div>
                             </div>
@@ -313,18 +331,26 @@
                                         <input type="text" name="pihak_lain_rill" inputmode="decimal" autocomplete="off"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                             placeholder="" value="{{ $formatCurrencyInput(old('pihak_lain_rill', '')) }}">
+                                        <div class="mt-2"><button type="button" onclick="openDetailModal('pihak_lain','riil')" class="text-xs text-blue-700">Kelola Rincian Riil</button></div>
                                     </div>
                                     <div>
                                         <label class="mb-2 block text-sm font-medium text-slate-700">Kerugian Potensial (Rp)</label>
                                         <input type="text" name="pihak_lain_potensial" inputmode="decimal" autocomplete="off"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                             placeholder="" value="{{ $formatCurrencyInput(old('pihak_lain_potensial', '')) }}">
+                                        <div class="mt-2"><button type="button" onclick="openDetailModal('pihak_lain','potensial')" class="text-xs text-blue-700">Kelola Rincian Potensial</button></div>
                                     </div>
                                     <div class="signifikan-hidden">
-                                        <label class="mb-2 block text-sm font-medium text-slate-700">Recovery (Rp)</label>
+                                        <label class="mb-2 block text-sm font-medium text-slate-700">Setelah Pengembalian (Recovery) (Rp)</label>
                                         <input type="text" name="pihak_lain_recovery" inputmode="decimal" autocomplete="off"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                            placeholder="" value="{{ $formatCurrencyInput(old('pihak_lain_recovery', '')) }}">
+                                            placeholder="0" value="{{ $formatCurrencyInput(old('pihak_lain_recovery', '')) }}">
+                                        <input type="date" name="pihak_lain_recovery_tanggal" value="{{ old('pihak_lain_recovery_tanggal', now()->toDateString()) }}"
+                                            class="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                        <input type="text" name="pihak_lain_recovery_no_rekening" value="{{ old('pihak_lain_recovery_no_rekening', '') }}" placeholder="Nomor Rekening (opsional)"
+                                            class="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                        <p class="mt-1 text-xs text-slate-500">Kosongkan jika belum ada pengembalian dana. Tambahkan nominal setiap kali ada recovery baru, total recovery akan terhitung otomatis.</p>
+
                                     </div>
                                 </div>
                             </div>
@@ -830,5 +856,6 @@ function toggleJenisLaporanFields() {
         initCurrencyInputs();
         checkFormValidity();
     });
+
 </script>
 @endsection

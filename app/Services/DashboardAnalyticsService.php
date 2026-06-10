@@ -5,32 +5,33 @@ namespace App\Services;
 use App\Models\Kasus;
 use App\Models\KerugianRecovery;
 use Illuminate\Support\Facades\DB;
-use Carbon\Carbon;
 
 class DashboardAnalyticsService
 {
-    protected $userId;
+    /** Rumus total kerugian per kasus (sama dengan ExportService / ringkasan sistem). */
+    private const KERUGIAN_PER_KASUS = '(
+        COALESCE(kerugian_fraud.ljk_rill, 0) + COALESCE(kerugian_fraud.ljk_potensial, 0) +
+        COALESCE(kerugian_fraud.konsumen_rill, 0) + COALESCE(kerugian_fraud.konsumen_potensial, 0) +
+        COALESCE(kerugian_fraud.pihak_lain_rill, 0) + COALESCE(kerugian_fraud.pihak_lain_potensial, 0)
+    ) - COALESCE((SELECT SUM(amount) FROM kerugian_recoveries WHERE kerugian_recoveries.kerugian_fraud_id = kerugian_fraud.id), 0)';
+
     protected $year;
     protected $month;
 
-    public function __construct($userId, $year = null, $month = null)
+    public function __construct($year = null, $month = null)
     {
-        $this->userId = $userId;
-        $this->year = $year;
-        $this->month = $month;
+        $this->year = $year ? (int) $year : null;
+        $this->month = $month ? (int) $month : null;
     }
 
-    /**
-     * Get base query with filters applied
-     */
     private function getBaseQuery()
     {
-        $query = Kasus::where('user_id', $this->userId)
-            ->where('jenis_laporan', 'semester');
+        $query = Kasus::query()
+            ->where('kasus.jenis_laporan', 'semester');
 
         if ($this->year || $this->month) {
             $query->leftJoin('waktu_fraud', 'kasus.id', '=', 'waktu_fraud.kasus_id');
-            
+
             if ($this->year) {
                 $query->whereYear('waktu_fraud.waktu_diketahui', $this->year);
             }
@@ -43,354 +44,243 @@ class DashboardAnalyticsService
         return $query;
     }
 
-    /**
-     * Get base query with join to waktuFraud
-     */
-    private function getBaseQueryWithDate()
+    private function applyDateFilterToQuery($query)
     {
-        return $this->getBaseQuery()
-            ->leftJoin('waktu_fraud', 'kasus.id', '=', 'waktu_fraud.kasus_id');
-    }
-
-    // ============================================
-    // KPI CARDS
-    // ============================================
-
-    /**
-     * Total Kasus Fraud
-     */
-    public function getTotalKasus()
-    {
-        return $this->getBaseQuery()->count();
-    }
-
-    /**
-     * Total Kerugian = (Kerugian Riil + Kerugian Potensial - Recovery)
-     */
-    public function getTotalKerugian()
-    {
-        $kasus = $this->getBaseQuery()
-            ->with('kerugianFraud')
-            ->get();
-
-        $totalKerugian = 0;
-        foreach ($kasus as $k) {
-            if ($k->kerugianFraud) {
-                $riil = ($k->kerugianFraud->ljk_rill ?? 0) +
-                       ($k->kerugianFraud->konsumen_rill ?? 0) +
-                       ($k->kerugianFraud->pihak_lain_rill ?? 0);
-
-                $potensial = ($k->kerugianFraud->ljk_potensial ?? 0) +
-                           ($k->kerugianFraud->konsumen_potensial ?? 0) +
-                           ($k->kerugianFraud->pihak_lain_potensial ?? 0);
-
-                $totalKerugian += $riil + $potensial;
-            }
+        if (!$this->year && !$this->month) {
+            return $query;
         }
 
-        return $totalKerugian;
+        return $query->whereHas('waktuFraud', function ($wq) {
+            if ($this->year) {
+                $wq->whereYear('waktu_diketahui', $this->year);
+            }
+            if ($this->month && $this->year) {
+                $wq->whereMonth('waktu_diketahui', $this->month);
+            }
+        });
     }
 
-    /**
-     * Total Recovery
-     */
-    public function getTotalRecovery()
+    // ============================================
+    // KPI
+    // ============================================
+
+    public function getTotalKasus(): int
     {
-        return KerugianRecovery::whereHas('kerugianFraud', function ($query) {
+        return (int) $this->getBaseQuery()->count('kasus.id');
+    }
+
+    public function getTotalKerugian(): float
+    {
+        return (float) ($this->getBaseQuery()
+            ->leftJoin('kerugian_fraud', 'kasus.id', '=', 'kerugian_fraud.kasus_id')
+            ->selectRaw('SUM(' . self::KERUGIAN_PER_KASUS . ') as total')
+            ->value('total') ?? 0);
+    }
+
+    public function getTotalRecovery(): float
+    {
+        return (float) KerugianRecovery::whereHas('kerugianFraud', function ($query) {
             $query->whereHas('kasus', function ($q) {
-                $q->where('user_id', $this->userId)
-                  ->where('jenis_laporan', 'semester');
-                
-                if ($this->year) {
-                    $q->whereHas('waktuFraud', function ($wq) {
-                        $wq->whereYear('waktu_diketahui', $this->year);
-                    });
-                }
-                
-                if ($this->month && $this->year) {
-                    $q->whereHas('waktuFraud', function ($wq) {
-                        $wq->whereMonth('waktu_diketahui', $this->month);
-                    });
-                }
+                $q->where('jenis_laporan', 'semester');
+                $this->applyDateFilterToQuery($q);
             });
         })->sum('amount');
     }
 
-    /**
-     * Recovery Rate = (Total Recovery / Total Kerugian) × 100%
-     */
-    public function getRecoveryRate()
+    public function getRecoveryRate(): float
     {
         $totalKerugian = $this->getTotalKerugian();
         if ($totalKerugian == 0) {
             return 0;
         }
 
-        $totalRecovery = $this->getTotalRecovery();
-        return round(($totalRecovery / $totalKerugian) * 100, 2);
+        return round(($this->getTotalRecovery() / $totalKerugian) * 100, 2);
     }
 
-    /**
-     * Kasus Aktif (Status 001 dan 003)
-     */
-    public function getActiveCases()
+    public function getKpiSummary(): array
     {
-        return $this->getBaseQuery()
-            ->whereIn('status_penanganan', ['001', '003'])
-            ->count();
+        return [
+            'total_kasus' => $this->getTotalKasus(),
+            'total_kerugian' => $this->getTotalKerugian(),
+            'total_recovery' => $this->getTotalRecovery(),
+            'recovery_rate' => $this->getRecoveryRate(),
+        ];
     }
 
-    /**
-     * Persentase Kasus Selesai (Status 002 dan 004)
-     */
-    public function getCompletionPercentage()
+    // ============================================
+    // TREN
+    // ============================================
+
+    public function getTrendCombined(): array
     {
-        $total = $this->getTotalKasus();
-        if ($total == 0) {
-            return 0;
+        $monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+
+        if ($this->year && $this->month) {
+            $cases = $this->getTotalKasus();
+            $loss = $this->getTotalKerugian();
+
+            return [
+                'labels' => [$monthNames[$this->month - 1] . ' ' . $this->year],
+                'cases' => [$cases],
+                'loss' => [$loss],
+            ];
         }
 
-        $completed = $this->getBaseQuery()
-            ->whereIn('status_penanganan', ['002', '004'])
-            ->count();
-
-        return round(($completed / $total) * 100, 2);
-    }
-
-    // ============================================
-    // TREN ANALYSIS
-    // ============================================
-
-    /**
-     * Tren Jumlah Kasus Fraud per Bulan
-     */
-    public function getTrendCases()
-    {
-        $query = Kasus::where('user_id', $this->userId)
-            ->where('jenis_laporan', 'semester')
+        $casesQuery = Kasus::where('jenis_laporan', 'semester')
             ->leftJoin('waktu_fraud', 'kasus.id', '=', 'waktu_fraud.kasus_id')
             ->select(
                 DB::raw('MONTH(waktu_fraud.waktu_diketahui) as month'),
                 DB::raw('COUNT(kasus.id) as count')
-            );
+            )
+            ->whereNotNull('waktu_fraud.waktu_diketahui');
 
-        if ($this->year) {
-            $query->whereYear('waktu_fraud.waktu_diketahui', $this->year);
-        }
-
-        $query = $query->groupBy(DB::raw('MONTH(waktu_fraud.waktu_diketahui)'))
-            ->orderBy(DB::raw('MONTH(waktu_fraud.waktu_diketahui)'))
-            ->get();
-
-        $data = [];
-        for ($i = 1; $i <= 12; $i++) {
-            $record = $query->where('month', $i)->first();
-            $data[$i] = $record ? $record->count : 0;
-        }
-
-        return $data;
-    }
-
-    /**
-     * Tren Total Kerugian per Bulan
-     */
-    public function getTrendLoss()
-    {
-        $query = Kasus::where('user_id', $this->userId)
-            ->where('jenis_laporan', 'semester')
+        $lossQuery = Kasus::where('jenis_laporan', 'semester')
             ->leftJoin('waktu_fraud', 'kasus.id', '=', 'waktu_fraud.kasus_id')
             ->leftJoin('kerugian_fraud', 'kasus.id', '=', 'kerugian_fraud.kasus_id')
             ->select(
                 DB::raw('MONTH(waktu_fraud.waktu_diketahui) as month'),
-                DB::raw('SUM((COALESCE(kerugian_fraud.ljk_rill, 0) + COALESCE(kerugian_fraud.konsumen_rill, 0) + COALESCE(kerugian_fraud.pihak_lain_rill, 0) +
-                         COALESCE(kerugian_fraud.ljk_potensial, 0) + COALESCE(kerugian_fraud.konsumen_potensial, 0) + COALESCE(kerugian_fraud.pihak_lain_potensial, 0))) as total')
-            );
+                DB::raw('SUM(' . self::KERUGIAN_PER_KASUS . ') as total')
+            )
+            ->whereNotNull('waktu_fraud.waktu_diketahui');
 
         if ($this->year) {
-            $query->whereYear('waktu_fraud.waktu_diketahui', $this->year);
+            $casesQuery->whereYear('waktu_fraud.waktu_diketahui', $this->year);
+            $lossQuery->whereYear('waktu_fraud.waktu_diketahui', $this->year);
         }
 
-        $query = $query->groupBy(DB::raw('MONTH(waktu_fraud.waktu_diketahui)'))
-            ->orderBy(DB::raw('MONTH(waktu_fraud.waktu_diketahui)'))
-            ->get();
+        $casesByMonth = $casesQuery
+            ->groupBy(DB::raw('MONTH(waktu_fraud.waktu_diketahui)'))
+            ->pluck('count', 'month');
 
-        $data = [];
+        $lossByMonth = $lossQuery
+            ->groupBy(DB::raw('MONTH(waktu_fraud.waktu_diketahui)'))
+            ->pluck('total', 'month');
+
+        $labels = [];
+        $cases = [];
+        $loss = [];
+
         for ($i = 1; $i <= 12; $i++) {
-            $record = $query->where('month', $i)->first();
-            $data[$i] = $record ? round($record->total ?? 0) : 0;
+            $labels[] = $monthNames[$i - 1];
+            $cases[] = (int) ($casesByMonth[$i] ?? 0);
+            $loss[] = (float) ($lossByMonth[$i] ?? 0);
         }
 
-        return $data;
+        return compact('labels', 'cases', 'loss');
     }
 
     // ============================================
-    // FRAUD ANALYSIS
+    // CHART DATA
     // ============================================
 
-    /**
-     * Top Jenis Fraud (Top 10)
-     */
-    public function getTopJenisFraud($limit = 10)
+    public function getInternalVsExternal(): array
     {
         return $this->getBaseQuery()
-            ->select('ref_jenis_fraud.nama', DB::raw('COUNT(kasus.id) as count'))
+            ->select('pelaku_fraud.kategori', DB::raw('COUNT(DISTINCT kasus.id) as count'))
+            ->join('pelaku_fraud', 'kasus.id', '=', 'pelaku_fraud.kasus_id')
+            ->groupBy('pelaku_fraud.kategori')
+            ->orderByDesc('count')
+            ->get()
+            ->map(fn ($row) => [
+                'kategori' => $row->kategori,
+                'count' => (int) $row->count,
+            ])
+            ->values()
+            ->all();
+    }
+
+    public function getTopJabatanPelaku(int $limit = 10): array
+    {
+        return $this->getBaseQuery()
+            ->select('ref_jabatan.nama', DB::raw('COUNT(DISTINCT pelaku_fraud.id) as count'))
+            ->join('pelaku_fraud', 'kasus.id', '=', 'pelaku_fraud.kasus_id')
+            ->join('ref_jabatan', 'pelaku_fraud.jabatan_saat_kejadian_id', '=', 'ref_jabatan.id')
+            ->groupBy('ref_jabatan.id', 'ref_jabatan.nama')
+            ->orderByDesc('count')
+            ->limit($limit)
+            ->get()
+            ->map(fn ($row) => ['nama' => $row->nama, 'count' => (int) $row->count])
+            ->all();
+    }
+
+    public function getTopJenisFraud(int $limit = 10): array
+    {
+        return $this->getBaseQuery()
+            ->select('ref_jenis_fraud.nama', DB::raw('COUNT(DISTINCT kasus.id) as count'))
             ->join('kasus_jenis_fraud', 'kasus.id', '=', 'kasus_jenis_fraud.kasus_id')
             ->join('ref_jenis_fraud', 'kasus_jenis_fraud.jenis_fraud_id', '=', 'ref_jenis_fraud.id')
             ->groupBy('ref_jenis_fraud.id', 'ref_jenis_fraud.nama')
-            ->orderBy('count', 'desc')
+            ->orderByDesc('count')
             ->limit($limit)
             ->get()
-            ->toArray();
+            ->map(fn ($row) => ['nama' => $row->nama, 'count' => (int) $row->count])
+            ->all();
     }
 
-    /**
-     * Aktivitas Terkait Fraud
-     */
-    public function getActivityRelated()
+    public function getDivisionByLoss(int $limit = 15): array
+    {
+        return $this->getBaseQuery()
+            ->leftJoin('kerugian_fraud', 'kasus.id', '=', 'kerugian_fraud.kasus_id')
+            ->select(
+                'kasus.divisi_unit',
+                DB::raw('SUM(' . self::KERUGIAN_PER_KASUS . ') as total_loss')
+            )
+            ->whereNotNull('kasus.divisi_unit')
+            ->where('kasus.divisi_unit', '!=', '')
+            ->groupBy('kasus.divisi_unit')
+            ->orderByDesc('total_loss')
+            ->limit($limit)
+            ->get()
+            ->map(fn ($row) => [
+                'divisi' => $row->divisi_unit,
+                'total_loss' => (float) $row->total_loss,
+            ])
+            ->all();
+    }
+
+    public function getTopKelemahan(int $limit = 10): array
+    {
+        return $this->getBaseQuery()
+            ->select('ref_kelemahan_fraud.nama', DB::raw('COUNT(DISTINCT kasus.id) as count'))
+            ->join('kasus_kelemahan', 'kasus.id', '=', 'kasus_kelemahan.kasus_id')
+            ->join('ref_kelemahan_fraud', 'kasus_kelemahan.kelemahan_id', '=', 'ref_kelemahan_fraud.id')
+            ->groupBy('ref_kelemahan_fraud.id', 'ref_kelemahan_fraud.nama')
+            ->orderByDesc('count')
+            ->limit($limit)
+            ->get()
+            ->map(fn ($row) => ['nama' => $row->nama, 'count' => (int) $row->count])
+            ->all();
+    }
+
+    public function getActivityRelated(): array
     {
         return $this->getBaseQuery()
             ->select('ref_aktivitas_terkait.nama', DB::raw('COUNT(kasus.id) as count'))
             ->join('ref_aktivitas_terkait', 'kasus.aktivitas_terkait_id', '=', 'ref_aktivitas_terkait.id')
+            ->whereNotNull('kasus.aktivitas_terkait_id')
             ->groupBy('ref_aktivitas_terkait.id', 'ref_aktivitas_terkait.nama')
-            ->orderBy('count', 'desc')
+            ->orderByDesc('count')
             ->get()
-            ->toArray();
+            ->map(fn ($row) => ['nama' => $row->nama, 'count' => (int) $row->count])
+            ->all();
     }
 
-    /**
-     * Fraud Berdasarkan Divisi/Unit Kerja
-     */
-    public function getFraudByDivision()
-    {
-        return $this->getBaseQuery()
-            ->select('kasus.divisi_unit', DB::raw('COUNT(kasus.id) as count'))
-            ->groupBy('kasus.divisi_unit')
-            ->orderBy('count', 'desc')
-            ->get()
-            ->toArray();
-    }
-
-    // ============================================
-    // PELAKU ANALYSIS
-    // ============================================
-
-    /**
-     * Internal vs Eksternal Pelaku
-     */
-    public function getInternalVsExternal()
-    {
-        return $this->getBaseQuery()
-            ->select('pelaku_fraud.kategori', DB::raw('COUNT(DISTINCT pelaku_fraud.id) as count'))
-            ->join('pelaku_fraud', 'kasus.id', '=', 'pelaku_fraud.kasus_id')
-            ->groupBy('pelaku_fraud.kategori')
-            ->get()
-            ->toArray();
-    }
-
-    /**
-     * Status Pelaku
-     */
-    public function getStatusPelaku()
-    {
-        return $this->getBaseQuery()
-            ->select('ref_status_pelaku.id', 'ref_status_pelaku.nama', DB::raw('COUNT(DISTINCT pelaku_fraud.id) as count'))
-            ->join('pelaku_fraud', 'kasus.id', '=', 'pelaku_fraud.kasus_id')
-            ->join('ref_status_pelaku', 'pelaku_fraud.status_pelaku_id', '=', 'ref_status_pelaku.id')
-            ->groupBy('ref_status_pelaku.id', 'ref_status_pelaku.nama')
-            ->orderBy('count', 'desc')
-            ->get()
-            ->toArray();
-    }
-
-    /**
-     * Top Jabatan Pelaku (Top 10)
-     */
-    public function getTopJabatanPelaku($limit = 10)
-    {
-        return $this->getBaseQuery()
-            ->select('ref_jabatan.id', 'ref_jabatan.nama', DB::raw('COUNT(DISTINCT pelaku_fraud.id) as count'))
-            ->join('pelaku_fraud', 'kasus.id', '=', 'pelaku_fraud.kasus_id')
-            ->join('ref_jabatan', 'pelaku_fraud.jabatan_saat_kejadian_id', '=', 'ref_jabatan.id')
-            ->groupBy('ref_jabatan.id', 'ref_jabatan.nama')
-            ->orderBy('count', 'desc')
-            ->limit($limit)
-            ->get()
-            ->toArray();
-    }
-
-    // ============================================
-    // KERUGIAN ANALYSIS
-    // ============================================
-
-    /**
-     * Kerugian Berdasarkan Pihak Dirugikan
-     */
-    public function getLossByVictim()
-    {
-        return $this->getBaseQuery()
-            ->select('ref_pihak_dirugikan.id', 'ref_pihak_dirugikan.nama', DB::raw('COUNT(kasus.id) as count'))
-            ->join('ref_pihak_dirugikan', 'kasus.pihak_dirugikan_id', '=', 'ref_pihak_dirugikan.id')
-            ->groupBy('ref_pihak_dirugikan.id', 'ref_pihak_dirugikan.nama')
-            ->get()
-            ->toArray();
-    }
-
-    /**
-     * Top 10 Kasus Dengan Kerugian Terbesar
-     */
-    public function getTop10CasesWithLargestLoss()
-    {
-        return $this->getBaseQuery()
-            ->select(
-                'kasus.id',
-                'kasus.kode_komponen',
-                'kasus.divisi_unit',
-                'kasus.status_penanganan',
-                DB::raw('(kerugian_fraud.ljk_rill + kerugian_fraud.konsumen_rill + kerugian_fraud.pihak_lain_rill +
-                         kerugian_fraud.ljk_potensial + kerugian_fraud.konsumen_potensial + kerugian_fraud.pihak_lain_potensial) as total_kerugian')
-            )
-            ->leftJoin('kerugian_fraud', 'kasus.id', '=', 'kerugian_fraud.kasus_id')
-            ->with([
-                'jenisFraud',
-            ])
-            ->orderBy('total_kerugian', 'desc')
-            ->limit(10)
-            ->get()
-            ->map(function ($k) {
-                return [
-                    'id' => $k->id,
-                    'kode_komponen' => $k->kode_komponen,
-                    'jenis_fraud' => $k->jenisFraud->pluck('nama')->join(', '),
-                    'divisi' => $k->divisi_unit,
-                    'status_penanganan' => $this->getStatusLabel($k->status_penanganan),
-                    'total_kerugian' => $k->total_kerugian ?? 0,
-                ];
-            })
-            ->toArray();
-    }
-
-    // ============================================
-    // PENANGANAN ANALYSIS
-    // ============================================
-
-    /**
-     * Status Penanganan Kasus
-     */
-    public function getHandlingStatus()
+    public function getHandlingStatus(): array
     {
         $statuses = [
-            '001' => 'Proses internal LJK',
-            '002' => 'Selesai diproses internal LJK',
-            '003' => 'Dalam proses aparat penegak hukum',
-            '004' => 'Berkekuatan hukum tetap',
+            '001' => 'Proses Internal LJK',
+            '002' => 'Selesai Diproses Internal LJK',
+            '003' => 'Dalam Proses Penegak Hukum',
+            '004' => 'Berkekuatan Hukum Tetap',
         ];
 
         $data = [];
         foreach ($statuses as $code => $label) {
-            $count = $this->getBaseQuery()
-                ->where('status_penanganan', $code)
-                ->count();
+            $count = (int) $this->getBaseQuery()
+                ->where('kasus.status_penanganan', $code)
+                ->count('kasus.id');
             $data[] = [
+                'code' => $code,
                 'status' => $label,
                 'count' => $count,
             ];
@@ -399,104 +289,117 @@ class DashboardAnalyticsService
         return $data;
     }
 
-    // ============================================
-    // ROOT CAUSE ANALYSIS
-    // ============================================
-
     /**
-     * Top Kelemahan Penyebab Fraud (Top 10)
+     * Satu payload untuk seluruh dashboard analisis.
      */
-    public function getTopKelemahan($limit = 10)
+    public function getDashboardData(): array
     {
-        return $this->getBaseQuery()
-            ->select('ref_kelemahan_fraud.id', 'ref_kelemahan_fraud.nama', DB::raw('COUNT(kasus.id) as count'))
-            ->join('kasus_kelemahan', 'kasus.id', '=', 'kasus_kelemahan.kasus_id')
-            ->join('ref_kelemahan_fraud', 'kasus_kelemahan.kelemahan_id', '=', 'ref_kelemahan_fraud.id')
-            ->groupBy('ref_kelemahan_fraud.id', 'ref_kelemahan_fraud.nama')
-            ->orderBy('count', 'desc')
-            ->limit($limit)
-            ->get()
-            ->toArray();
-    }
-
-    // ============================================
-    // PENCEGAHAN ANALYSIS
-    // ============================================
-
-    /**
-     * Status Realisasi Pencegahan
-     */
-    public function getPreventionStatus()
-    {
-        $tepat_waktu = $this->getBaseQuery()
-            ->select(DB::raw('COUNT(DISTINCT pencegahan_fraud.id) as count'))
-            ->join('pencegahan_fraud', 'kasus.id', '=', 'pencegahan_fraud.kasus_id')
-            ->whereRaw('pencegahan_fraud.realisasi <= pencegahan_fraud.target_waktu')
-            ->whereNotNull('pencegahan_fraud.realisasi')
-            ->first()
-            ->count ?? 0;
-
-        $terlambat = $this->getBaseQuery()
-            ->select(DB::raw('COUNT(DISTINCT pencegahan_fraud.id) as count'))
-            ->join('pencegahan_fraud', 'kasus.id', '=', 'pencegahan_fraud.kasus_id')
-            ->whereRaw('pencegahan_fraud.realisasi > pencegahan_fraud.target_waktu')
-            ->whereNotNull('pencegahan_fraud.realisasi')
-            ->first()
-            ->count ?? 0;
-
-        $belum_direalisasikan = $this->getBaseQuery()
-            ->select(DB::raw('COUNT(DISTINCT pencegahan_fraud.id) as count'))
-            ->join('pencegahan_fraud', 'kasus.id', '=', 'pencegahan_fraud.kasus_id')
-            ->whereNull('pencegahan_fraud.realisasi')
-            ->first()
-            ->count ?? 0;
-
         return [
-            ['status' => 'Tepat Waktu', 'count' => $tepat_waktu],
-            ['status' => 'Terlambat', 'count' => $terlambat],
-            ['status' => 'Belum Direalisasikan', 'count' => $belum_direalisasikan],
+            'kpi' => $this->getKpiSummary(),
+            'trend' => $this->getTrendCombined(),
+            'internal_vs_external' => $this->getInternalVsExternal(),
+            'top_jabatan' => $this->getTopJabatanPelaku(),
+            'top_jenis_fraud' => $this->getTopJenisFraud(),
+            'division_loss' => $this->getDivisionByLoss(),
+            'top_kelemahan' => $this->getTopKelemahan(),
+            'activity_related' => $this->getActivityRelated(),
+            'handling_status' => $this->getHandlingStatus(),
         ];
     }
 
-    /**
-     * On-Time Completion Rate
-     */
-    public function getOnTimeCompletionRate()
-    {
-        $total_pencegahan = $this->getBaseQuery()
-            ->select(DB::raw('COUNT(DISTINCT pencegahan_fraud.id) as count'))
-            ->join('pencegahan_fraud', 'kasus.id', '=', 'pencegahan_fraud.kasus_id')
-            ->first()
-            ->count ?? 0;
+    // ============================================
+    // DRILL DOWN
+    // ============================================
 
-        if ($total_pencegahan == 0) {
-            return 0;
+    public function getDrilldownCases(string $type, string $value): array
+    {
+        $query = Kasus::with(['jenisFraud', 'kerugianFraud'])
+            ->where('jenis_laporan', 'semester');
+
+        $this->applyDateFilterToQuery($query);
+
+        switch ($type) {
+            case 'internal_external':
+                $query->whereHas('pelakuFrauds', function ($q) use ($value) {
+                    $q->whereRaw('LOWER(kategori) = ?', [strtolower($value)]);
+                });
+                break;
+            case 'jabatan':
+                $query->whereHas('pelakuFrauds', function ($q) use ($value) {
+                    $q->whereHas('jabatanKejadian', function ($jq) use ($value) {
+                        $jq->where('nama', $value);
+                    });
+                });
+                break;
+            case 'jenis_fraud':
+                $query->whereHas('jenisFraud', function ($q) use ($value) {
+                    $q->where('nama', $value);
+                });
+                break;
+            case 'divisi':
+                $query->where('divisi_unit', $value);
+                break;
+            case 'kelemahan':
+                $query->whereHas('kelemahanFraud', function ($q) use ($value) {
+                    $q->where('nama', $value);
+                });
+                break;
+            case 'aktivitas':
+                $query->whereHas('aktivitasTerkait', function ($q) use ($value) {
+                    $q->where('nama', $value);
+                });
+                break;
+            case 'status_penanganan':
+                $query->where('status_penanganan', $value);
+                break;
+            default:
+                return [];
         }
 
-        $tepat_waktu = $this->getBaseQuery()
-            ->select(DB::raw('COUNT(DISTINCT pencegahan_fraud.id) as count'))
-            ->join('pencegahan_fraud', 'kasus.id', '=', 'pencegahan_fraud.kasus_id')
-            ->whereRaw('pencegahan_fraud.realisasi <= pencegahan_fraud.target_waktu')
-            ->whereNotNull('pencegahan_fraud.realisasi')
-            ->first()
-            ->count ?? 0;
-
-        return round(($tepat_waktu / $total_pencegahan) * 100, 2);
+        return $query
+            ->orderByDesc('kasus.id')
+            ->limit(200)
+            ->get()
+            ->map(fn ($k) => $this->formatCaseForDrilldown($k))
+            ->values()
+            ->all();
     }
 
-    // ============================================
-    // HELPERS
-    // ============================================
+    private function formatCaseForDrilldown(Kasus $k): array
+    {
+        $totalLoss = 0;
+        if ($k->kerugianFraud) {
+            $kf = $k->kerugianFraud;
+            $totalLoss = ($kf->ljk_rill ?? 0) + ($kf->ljk_potensial ?? 0)
+                + ($kf->konsumen_rill ?? 0) + ($kf->konsumen_potensial ?? 0)
+                + ($kf->pihak_lain_rill ?? 0) + ($kf->pihak_lain_potensial ?? 0);
+        }
 
-    private function getStatusLabel($code)
+        return [
+            'id' => $k->id,
+'kode_kejadian' => $k->kejadianFraud
+    ->pluck('pivot')
+    ->pluck('kode_kejadian')
+    ->filter()
+    ->join(', ') ?: '-',
+            'jenis_fraud' => $k->jenisFraud->pluck('nama')->join(', ') ?: '-',
+            'divisi' => $k->divisi_unit ?: '-',
+            'status_penanganan' => $k->status_penanganan,
+            'status_label' => $this->getStatusLabel($k->status_penanganan),
+            'total_kerugian' => $totalLoss,
+            'show_url' => route('kasus.show', $k->id),
+        ];
+    }
+
+    private function getStatusLabel(?string $code): string
     {
         $statuses = [
-            '001' => 'Proses internal LJK',
-            '002' => 'Selesai diproses internal LJK',
-            '003' => 'Dalam proses aparat penegak hukum',
-            '004' => 'Berkekuatan hukum tetap',
+            '001' => 'Proses Internal LJK',
+            '002' => 'Selesai Diproses Internal LJK',
+            '003' => 'Dalam Proses Penegak Hukum',
+            '004' => 'Berkekuatan Hukum Tetap',
         ];
 
-        return $statuses[$code] ?? $code;
+        return $statuses[$code] ?? ($code ?? '-');
     }
 }

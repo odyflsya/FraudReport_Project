@@ -165,13 +165,13 @@
             $formatRefLabel = function ($ref) {
                 return $ref
                     ? ($ref->kode ? $ref->kode . ' (' . $ref->nama . ')' : $ref->nama)
-                    : '-';
+                    : '';
             };
         @endphp
 
         <!-- LAPORAN SEMESTER TABLE -->
         <div id="semesterTableContainer" class="bg-white rounded-lg shadow overflow-x-auto mb-8">
-            <table class="min-w-fit table-auto text-xs border-collapse" id="semesterTable" style="table-layout: fixed; width: max-content;">
+            <table class="min-w-[3500px] text-xs border-collapse" id="semesterTable">
                 <colgroup id="semesterColGroup"></colgroup>
                 <thead class="bg-[#FF0000] text-white">
                     <tr>
@@ -276,7 +276,7 @@
                             </td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="ID Kejadian Fraud">
-                                @foreach($k->kejadianFraud as $i) {{ $i->pivot->kode_kejadian ?? '-' }}<br>@endforeach
+                                @foreach($k->kejadianFraud as $i) {{ $i->pivot->kode_kejadian ?? '' }}<br>@endforeach
                             </td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Jenis Fraud">
@@ -306,26 +306,86 @@
                             </td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Waktu Terjadi Awal">
-                                {{ $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '-' }}
+                                {{ $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '' }}
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Waktu Terjadi Akhir">
-                                {{ $k->waktuFraud && $k->waktuFraud->waktu_akhir ? \Carbon\Carbon::parse($k->waktuFraud->waktu_akhir)->format('Y-m-d') : '-' }}
+                                {{ $k->waktuFraud && $k->waktuFraud->waktu_akhir ? \Carbon\Carbon::parse($k->waktuFraud->waktu_akhir)->format('Y-m-d') : '' }}
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Fraud Diketahui">
-                                {{ $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '-' }}
+                                {{ $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '' }}
                             </td>
 
-                            <td class="border p-2" data-column="LJK Rill">{{ $formatCurrency($k->kerugianFraud?->ljk_rill) }}</td>
-                            <td class="border p-2" data-column="LJK Potensial">{{ $formatCurrency($k->kerugianFraud?->ljk_potensial) }}</td>
-                            <td class="border p-2" data-column="LJK Recovery">{{ $formatRecovery($k->kerugianFraud?->ljk_recovery) }}</td>
+<td class="border p-2" data-column="LJK Rill">
+    @if($k->kerugianFraud && ($k->kerugianFraud->ljk_rill ?? 0) > 0)
+        {{ $formatCurrency($k->kerugianFraud->ljk_rill) }}
+    @endif
+</td>
 
-                            <td class="border p-2" data-column="Konsumen Rill">{{ $formatCurrency($k->kerugianFraud?->konsumen_rill) }}</td>
-                            <td class="border p-2" data-column="Konsumen Potensial">{{ $formatCurrency($k->kerugianFraud?->konsumen_potensial) }}</td>
-                            <td class="border p-2" data-column="Konsumen Recovery">{{ $formatRecovery($k->kerugianFraud?->konsumen_recovery) }}</td>
+<td class="border p-2" data-column="LJK Potensial">
+    @if($k->kerugianFraud && ($k->kerugianFraud->ljk_potensial ?? 0) > 0)
+        {{ $formatCurrency($k->kerugianFraud->ljk_potensial) }}
+    @endif
+</td>
 
-                            <td class="border p-2" data-column="Pihak Lain Rill">{{ $formatCurrency($k->kerugianFraud?->pihak_lain_rill) }}</td>
-                            <td class="border p-2" data-column="Pihak Lain Potensial">{{ $formatCurrency($k->kerugianFraud?->pihak_lain_potensial) }}</td>
-                            <td class="border p-2" data-column="Pihak Lain Recovery">{{ $formatRecovery($k->kerugianFraud?->pihak_lain_recovery) }}</td>
+<td class="border p-2" data-column="LJK Recovery">
+    @php
+        $ljkOutstanding = (($k->kerugianFraud?->ljk_rill ?? 0)
+            + ($k->kerugianFraud?->ljk_potensial ?? 0)
+            - ($k->kerugianFraud?->recoveries?->where('kategori', 'ljk')->sum('amount') ?? 0));
+    @endphp
+
+    @if($ljkOutstanding > 0)
+        {{ $formatCurrency($ljkOutstanding) }}
+    @endif
+</td>
+
+<td class="border p-2" data-column="Konsumen Rill">
+    @if($k->kerugianFraud && ($k->kerugianFraud->konsumen_rill ?? 0) > 0)
+        {{ $formatCurrency($k->kerugianFraud->konsumen_rill) }}
+    @endif
+</td>
+
+<td class="border p-2" data-column="Konsumen Potensial">
+    @if($k->kerugianFraud && ($k->kerugianFraud->konsumen_potensial ?? 0) > 0)
+        {{ $formatCurrency($k->kerugianFraud->konsumen_potensial) }}
+    @endif
+</td>
+
+<td class="border p-2" data-column="Konsumen Recovery">
+    @php
+        $konsumenOutstanding = (($k->kerugianFraud?->konsumen_rill ?? 0)
+            + ($k->kerugianFraud?->konsumen_potensial ?? 0)
+            - ($k->kerugianFraud?->recoveries?->where('kategori', 'konsumen')->sum('amount') ?? 0));
+    @endphp
+
+    @if($konsumenOutstanding > 0)
+        {{ $formatCurrency($konsumenOutstanding) }}
+    @endif
+</td>
+
+<td class="border p-2" data-column="Pihak Lain Rill">
+    @if($k->kerugianFraud && ($k->kerugianFraud->pihak_lain_rill ?? 0) > 0)
+        {{ $formatCurrency($k->kerugianFraud->pihak_lain_rill) }}
+    @endif
+</td>
+
+<td class="border p-2" data-column="Pihak Lain Potensial">
+    @if($k->kerugianFraud && ($k->kerugianFraud->pihak_lain_potensial ?? 0) > 0)
+        {{ $formatCurrency($k->kerugianFraud->pihak_lain_potensial) }}
+    @endif
+</td>
+
+<td class="border p-2" data-column="Pihak Lain Recovery">
+    @php
+        $pihakLainOutstanding = (($k->kerugianFraud?->pihak_lain_rill ?? 0)
+            + ($k->kerugianFraud?->pihak_lain_potensial ?? 0)
+            - ($k->kerugianFraud?->recoveries?->where('kategori', 'pihak_lain')->sum('amount') ?? 0));
+    @endphp
+
+    @if($pihakLainOutstanding > 0)
+        {{ $formatCurrency($pihakLainOutstanding) }}
+    @endif
+</td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Kelemahan Penyebab Fraud">
                                 @foreach($k->kelemahanFraud as $i) {{ $i->kode ? $i->kode . ' (' . $i->nama . ')' : $i->nama }}<br>@endforeach
@@ -342,16 +402,16 @@
                             </td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Tindakan Perbaikan untuk Pencegahan Fraud">
-                                @foreach($k->pencegahanFraud as $i) {{ $i->refPencegahan ? ($i->refPencegahan->kode ? $i->refPencegahan->kode . ' (' . $i->refPencegahan->nama . ')' : $i->refPencegahan->nama) : '-' }}<br>@endforeach
+                                @foreach($k->pencegahanFraud as $i) {{ $i->refPencegahan ? ($i->refPencegahan->kode ? $i->refPencegahan->kode . ' (' . $i->refPencegahan->nama . ')' : $i->refPencegahan->nama) : '' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Keterangan Perbaikan">
                                 @foreach($k->pencegahanFraud as $i) {{ $i->keterangan }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Target Waktu Pelaksanaan">
-                                @foreach($k->pencegahanFraud as $i) {{ $i->target_waktu ? \Carbon\Carbon::parse($i->target_waktu)->format('Y-m-d') : '-' }}<br>@endforeach
+                                @foreach($k->pencegahanFraud as $i) {{ $i->target_waktu ? \Carbon\Carbon::parse($i->target_waktu)->format('Y-m-d') : '' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Realisasi Pelaksanaan">
-                                @foreach($k->pencegahanFraud as $i) {{ $i->realisasi ? \Carbon\Carbon::parse($i->realisasi)->format('Y-m-d') : '-' }}<br>@endforeach
+                                @foreach($k->pencegahanFraud as $i) {{ $i->realisasi ? \Carbon\Carbon::parse($i->realisasi)->format('Y-m-d') : '' }}<br>@endforeach
                             </td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Internal/Eksternal">
@@ -361,7 +421,7 @@
                                 @foreach($k->pelakuFrauds as $p) {{ $p->nama }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Jenis Identitas">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->jenisIdentitas ? ($p->jenisIdentitas->kode ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : $p->jenisIdentitas->nama) : '-' }}<br>@endforeach
+                                @foreach($k->pelakuFrauds as $p) {{ $p->jenisIdentitas ? ($p->jenisIdentitas->kode ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : $p->jenisIdentitas->nama) : '' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Nomor Identitas">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->nomor_identitas }}<br>@endforeach
@@ -373,7 +433,7 @@
                                 @foreach($k->pelakuFrauds as $p) {{ $p->tempat_lahir }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Tanggal Lahir">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '-' }}<br>@endforeach
+                                @foreach($k->pelakuFrauds as $p) {{ $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Alamat Identitas">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->alamat_identitas }}<br>@endforeach
@@ -382,16 +442,16 @@
                                 @foreach($k->pelakuFrauds as $p) {{ $p->alamat_domisili }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Status Pelaku">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-' }}<br>@endforeach
+                                @foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Pada Saat Fraud Terjadi">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '-' }}<br>@endforeach
+                                @foreach($k->pelakuFrauds as $p) {{ $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Keterangan Jabatan Terjadi">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->ket_jabatan_kejadian }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Pada Saat Fraud Diketahui">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->jabatanDiketahui ? ($p->jabatanDiketahui->kode ? $p->jabatanDiketahui->kode . ' (' . $p->jabatanDiketahui->nama . ')' : $p->jabatanDiketahui->nama) : '-' }}<br>@endforeach
+                                @foreach($k->pelakuFrauds as $p) {{ $p->jabatanDiketahui ? ($p->jabatanDiketahui->kode ? $p->jabatanDiketahui->kode . ' (' . $p->jabatanDiketahui->nama . ')' : $p->jabatanDiketahui->nama) : '' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Keterangan Jabatan Diketahui">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->ket_jabatan_diketahui }}<br>@endforeach
@@ -401,7 +461,7 @@
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Pengenaan Sanksi">
                                 @forelse($k->pelakuFrauds as $p)
-                                    {{ $p->sanksi ?? '-' }}<br>
+                                    {{ $p->sanksi ?? '' }}<br>
                                 @empty
                                     -
                                 @endforelse
@@ -423,7 +483,7 @@
 
         <!-- LAPORAN SIGNIFIKAN TABLE -->
         <div id="signifikanTableContainer" class="bg-white rounded-lg shadow overflow-x-auto mb-8 hidden">
-            <table class="min-w-fit table-auto text-xs border-collapse" id="signifikanTable" style="table-layout: fixed; width: max-content;">
+            <table class="min-w-[3500px] text-xs border-collapse" id="signifikanTable">
                 <colgroup id="signifikanColGroup"></colgroup>
                 <thead class="bg-[#FF0000] text-white">
                     <tr>
@@ -494,7 +554,7 @@
                             </td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="ID Kejadian Fraud">
-                                @foreach($k->kejadianFraud as $i) {{ $i->pivot->kode_kejadian ?? '-' }}<br>@endforeach
+                                @foreach($k->kejadianFraud as $i) {{ $i->pivot->kode_kejadian ?? '' }}<br>@endforeach
                             </td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Jenis Fraud">
@@ -522,16 +582,16 @@
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Pihak Yang Dirugikan">
                                 {{ $formatRefLabel($k->pihakDirugikan) }}
                             </td>
-                            <td class="border p-2" data-column="Jumlah Kerugian Potensial">{{ $k->kerugianFraud ? $formatCurrency($k->getTotalKerugianPotensial()) : '-' }}</td>
+                            <td class="border p-2" data-column="Jumlah Kerugian Potensial">{{ $k->kerugianFraud ? $formatCurrency($k->getTotalKerugianPotensial()) : '' }}</td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Tindak Lanjut LJK">{{ $k->tindak_lanjut_ljk ?? '-' }}</td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Waktu Terjadi Awal">
-                                {{ $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '-' }}
+                                {{ $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '' }}
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Waktu Terjadi Akhir">
-                                {{ $k->waktuFraud && $k->waktuFraud->waktu_akhir ? \Carbon\Carbon::parse($k->waktuFraud->waktu_akhir)->format('Y-m-d') : '-' }}
+                                {{ $k->waktuFraud && $k->waktuFraud->waktu_akhir ? \Carbon\Carbon::parse($k->waktuFraud->waktu_akhir)->format('Y-m-d') : '' }}
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Fraud Diketahui">
-                                {{ $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '-' }}
+                                {{ $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '' }}
                             </td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Internal/Eksternal">
@@ -541,7 +601,7 @@
                                 @foreach($k->pelakuFrauds as $p) {{ $p->nama }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Jenis Identitas">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->jenisIdentitas ? ($p->jenisIdentitas->kode ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : $p->jenisIdentitas->nama) : '-' }}<br>@endforeach
+                                @foreach($k->pelakuFrauds as $p) {{ $p->jenisIdentitas ? ($p->jenisIdentitas->kode ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : $p->jenisIdentitas->nama) : '' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Nomor Identitas">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->nomor_identitas }}<br>@endforeach
@@ -553,7 +613,7 @@
                                 @foreach($k->pelakuFrauds as $p) {{ $p->tempat_lahir }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Tanggal Lahir">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '-' }}<br>@endforeach
+                                @foreach($k->pelakuFrauds as $p) {{ $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Alamat Identitas">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->alamat_identitas }}<br>@endforeach
@@ -562,16 +622,16 @@
                                 @foreach($k->pelakuFrauds as $p) {{ $p->alamat_domisili }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Status Pelaku">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-' }}<br>@endforeach
+                                @foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Pada Saat Fraud Terjadi">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '-' }}<br>@endforeach
+                                @foreach($k->pelakuFrauds as $p) {{ $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Keterangan Jabatan Terjadi">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->ket_jabatan_kejadian }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Pada Saat Fraud Diketahui">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->jabatanDiketahui ? ($p->jabatanDiketahui->kode ? $p->jabatanDiketahui->kode . ' (' . $p->jabatanDiketahui->nama . ')' : $p->jabatanDiketahui->nama) : '-' }}<br>@endforeach
+                                @foreach($k->pelakuFrauds as $p) {{ $p->jabatanDiketahui ? ($p->jabatanDiketahui->kode ? $p->jabatanDiketahui->kode . ' (' . $p->jabatanDiketahui->nama . ')' : $p->jabatanDiketahui->nama) : '' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Keterangan Jabatan Diketahui">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->ket_jabatan_diketahui }}<br>@endforeach
@@ -581,7 +641,7 @@
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Pengenaan Sanksi">
                                 @forelse($k->pelakuFrauds as $p)
-                                    {{ $p->sanksi ?? '-' }}<br>
+                                    {{ $p->sanksi ?? '' }}<br>
                                 @empty
                                     -
                                 @endforelse
@@ -603,7 +663,7 @@
 
         <!-- LAPORAN NON-SIGNIFIKAN TABLE -->
         <div id="nonSignifikanTableContainer" class="bg-white rounded-lg shadow overflow-x-auto mb-8 hidden">
-            <table class="min-w-fit table-auto text-xs border-collapse" id="nonSignifikanTable" style="table-layout: fixed; width: max-content;">
+            <table class="min-w-[3500px] text-xs border-collapse" id="nonSignifikanTable">
                 <colgroup id="nonSignifikanColGroup"></colgroup>
                 <thead class="bg-[#FF0000] text-white">
                     <tr>
@@ -674,7 +734,7 @@
                             </td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="ID Kejadian Fraud">
-                                @foreach($k->kejadianFraud as $i) {{ $i->pivot->kode_kejadian ?? '-' }}<br>@endforeach
+                                @foreach($k->kejadianFraud as $i) {{ $i->pivot->kode_kejadian ?? '' }}<br>@endforeach
                             </td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Jenis Fraud">
@@ -702,16 +762,16 @@
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Pihak Yang Dirugikan">
                                 {{ $formatRefLabel($k->pihakDirugikan) }}
                             </td>
-                            <td class="border p-2" data-column="Jumlah Kerugian Potensial">{{ $k->kerugianFraud ? $formatCurrency($k->getTotalKerugianPotensial()) : '-' }}</td>
-                            <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Tindak Lanjut LJK">{{ $k->tindak_lanjut_ljk ?? '-' }}</td>
+                            <td class="border p-2" data-column="Jumlah Kerugian Potensial">{{ $k->kerugianFraud ? $formatCurrency($k->getTotalKerugianPotensial()) : '' }}</td>
+                            <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Tindak Lanjut LJK">{{ $k->tindak_lanjut_ljk ?? '' }}</td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Waktu Terjadi Awal">
-                                {{ $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '-' }}
+                                {{ $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '' }}
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Waktu Terjadi Akhir">
-                                {{ $k->waktuFraud && $k->waktuFraud->waktu_akhir ? \Carbon\Carbon::parse($k->waktuFraud->waktu_akhir)->format('Y-m-d') : '-' }}
+                                {{ $k->waktuFraud && $k->waktuFraud->waktu_akhir ? \Carbon\Carbon::parse($k->waktuFraud->waktu_akhir)->format('Y-m-d') : '' }}
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Fraud Diketahui">
-                                {{ $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '-' }}
+                                {{ $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '' }}
                             </td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Internal/Eksternal">
@@ -721,7 +781,7 @@
                                 @foreach($k->pelakuFrauds as $p) {{ $p->nama }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Jenis Identitas">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->jenisIdentitas ? ($p->jenisIdentitas->kode ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : $p->jenisIdentitas->nama) : '-' }}<br>@endforeach
+                                @foreach($k->pelakuFrauds as $p) {{ $p->jenisIdentitas ? ($p->jenisIdentitas->kode ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : $p->jenisIdentitas->nama) : '' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Nomor Identitas">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->nomor_identitas }}<br>@endforeach
@@ -733,7 +793,7 @@
                                 @foreach($k->pelakuFrauds as $p) {{ $p->tempat_lahir }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Tanggal Lahir">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '-' }}<br>@endforeach
+                                @foreach($k->pelakuFrauds as $p) {{ $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Alamat Identitas">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->alamat_identitas }}<br>@endforeach
@@ -742,16 +802,16 @@
                                 @foreach($k->pelakuFrauds as $p) {{ $p->alamat_domisili }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Status Pelaku">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-' }}<br>@endforeach
+                                @foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Pada Saat Fraud Terjadi">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '-' }}<br>@endforeach
+                                @foreach($k->pelakuFrauds as $p) {{ $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Keterangan Jabatan Terjadi">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->ket_jabatan_kejadian }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Pada Saat Fraud Diketahui">
-                                @foreach($k->pelakuFrauds as $p) {{ $p->jabatanDiketahui ? ($p->jabatanDiketahui->kode ? $p->jabatanDiketahui->kode . ' (' . $p->jabatanDiketahui->nama . ')' : $p->jabatanDiketahui->nama) : '-' }}<br>@endforeach
+                                @foreach($k->pelakuFrauds as $p) {{ $p->jabatanDiketahui ? ($p->jabatanDiketahui->kode ? $p->jabatanDiketahui->kode . ' (' . $p->jabatanDiketahui->nama . ')' : $p->jabatanDiketahui->nama) : '' }}<br>@endforeach
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Keterangan Jabatan Diketahui">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->ket_jabatan_diketahui }}<br>@endforeach
@@ -761,7 +821,7 @@
                             </td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Pengenaan Sanksi">
                                 @forelse($k->pelakuFrauds as $p)
-                                    {{ $p->sanksi ?? '-' }}<br>
+                                    {{ $p->sanksi ?? '' }}<br>
                                 @empty
                                     -
                                 @endforelse

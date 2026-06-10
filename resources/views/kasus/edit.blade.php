@@ -85,6 +85,20 @@
                         </div>
                     </div>
 
+                    @php
+                        $kerugianDetailsJson = '[]';
+                        if ($kasus->kerugianFraud && $kasus->kerugianFraud->details) {
+                            $kerugianDetailsJson = json_encode($kasus->kerugianFraud->details->map(fn ($d) => [
+                                'id' => $d->id,
+                                'kategori' => $d->kategori,
+                                'tipe' => $d->tipe,
+                                'nominal' => $d->nominal,
+                                'no_rekening' => $d->no_rekening,
+                            ])->values()->all());
+                        }
+                    @endphp
+                    @include('kasus.partials.kerugian-detail-manager', ['kerugianDetailsJson' => $kerugianDetailsJson])
+
                     <!-- SECTION: KEJADIAN FRAUD MENURUT PELAKU -->
                     <div>
                         <h3 class="mb-4 text-lg font-semibold text-slate-900">Kejadian Fraud Menurut Pelaku</h3>
@@ -267,6 +281,7 @@
                                             value="{{ $formatCurrencyInput(old('ljk_rill', $kasus->kerugianFraud?->ljk_rill ?? '')) }}"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                             placeholder="">
+                                        <div class="mt-2"><button type="button" onclick="openDetailModal('ljk','riil')" class="text-xs text-blue-700">Kelola Rincian Riil</button></div>
                                     </div>
                                     <div>
                                         <label class="mb-2 block text-sm font-medium text-slate-700">Kerugian Potensial (Rp)</label>
@@ -274,15 +289,20 @@
                                             value="{{ $formatCurrencyInput(old('ljk_potensial', $kasus->kerugianFraud?->ljk_potensial ?? '')) }}"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                             placeholder="">
+                                        <div class="mt-2"><button type="button" onclick="openDetailModal('ljk','potensial')" class="text-xs text-blue-700">Kelola Rincian Potensial</button></div>
                                     </div>
                                     <div class="signifikan-hidden {{ $isSignifikanEdit ? 'hidden' : '' }}">
-                                        <label class="mb-2 block text-sm font-medium text-slate-700">Tambah Recovery Baru (Rp)</label>
+                                        <label class="mb-2 block text-sm font-medium text-slate-700">Setelah Pengembalian (Recovery) (Rp)</label>
                                         <input type="text" name="ljk_recovery" inputmode="decimal" autocomplete="off"
                                             value="{{ old('ljk_recovery', '') }}"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                             placeholder="0">
-                                        <p class="mt-1 text-sm text-slate-600">Total recovery saat ini: Rp {{ number_format($kasus->kerugianFraud?->ljk_recovery ?? 0, 0, ',', '.') }}</p>
-                                        <p class="mt-1 text-xs text-slate-500">Masukkan nominal baru untuk menambah entry recovery LJK.</p>
+                                        <input type="date" name="ljk_recovery_tanggal" value="{{ old('ljk_recovery_tanggal', now()->toDateString()) }}"
+                                            class="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                        <input type="text" name="ljk_recovery_no_rekening" value="{{ old('ljk_recovery_no_rekening', '') }}" placeholder="Nomor Rekening (opsional)"
+                                            class="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                        <p class="mt-1 text-sm text-slate-600">Kerugian tersisa LJK: Rp {{ number_format($kasus->kerugianFraud?->getOutstandingForKategori('ljk') ?? 0, 0, ',', '.') }}</p>
+                                        <p class="mt-1 text-xs text-slate-500">Kosongkan jika belum ada pengembalian dana. Tambahkan nominal setiap kali ada recovery baru, total recovery akan terhitung otomatis.</p>
                                     </div>
                                 </div>
                             </div>
@@ -296,6 +316,7 @@
                                             value="{{ $formatCurrencyInput(old('konsumen_rill', $kasus->kerugianFraud?->konsumen_rill ?? '')) }}"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                             placeholder="">
+                                        <div class="mt-2"><button type="button" onclick="openDetailModal('konsumen','riil')" class="text-xs text-blue-700">Kelola Rincian Riil</button></div>
                                     </div>
                                     <div>
                                         <label class="mb-2 block text-sm font-medium text-slate-700">Kerugian Potensial (Rp)</label>
@@ -303,15 +324,20 @@
                                             value="{{ $formatCurrencyInput(old('konsumen_potensial', $kasus->kerugianFraud?->konsumen_potensial ?? '')) }}"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                             placeholder="">
+                                        <div class="mt-2"><button type="button" onclick="openDetailModal('konsumen','potensial')" class="text-xs text-blue-700">Kelola Rincian Potensial</button></div>
                                     </div>
                                     <div class="signifikan-hidden {{ $isSignifikanEdit ? 'hidden' : '' }}">
-                                        <label class="mb-2 block text-sm font-medium text-slate-700">Tambah Recovery Baru (Rp)</label>
+                                        <label class="mb-2 block text-sm font-medium text-slate-700">Setelah Pengembalian (Recovery) (Rp)</label>
                                         <input type="text" name="konsumen_recovery" inputmode="decimal" autocomplete="off"
                                             value="{{ old('konsumen_recovery', '') }}"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                             placeholder="0">
-                                        <p class="mt-1 text-sm text-slate-600">Total recovery saat ini: Rp {{ number_format($kasus->kerugianFraud?->konsumen_recovery ?? 0, 0, ',', '.') }}</p>
-                                        <p class="mt-1 text-xs text-slate-500">Masukkan nominal baru untuk menambah entry recovery Konsumen.</p>
+                                        <input type="date" name="konsumen_recovery_tanggal" value="{{ old('konsumen_recovery_tanggal', now()->toDateString()) }}"
+                                            class="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                        <input type="text" name="konsumen_recovery_no_rekening" value="{{ old('konsumen_recovery_no_rekening', '') }}" placeholder="Nomor Rekening (opsional)"
+                                            class="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                        <p class="mt-1 text-sm text-slate-600">Kerugian tersisa Konsumen: Rp {{ number_format($kasus->kerugianFraud?->getOutstandingForKategori('konsumen') ?? 0, 0, ',', '.') }}</p>
+                                        <p class="mt-1 text-xs text-slate-500">Kosongkan jika belum ada pengembalian dana. Tambahkan nominal setiap kali ada recovery baru, total recovery akan terhitung otomatis.</p>
                                     </div>
                                 </div>
                             </div>
@@ -325,6 +351,7 @@
                                             value="{{ $formatCurrencyInput(old('pihak_lain_rill', $kasus->kerugianFraud?->pihak_lain_rill ?? '')) }}"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                             placeholder="">
+                                        <div class="mt-2"><button type="button" onclick="openDetailModal('pihak_lain','riil')" class="text-xs text-blue-700">Kelola Rincian Riil</button></div>
                                     </div>
                                     <div>
                                         <label class="mb-2 block text-sm font-medium text-slate-700">Kerugian Potensial (Rp)</label>
@@ -332,57 +359,61 @@
                                             value="{{ $formatCurrencyInput(old('pihak_lain_potensial', $kasus->kerugianFraud?->pihak_lain_potensial ?? '')) }}"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                             placeholder="">
+                                        <div class="mt-2"><button type="button" onclick="openDetailModal('pihak_lain','potensial')" class="text-xs text-blue-700">Kelola Rincian Potensial</button></div>
                                     </div>
                                     <div class="signifikan-hidden {{ $isSignifikanEdit ? 'hidden' : '' }}">
-                                        <label class="mb-2 block text-sm font-medium text-slate-700">Tambah Recovery Baru (Rp)</label>
+                                        <label class="mb-2 block text-sm font-medium text-slate-700">Setelah Pengembalian (Recovery) (Rp)</label>
                                         <input type="text" name="pihak_lain_recovery" inputmode="decimal" autocomplete="off"
                                             value="{{ old('pihak_lain_recovery', '') }}"
                                             class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
                                             placeholder="0">
-                                        <p class="mt-1 text-sm text-slate-600">Total recovery saat ini: Rp {{ number_format($kasus->kerugianFraud?->pihak_lain_recovery ?? 0, 0, ',', '.') }}</p>
-                                        <p class="mt-1 text-xs text-slate-500">Masukkan nominal baru untuk menambah entry recovery Pihak Lain.</p>
+                                        <input type="date" name="pihak_lain_recovery_tanggal" value="{{ old('pihak_lain_recovery_tanggal', now()->toDateString()) }}"
+                                            class="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                        <input type="text" name="pihak_lain_recovery_no_rekening" value="{{ old('pihak_lain_recovery_no_rekening', '') }}" placeholder="Nomor Rekening (opsional)"
+                                            class="mt-2 w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                                        <p class="mt-1 text-sm text-slate-600">Kerugian tersisa Pihak Lain: Rp {{ number_format($kasus->kerugianFraud?->getOutstandingForKategori('pihak_lain') ?? 0, 0, ',', '.') }}</p>
+                                        <p class="mt-1 text-xs text-slate-500">Kosongkan jika belum ada pengembalian dana. Tambahkan nominal setiap kali ada recovery baru, total recovery akan terhitung otomatis.</p>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
                         <div>
-                            <h3 class="mb-4 text-lg font-semibold text-slate-900">Rincian Recovery</h3>
+                            <h3 class="mb-4 text-lg font-semibold text-slate-900">Histori Recovery Tercatat</h3>
                             @php
-                                $recoveryEntries = $kasus->kerugianFraud?->recoveries ?? collect();
+                                $recoveryHistory = $kasus->kerugianFraud?->getRecoveryHistoryWithRunningTotals() ?? [];
                             @endphp
-                            @if($recoveryEntries->isNotEmpty())
-                                <div class="space-y-4">
-                                    @foreach($recoveryEntries->sortByDesc('created_at') as $rec)
-                                        <div class="rounded-3xl border border-slate-200 bg-slate-50 p-4">
-                                            <div class="grid gap-4 md:grid-cols-[1.5fr_1fr] md:items-end">
-                                                <div>
-                                                    <p class="text-sm font-semibold text-slate-900">{{ strtoupper($rec->kategori) }}</p>
-                                                    <p class="mt-1 text-sm text-slate-600">Dibuat: {{ $rec->created_at->format('Y-m-d H:i') }}@if($rec->user_id) • User #{{ $rec->user_id }}@endif</p>
-                                                    <p class="mt-2 text-sm text-slate-500">{{ $rec->keterangan ?? 'Rincian recovery sebelumnya' }}</p>
-                                                </div>
-                                                <div class="space-y-3">
-                                                    <div>
-                                                        <label class="mb-2 block text-sm font-medium text-slate-700">Nominal Recovery (Rp)</label>
-                                                        <input type="text" name="recovery[{{ $rec->id }}]" inputmode="decimal" autocomplete="off"
-                                                            value="{{ old('recovery.' . $rec->id, $formatCurrencyInput($rec->amount)) }}"
-                                                            class="currency-input w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 shadow-sm transition focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200"
-                                                            placeholder="0">
-                                                    </div>
-                                                    <div class="flex items-center justify-between gap-3">
-                                                        <button type="button" data-recovery-id="{{ $rec->id }}" class="delete-recovery-button text-sm font-semibold text-red-600 hover:text-red-800">
-                                                            Hapus
-                                                        </button>
-                                                        <span class="text-xs text-slate-500">Klik untuk hapus entry recovery ini.</span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    @endforeach
+                            @if(count($recoveryHistory) > 0)
+                                <div class="overflow-x-auto rounded-xl border border-slate-200">
+                                    <table class="min-w-full text-sm">
+                                        <thead class="bg-slate-50">
+                                            <tr>
+                                                <th class="border-b px-3 py-2 text-left">Tanggal</th>
+                                                <th class="border-b px-3 py-2 text-left">Kategori</th>
+                                                <th class="border-b px-3 py-2 text-left">Nomor Rekening</th>
+                                                <th class="border-b px-3 py-2 text-right">Nominal Recovery</th>
+                                                <th class="border-b px-3 py-2 text-right">Kerugian Setelah Recovery</th>
+                                                <th class="border-b px-3 py-2 text-center">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach($recoveryHistory as $row)
+                                                <tr>
+                                                    <td class="border-b px-3 py-2">{{ \Carbon\Carbon::parse($row['tanggal'])->format('d-m-Y') }}</td>
+                                                    <td class="border-b px-3 py-2">{{ strtoupper($row['kategori'] ?? '-') }}</td>
+                                                    <td class="border-b px-3 py-2">{{ $row['no_rekening'] ?? '-' }}</td>
+                                                    <td class="border-b px-3 py-2 text-right">Rp {{ number_format($row['amount'], 0, ',', '.') }}</td>
+                                                    <td class="border-b px-3 py-2 text-right font-medium">Rp {{ number_format($row['total_outstanding'], 0, ',', '.') }}</td>
+                                                    <td class="border-b px-3 py-2 text-center">
+                                                        <button type="button" data-recovery-id="{{ $row['id'] }}" class="delete-recovery-button text-xs font-semibold text-red-600 hover:text-red-800">Hapus</button>
+                                                    </td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
                                 </div>
-                                <p class="mt-3 text-sm text-slate-500">Ubah nominal per entry recovery untuk memperbarui rincian yang sudah disubmit.</p>
                             @else
-                                <p class="text-sm text-slate-600">Belum ada rincian recovery. Masukkan recovery di masing-masing kategori di atas.</p>
+                                <p class="text-sm text-slate-600">Belum ada histori recovery. Gunakan field "Tambah Recovery Baru" di atas.</p>
                             @endif
                         </div>
                     </div>
@@ -946,6 +977,7 @@
         initRecoveryDeleteButtons();
         checkFormValidity();
     });
+
 </script>
 
 @endsection

@@ -27,45 +27,52 @@ use App\Models\KerugianRecovery;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
+use App\Models\KerugianDetail;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Services\ExportService;
-use Barryvdh\DomPDF\Facade\Pdf;
+use App\Services\ImportService;
 
 class KasusController extends Controller
 {
     // ================= INDEX =================
-    public function index(Request $request)
-    {
-        // Ambil parameter dari request
-        $search = $request->get('search');
-        $status_penanganan = $request->get('status_penanganan');
-        $jenis_fraud = $request->get('jenis_fraud');
-        $jenis_laporan = $request->get('jenis_laporan');
-        $tanggal_awal = $request->get('tanggal_awal');
-        $tanggal_akhir = $request->get('tanggal_akhir');
+public function index(Request $request)
+{
+    // Ambil parameter dari request
+    $search = $request->get('search');
+    $status_penanganan = $request->get('status_penanganan');
+    $jenis_fraud = $request->get('jenis_fraud');
+    $jenis_laporan = $request->get('jenis_laporan');
+    $tanggal_awal = $request->get('tanggal_awal');
+    $tanggal_akhir = $request->get('tanggal_akhir');
+    $tahun = $request->get('tahun');
 
-        // Query dasar dengan eager loading
-        $query = Kasus::with([
-            'kejadianFraud',
-            'jenisFraud',
-            'aktivitasTerkait',
-            'lokasiFraud',
-            'pihakDirugikan',
-            'waktuFraud',
-            'kerugianFraud',
-            'kelemahanFraud',
-            'penangananFraud',
-            'pencegahanFraud' => function($query) {
-                $query->with('refPencegahan');
-            },
-            'pelakuFrauds' => function($query) {
-                $query->with(['jenisIdentitas', 'statusPelaku', 'jabatanKejadian', 'jabatanDiketahui']);
-            }
-        ])->where('user_id', auth()->id());
+    // Query dasar dengan eager loading
+    $query = Kasus::with([
+        'kejadianFraud',
+        'jenisFraud',
+        'aktivitasTerkait',
+        'lokasiFraud',
+        'pihakDirugikan',
+        'waktuFraud',
+        'kerugianFraud' => function ($q) { $q->with(['recoveries', 'details']); },
+        'kelemahanFraud',
+        'penangananFraud',
+        'pencegahanFraud' => function($query) {
+            $query->with('refPencegahan');
+        },
+        'pelakuFrauds' => function($query) {
+            $query->with([
+                'jenisIdentitas',
+                'statusPelaku',
+                'jabatanKejadian',
+                'jabatanDiketahui'
+            ]);
+        },
+    ]);
 
-        // Search global (kode_komponen, deskripsi_fraud, divisi_unit, nama pelaku)
+        // Search global (kode_kejadian, deskripsi_fraud, divisi_unit, nama pelaku)
         if ($search) {
             $query->where(function($q) use ($search) {
                 $q->whereHas('kejadianFraud', function($kejadianQuery) use ($search) {
@@ -79,17 +86,17 @@ class KasusController extends Controller
             });
         }
 
-        // Filter status penanganan
-        $query->when($status_penanganan, function($q) use ($status_penanganan) {
-            return $q->where('status_penanganan', $status_penanganan);
-        });
+    // Filter status penanganan
+    $query->when($status_penanganan, function($q) use ($status_penanganan) {
+        return $q->where('status_penanganan', $status_penanganan);
+    });
 
-        // Filter jenis fraud
-        $query->when($jenis_fraud, function($q) use ($jenis_fraud) {
-            return $q->whereHas('jenisFraud', function($jenisQuery) use ($jenis_fraud) {
-                $jenisQuery->where('ref_jenis_fraud.id', $jenis_fraud);
-            });
+    // Filter jenis fraud
+    $query->when($jenis_fraud, function($q) use ($jenis_fraud) {
+        return $q->whereHas('jenisFraud', function($jenisQuery) use ($jenis_fraud) {
+            $jenisQuery->where('ref_jenis_fraud.id', $jenis_fraud);
         });
+    });
 
         // Filter berdasarkan tanggal input/kasus (`created_at`) bukan waktu kejadian
         if ($tanggal_awal && $tanggal_akhir) {
@@ -100,19 +107,104 @@ class KasusController extends Controller
             $query->where('created_at', '<=', $tanggal_akhir . ' 23:59:59');
         }
 
-        // Filter jenis laporan
-        $query->when($jenis_laporan, function($q) use ($jenis_laporan) {
-            return $q->where('jenis_laporan', $jenis_laporan);
+    // Filter jenis laporan
+    $query->when($jenis_laporan, function($q) use ($jenis_laporan) {
+        return $q->where('jenis_laporan', $jenis_laporan);
+    });
+
+    // Filter tahun - use whereRaw to allow NULL values
+    if (!$tanggal_awal && !$tanggal_akhir && $tahun) {
+        $query->where(function($q) use ($tahun) {
+            $q->whereHas('waktuFraud', function($waktuQuery) use ($tahun) {
+                $waktuQuery->where(function($w) use ($tahun) {
+                    $w->whereYear('waktu_diketahui', $tahun)
+                      ->orWhereYear('waktu_awal', $tahun)
+                      ->orWhereYear('waktu_akhir', $tahun);
+                });
+            })
+            ->orDoesntHave('waktuFraud'); // Include data without waktuFraud
         });
-
-        // Pagination (urutkan dari kasus pertama yang dibuat ke yang paling baru)
-        $kasus = $query->orderBy('created_at', 'asc')->paginate(10)->withQueryString();
-
-        // Data untuk filter dropdown
-        $jenisFraudOptions = RefJenisFraud::orderBy('nama')->get();
-
-        return view('kasus.index', compact('kasus', 'jenisFraudOptions'));
     }
+
+    // Pagination - separate for semester and signifikan
+    $semesterQuery = clone $query;
+    $signifikanQuery = clone $query;
+    $nonSignifikanQuery = clone $query;
+    
+    // Prepare filter parameters to preserve in pagination links
+    $filterParams = array_filter([
+        'search' => $search,
+        'status_penanganan' => $status_penanganan,
+        'jenis_fraud' => $jenis_fraud,
+        'tanggal_awal' => $tanggal_awal,
+        'tanggal_akhir' => $tanggal_akhir,
+        'tahun' => $tahun,
+        'jenis_laporan' => $jenis_laporan, // ALWAYS include jenis_laporan
+    ]);
+    
+    $semesterKasus = $semesterQuery->where('jenis_laporan', 'semester')
+                                    ->orderBy('created_at', 'asc')
+                                    ->paginate(10, ['*'], 'semester_page')
+                                    ->appends($filterParams)
+                                    ->withQueryString();
+    
+    $signifikanKasus = $signifikanQuery->where('jenis_laporan', 'signifikan')
+                                       ->orderBy('created_at', 'asc')
+                                       ->paginate(10, ['*'], 'signifikan_page')
+                                       ->appends($filterParams)
+                                       ->withQueryString();
+
+    $nonSignifikanKasus = $nonSignifikanQuery->where('jenis_laporan', 'non-signifikan')
+                                             ->orderBy('created_at', 'asc')
+                                             ->paginate(10, ['*'], 'non_signifikan_page')
+                                             ->appends($filterParams)
+                                             ->withQueryString();
+
+    // Dropdown jenis fraud
+    $jenisFraudOptions = RefJenisFraud::orderBy('nama')->get();
+
+    // ================= AMBIL TAHUN =================
+    $availableYears = DB::table('waktu_fraud')
+        ->join('kasus', 'waktu_fraud.kasus_id', '=', 'kasus.id')
+        ->whereNotNull('waktu_fraud.waktu_diketahui')
+        ->selectRaw('DISTINCT YEAR(waktu_fraud.waktu_diketahui) as year')
+        ->pluck('year')
+        ->map(function ($year) {
+            return (int) $year;
+        })
+        ->filter(function ($year) {
+            return $year > 1900 && $year < 2100;
+        })
+        ->toArray();
+
+    // Default tahun
+    $defaultYears = [2025];
+
+    // Gabungkan
+    $yearOptions = array_unique(array_merge($defaultYears, $availableYears));
+
+    // Urut descending
+    rsort($yearOptions);
+
+    // Reset index
+    $yearOptions = array_values($yearOptions);
+
+    // DEBUG
+    \Log::info('DEBUG YEAR', [
+        'availableYears' => $availableYears,
+        'yearOptions' => $yearOptions
+    ]);
+
+    return view('kasus.index', compact(
+        'semesterKasus',
+        'signifikanKasus',
+        'nonSignifikanKasus',
+        'jenisFraudOptions',
+        'yearOptions'
+    ));
+}
+
+    
 
     private function buildExportQuery(Request $request)
     {
@@ -130,7 +222,7 @@ class KasusController extends Controller
             'lokasiFraud',
             'pihakDirugikan',
             'waktuFraud',
-            'kerugianFraud',
+            'kerugianFraud' => function ($q) { $q->with(['recoveries', 'details']); },
             'kelemahanFraud',
             'penangananFraud',
             'pencegahanFraud' => function ($query) {
@@ -139,7 +231,7 @@ class KasusController extends Controller
             'pelakuFrauds' => function ($query) {
                 $query->with(['jenisIdentitas', 'statusPelaku', 'jabatanKejadian', 'jabatanDiketahui']);
             }
-        ])->where('user_id', auth()->id());
+        ]);
 
         if ($search) {
             $query->where(function ($q) use ($search) {
@@ -214,6 +306,107 @@ class KasusController extends Controller
         return is_numeric($value) ? (int) $value : null;
     }
 
+    private function recordRecoveryEntry(KerugianFraud $kerugian, string $kategori, Request $request): void
+    {
+        $amount = $this->parseNumericField($request->input($kategori . '_recovery')) ?? 0;
+        if ($amount <= 0) {
+            return;
+        }
+
+        $tanggal = $request->input($kategori . '_recovery_tanggal') ?: now()->toDateString();
+        $noRekening = $request->input($kategori . '_recovery_no_rekening');
+        KerugianRecovery::create([
+            'kerugian_fraud_id' => $kerugian->id,
+            'kategori' => $kategori,
+            'tanggal' => $tanggal,
+            'amount' => $amount,
+            'no_rekening' => $noRekening ?: null,
+            'user_id' => auth()->id(),
+        ]);
+    }
+
+    private function syncKerugianRecoveryTotals(KerugianFraud $kerugian): void
+    {
+        $ljkTotal = $kerugian->recoveries()->where('kategori', 'ljk')->sum('amount');
+        $konsumenTotal = $kerugian->recoveries()->where('kategori', 'konsumen')->sum('amount');
+        $pihakLainTotal = $kerugian->recoveries()->where('kategori', 'pihak_lain')->sum('amount');
+
+        $kerugian->update([
+            'ljk_recovery' => $ljkTotal > 0 ? $ljkTotal : null,
+            'konsumen_recovery' => $konsumenTotal > 0 ? $konsumenTotal : null,
+            'pihak_lain_recovery' => $pihakLainTotal > 0 ? $pihakLainTotal : null,
+        ]);
+    }
+
+    private function syncKerugianDetails(KerugianFraud $kerugian, $kerugianDetails): void
+    {
+        if (is_string($kerugianDetails)) {
+            $decoded = json_decode($kerugianDetails, true);
+            $kerugianDetails = is_array($decoded) ? $decoded : [];
+        }
+
+        if (!is_array($kerugianDetails)) {
+            return;
+        }
+
+        $keptIds = [];
+
+        foreach ($kerugianDetails as $d) {
+            if (!empty($d['_deleted'])) {
+                if (!empty($d['id']) && is_numeric($d['id'])) {
+                    KerugianDetail::where('kerugian_fraud_id', $kerugian->id)
+                        ->where('id', $d['id'])
+                        ->delete();
+                }
+                continue;
+            }
+
+            $nom = isset($d['nominal']) ? $this->parseNumericField($d['nominal']) : null;
+            if ($nom === null) {
+                continue;
+            }
+
+            $payload = [
+                'kategori' => $d['kategori'] ?? null,
+                'tipe' => $d['tipe'] ?? null,
+                'nominal' => $nom,
+                'no_rekening' => $d['no_rekening'] ?? null,
+                'keterangan' => $d['keterangan'] ?? null,
+            ];
+
+            if (!empty($d['id']) && is_numeric($d['id'])) {
+                $detail = KerugianDetail::where('kerugian_fraud_id', $kerugian->id)
+                    ->where('id', $d['id'])
+                    ->first();
+
+                if ($detail) {
+                    $detail->update($payload);
+                    $keptIds[] = $detail->id;
+                    continue;
+                }
+            }
+
+            $new = KerugianDetail::create(array_merge($payload, [
+                'kerugian_fraud_id' => $kerugian->id,
+                'user_id' => auth()->id(),
+            ]));
+            $keptIds[] = $new->id;
+        }
+
+        $deleteQuery = KerugianDetail::where('kerugian_fraud_id', $kerugian->id);
+        if (count($keptIds) > 0) {
+            $deleteQuery->whereNotIn('id', $keptIds);
+        }
+        $deleteQuery->delete();
+    }
+
+    private function kerugianDetailSuccessSuffix(KerugianFraud $kerugian): string
+    {
+        $count = $kerugian->details()->count();
+
+        return $count > 0 ? ' ' . $count . ' rincian telah dicatat.' : '';
+    }
+
     // ================= STORE =================
     public function store(Request $request)
     {
@@ -239,6 +432,8 @@ class KasusController extends Controller
 
         try {
             // ================= SIMPAN KASUS =================
+            $now = \Carbon\Carbon::now();
+            
             $kasus = Kasus::create([
                 'user_id' => auth()->id(),
                 'kode_komponen' => $request->kode_komponen,
@@ -341,46 +536,15 @@ class KasusController extends Controller
                 'pihak_lain_recovery' => null,
             ]);
 
-            // Create recovery entries for any non-zero input so we have a history
+            if ($request->filled('kerugian_details')) {
+                $this->syncKerugianDetails($kerugian, $request->input('kerugian_details'));
+            }
+
             if (!in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
-                $ljkRec = $this->parseNumericField($request->ljk_recovery) ?? 0;
-                $konsumenRec = $this->parseNumericField($request->konsumen_recovery) ?? 0;
-                $pihakLainRec = $this->parseNumericField($request->pihak_lain_recovery) ?? 0;
-
-                if ($ljkRec > 0) {
-                    KerugianRecovery::create([
-                        'kerugian_fraud_id' => $kerugian->id,
-                        'kategori' => 'ljk',
-                        'amount' => $ljkRec,
-                        'user_id' => auth()->id(),
-                    ]);
-                }
-                if ($konsumenRec > 0) {
-                    KerugianRecovery::create([
-                        'kerugian_fraud_id' => $kerugian->id,
-                        'kategori' => 'konsumen',
-                        'amount' => $konsumenRec,
-                        'user_id' => auth()->id(),
-                    ]);
-                }
-                if ($pihakLainRec > 0) {
-                    KerugianRecovery::create([
-                        'kerugian_fraud_id' => $kerugian->id,
-                        'kategori' => 'pihak_lain',
-                        'amount' => $pihakLainRec,
-                        'user_id' => auth()->id(),
-                    ]);
-                }
-
-                // Recalculate recovery totals from entries
-                $ljkTotal = $kerugian->recoveries()->where('kategori', 'ljk')->sum('amount');
-                $konsumenTotal = $kerugian->recoveries()->where('kategori', 'konsumen')->sum('amount');
-                $pihakLainTotal = $kerugian->recoveries()->where('kategori', 'pihak_lain')->sum('amount');
-
-                $kerugian->ljk_recovery = $ljkTotal > 0 ? $ljkTotal : null;
-                $kerugian->konsumen_recovery = $konsumenTotal > 0 ? $konsumenTotal : null;
-                $kerugian->pihak_lain_recovery = $pihakLainTotal > 0 ? $pihakLainTotal : null;
-                $kerugian->save();
+                $this->recordRecoveryEntry($kerugian, 'ljk', $request);
+                $this->recordRecoveryEntry($kerugian, 'konsumen', $request);
+                $this->recordRecoveryEntry($kerugian, 'pihak_lain', $request);
+                $this->syncKerugianRecoveryTotals($kerugian);
             }
 
             // ================= PENCEGAHAN =================
@@ -403,7 +567,9 @@ class KasusController extends Controller
 
             DB::commit();
 
-            return redirect()->route('kasus.index')->with('success', 'Data berhasil disimpan');
+            $successMsg = 'Data berhasil disimpan.' . $this->kerugianDetailSuccessSuffix($kerugian);
+
+            return redirect()->route('kasus.index')->with('success', $successMsg);
 
         } catch (\Exception $e) {
             DB::rollback();
@@ -422,6 +588,7 @@ class KasusController extends Controller
             'pihakDirugikan',
             'waktuFraud',
             'kerugianFraud.recoveries',
+            'kerugianFraud.details',
             'kelemahanFraud',
             'penangananFraud',
             'pencegahanFraud' => function($query) {
@@ -430,7 +597,7 @@ class KasusController extends Controller
             'pelakuFrauds' => function($query) {
                 $query->with(['jenisIdentitas', 'statusPelaku', 'jabatanKejadian', 'jabatanDiketahui']);
             }
-        ])->where('user_id', auth()->id())->findOrFail($id);
+        ])->findOrFail($id);
         // Sesuaikan waktu `created_at` dan `updated_at` ke timezone mesin lokal
         $localTz = date_default_timezone_get();
         if ($kasus->created_at) {
@@ -454,6 +621,7 @@ class KasusController extends Controller
             'pihakDirugikan',
             'waktuFraud',
             'kerugianFraud.recoveries',
+            'kerugianFraud.details',
             'kerugianFraud',
             'kelemahanFraud',
             'penangananFraud',
@@ -463,8 +631,8 @@ class KasusController extends Controller
             'pelakuFrauds' => function($query) {
                 $query->with(['jenisIdentitas', 'statusPelaku', 'jabatanKejadian', 'jabatanDiketahui']);
             }
-        ])->where('user_id', auth()->id())->findOrFail($id);
-        
+        ])->findOrFail($id);
+
         return view('kasus.edit', [
             'kasus' => $kasus,
             'kejadianFraud' => RefKejadianFraud::all(),
@@ -509,7 +677,9 @@ class KasusController extends Controller
         DB::beginTransaction();
 
         try {
-            $kasus = Kasus::where('user_id', auth()->id())->findOrFail($id);
+            $kasus = Kasus::findOrFail($id);
+
+            $now = \Carbon\Carbon::now();
 
             // ================= UPDATE KASUS =================
             $kasus->update([
@@ -622,62 +792,16 @@ if ($kasus->kerugianFraud) {
     $kerugian = KerugianFraud::create($kerugianData);
 }
 
-// Handle recovery entry edits and new recovery inputs
 if (!in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
-    $recoveryUpdates = $request->input('recovery', []);
-
-    // Update existing recovery entries
-    if (!empty($recoveryUpdates) && is_array($recoveryUpdates)) {
-        $recoveriesToUpdate = $kerugian->recoveries()
-            ->whereIn('id', array_keys($recoveryUpdates))
-            ->get();
-
-        foreach ($recoveriesToUpdate as $recovery) {
-            $newAmount = $this->parseNumericField($recoveryUpdates[$recovery->id]) ?? 0;
-            if ($newAmount !== $recovery->amount) {
-                $recovery->update(['amount' => $newAmount]);
-            }
-        }
-    }
-
-    $ljkRec = $this->parseNumericField($request->ljk_recovery) ?? 0;
-    $konsumenRec = $this->parseNumericField($request->konsumen_recovery) ?? 0;
-    $pihakLainRec = $this->parseNumericField($request->pihak_lain_recovery) ?? 0;
-
-    if ($ljkRec > 0) {
-        KerugianRecovery::create([
-            'kerugian_fraud_id' => $kerugian->id,
-            'kategori' => 'ljk',
-            'amount' => $ljkRec,
-            'user_id' => auth()->id(),
-        ]);
-    }
-    if ($konsumenRec > 0) {
-        KerugianRecovery::create([
-            'kerugian_fraud_id' => $kerugian->id,
-            'kategori' => 'konsumen',
-            'amount' => $konsumenRec,
-            'user_id' => auth()->id(),
-        ]);
-    }
-    if ($pihakLainRec > 0) {
-        KerugianRecovery::create([
-            'kerugian_fraud_id' => $kerugian->id,
-            'kategori' => 'pihak_lain',
-            'amount' => $pihakLainRec,
-            'user_id' => auth()->id(),
-        ]);
-    }
-
-    $ljkTotal = $kerugian->recoveries()->where('kategori', 'ljk')->sum('amount');
-    $konsumenTotal = $kerugian->recoveries()->where('kategori', 'konsumen')->sum('amount');
-    $pihakLainTotal = $kerugian->recoveries()->where('kategori', 'pihak_lain')->sum('amount');
-
-    $kerugian->ljk_recovery = $ljkTotal > 0 ? $ljkTotal : null;
-    $kerugian->konsumen_recovery = $konsumenTotal > 0 ? $konsumenTotal : null;
-    $kerugian->pihak_lain_recovery = $pihakLainTotal > 0 ? $pihakLainTotal : null;
-    $kerugian->save();
+    $this->recordRecoveryEntry($kerugian, 'ljk', $request);
+    $this->recordRecoveryEntry($kerugian, 'konsumen', $request);
+    $this->recordRecoveryEntry($kerugian, 'pihak_lain', $request);
+    $this->syncKerugianRecoveryTotals($kerugian);
 }
+
+            if ($request->has('kerugian_details')) {
+                $this->syncKerugianDetails($kerugian, $request->input('kerugian_details'));
+            }
 
             // ================= PENCEGAHAN =================
             if (in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
@@ -705,7 +829,9 @@ if (!in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
 
             DB::commit();
 
-            return redirect()->route('kasus.show', $kasus->id)->with('success', 'Data berhasil diupdate');
+            $successMsg = 'Data berhasil diupdate.' . $this->kerugianDetailSuccessSuffix($kerugian);
+
+            return redirect()->route('kasus.show', $kasus->id)->with('success', $successMsg);
 
         } catch (\Exception $e) {
             DB::rollback();
@@ -719,8 +845,8 @@ if (!in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
         DB::beginTransaction();
 
         try {
-            $kasus = Kasus::where('user_id', auth()->id())->findOrFail($id);
-            
+            $kasus = Kasus::findOrFail($id);
+
             // Delete relasi many-to-many
             $kasus->kejadianFraud()->detach();
             $kasus->jenisFraud()->detach();
@@ -764,16 +890,42 @@ if (!in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
             $konsumenTotal = $kerugian->recoveries()->where('kategori', 'konsumen')->sum('amount');
             $pihakLainTotal = $kerugian->recoveries()->where('kategori', 'pihak_lain')->sum('amount');
 
-            $kerugian->ljk_recovery = $ljkTotal > 0 ? $ljkTotal : null;
-            $kerugian->konsumen_recovery = $konsumenTotal > 0 ? $konsumenTotal : null;
-            $kerugian->pihak_lain_recovery = $pihakLainTotal > 0 ? $pihakLainTotal : null;
-            $kerugian->save();
+            $this->syncKerugianRecoveryTotals($kerugian);
 
             return response()->json(['success' => true, 'message' => 'Recovery entry berhasil dihapus']);
 
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Error: ' . $e->getMessage()], 500);
         }
+    }
+
+    // ================= STORE KERUGIAN DETAIL (AJAX) =================
+    public function storeKerugianDetail(Request $request)
+    {
+        $request->validate([
+            'kerugian_fraud_id' => 'required|exists:kerugian_fraud,id',
+            'kategori' => 'required|string',
+            'tipe' => 'required|string|in:riil,potensial',
+            'nominal' => 'required',
+            'no_rekening' => 'nullable|string',
+            'keterangan' => 'nullable|string',
+        ]);
+
+        $kerugian = KerugianFraud::findOrFail($request->kerugian_fraud_id);
+
+        $nom = $this->parseNumericField($request->nominal);
+
+        $detail = KerugianDetail::create([
+            'kerugian_fraud_id' => $kerugian->id,
+            'kategori' => $request->kategori,
+            'tipe' => $request->tipe,
+            'nominal' => $nom,
+            'no_rekening' => $request->no_rekening,
+            'keterangan' => $request->keterangan,
+            'user_id' => auth()->id(),
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Rincian tersimpan', 'detail' => $detail]);
     }
 
 
@@ -786,6 +938,7 @@ if (!in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
             'status_penanganan' => $request->get('status_penanganan'),
             'jenis_fraud' => $request->get('jenis_fraud'),
             'jenis_laporan' => $request->get('jenis_laporan'),
+            'tahun' => $request->get('tahun'),
             'tanggal_awal' => $request->get('dari_tanggal') ?? $request->get('tanggal_awal'),
             'tanggal_akhir' => $request->get('sampai_tanggal') ?? $request->get('tanggal_akhir'),
         ];
@@ -984,10 +1137,10 @@ if (!in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
     // BAGIAN PELAKU (BARIS 3 SEJAJAR)
     $sheet->setCellValue('AG3', 'Internal / Eksternal');
     $sheet->setCellValue('AH3', 'Identitas Pelaku'); 
-    $sheet->setCellValue('AP3', 'Status Pelaku'); // Status Pelaku
-    $sheet->setCellValue('AQ3', 'Jabatan Pelaku'); // Sejajar Identitas
-    $sheet->setCellValue('AU3', 'Keterangan Pelaku'); // SEJAJAR Status Pelaku (Permintaan Anda)
-    $sheet->setCellValue('AV3', 'Pengenaan Sanksi'); // SEJAJAR Status Pelaku (Permintaan Anda)
+    $sheet->setCellValue('AP3', 'Status Pelaku'); 
+    $sheet->setCellValue('AQ3', 'Jabatan Pelaku'); 
+    $sheet->setCellValue('AU3', 'Keterangan Pelaku'); 
+    $sheet->setCellValue('AV3', 'Pengenaan Sanksi');
 
     // --- ROW 4: Final Detail Headings (Semua Sejajar) ---
     $sheet->setCellValue('M4', 'Awal');
@@ -1034,13 +1187,13 @@ if (!in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
     $sheet->mergeCells('AC2:AF2'); $sheet->mergeCells('AC3:AC4'); $sheet->mergeCells('AD3:AD4'); $sheet->mergeCells('AE3:AE4'); $sheet->mergeCells('AF3:AF4');
 
     // STRUKTUR PELAKU FRAUD (AG - AV)
-    $sheet->mergeCells('AG2:AV2'); // Header besar memayungi sampai Sanksi
-    $sheet->mergeCells('AG3:AG4'); // Internal/Eksternal vertikal
-    $sheet->mergeCells('AH3:AO3'); // Identitas Pelaku Group
-    $sheet->mergeCells('AP3:AP4'); // Status Pelaku vertikal
-    $sheet->mergeCells('AQ3:AT3'); // Jabatan Pelaku Group
-    $sheet->mergeCells('AU3:AU4'); // Keterangan Pelaku vertikal (Sejajar Status)
-    $sheet->mergeCells('AV3:AV4'); // Pengenaan Sanksi vertikal (Sejajar Status)
+    $sheet->mergeCells('AG2:AV2'); 
+    $sheet->mergeCells('AG3:AG4'); 
+    $sheet->mergeCells('AH3:AO3'); 
+    $sheet->mergeCells('AP3:AP4'); 
+    $sheet->mergeCells('AQ3:AT3'); 
+    $sheet->mergeCells('AU3:AU4'); 
+    $sheet->mergeCells('AV3:AV4'); 
 
     // KOLOM STATUS PENANGANAN (Paling Kanan)
     $sheet->mergeCells('AW2:AW4');
@@ -1293,7 +1446,7 @@ if (!in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
             'W' => 13.21875,
             'X' => 18.109375,
             'Y' => 67.21875,
-            'Z' => 15.88671875,
+            'Z' => 116,
             'AA' => 47.21875,
             'AB' => 15.88671875,
             'AC' => 60.6640625,
@@ -1369,48 +1522,112 @@ if (!in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
         }
     }
 
-    public function exportPdf(Request $request)
+    // ================= IMPORT =================
+    public function showImportForm()
     {
-        // Map form parameters to filter keys
-        $filters = [
-            'search' => $request->get('search'),
-            'status_penanganan' => $request->get('status_penanganan'),
-            'jenis_fraud' => $request->get('jenis_fraud'),
-            'jenis_laporan' => $request->get('jenis_laporan'),
-            'tanggal_awal' => $request->get('dari_tanggal') ?? $request->get('tanggal_awal'),
-            'tanggal_akhir' => $request->get('sampai_tanggal') ?? $request->get('tanggal_akhir'),
-        ];
+        return view('kasus.import');
+    }
 
-        $service = new ExportService();
-        $selectedColumns = $request->get('selected_columns') ? explode(',', $request->get('selected_columns')) : [];
-
-        $kasus = $service->getFilteredKasus($filters);
-        $semesterKasus = $kasus->where('jenis_laporan', 'semester');
-        $signifikanKasus = $kasus->where('jenis_laporan', 'signifikan');
-        $nonSignifikanKasus = $kasus->where('jenis_laporan', 'non-signifikan');
-
-        $semesterData = $service->prepareExportDataSemester($semesterKasus);
-        $signifikanData = $service->prepareExportDataSignifikan($signifikanKasus);
-        $nonSignifikanData = $service->prepareExportDataNonSignifikan($nonSignifikanKasus);
-        $summary = $service->getSummary($kasus);
-
-        $reportType = $request->get('report_type') ?? $request->get('jenis_laporan');
-
-        $pdf = app('dompdf.wrapper');
-        $pdf->loadView('kasus.export-pdf', [
-            'semesterData' => $semesterData,
-            'signifikanData' => $signifikanData,
-            'nonSignifikanData' => $nonSignifikanData,
-            'summary' => $summary,
-            'filters' => $filters,
-            'reportType' => $reportType,
-            'selectedColumns' => $selectedColumns,
-            'dari_tanggal' => $request->get('dari_tanggal') ?? $request->get('tanggal_awal') ?? '-',
-            'sampai_tanggal' => $request->get('sampai_tanggal') ?? $request->get('tanggal_akhir') ?? '-',
+    public function import(Request $request)
+    {
+        $request->validate([
+            'file' => 'required|mimes:xlsx,xls,xlsm',
+            'jenis_laporan' => 'required|in:semester,signifikan,non-signifikan',
+        ], [
+            'file.required' => 'File harus dipilih',
+            'file.mimes' => 'File harus berformat Excel (.xlsx, .xls, atau .xlsm)',
+            'jenis_laporan.required' => 'Jenis laporan harus dipilih',
         ]);
 
-        $filename = 'laporan-kasus-fraud' . ($reportType ? '-' . $reportType : '') . '-' . now()->format('Ymd_His') . '.pdf';
-        return $pdf->download($filename);
+        $file = $request->file('file');
+        $path = $file->store('imports', 'local');
+        
+        // Get full file path with proper separator handling
+        $filePath = \Storage::disk('local')->path($path);
+        
+        // Verify file exists before processing
+        if (!file_exists($filePath)) {
+            \Storage::delete($path);
+            return back()
+                ->with('error', 'File tidak dapat diakses. Silakan coba upload kembali.')
+                ->withInput();
+        }
+        
+        $importService = new ImportService();
+        $result = $importService->importFromFile(
+            $filePath,
+            $request->jenis_laporan,
+            auth()->id()
+        );
+
+        // Clean up uploaded file only after import is done
+        try {
+            \Storage::delete($path);
+        } catch (\Exception $e) {
+            // File cleanup failed, but import may have succeeded
+        }
+
+        if ($result['success']) {
+            $message = $result['message'];
+            
+            if (!empty($result['warnings'])) {
+                $message .= "\n\n⚠️ Peringatan:\n" . implode("\n", array_slice($result['warnings'], 0, 5));
+                if (count($result['warnings']) > 5) {
+                    $message .= "\n... dan " . (count($result['warnings']) - 5) . " peringatan lainnya";
+                }
+            }
+
+            // Redirect to the appropriate report type (semester or signifikan)
+            return redirect()
+                ->route('kasus.index', ['jenis_laporan' => $request->jenis_laporan])
+                ->with('success', $message)
+                ->with('importStats', [
+                    'success' => $result['successCount'],
+                    'skip' => $result['skipCount']
+                ]);
+        } else {
+            return back()
+                ->with('error', $result['message'])
+                ->withErrors((array) $result['errors']);
+        }
+    }
+
+    // ================= DOWNLOAD TEMPLATE =================
+    public function downloadTemplate()
+    {
+        // Create empty spreadsheet with both sheets
+        $spreadsheet = new Spreadsheet();
+        
+        // Semester Sheet (01A)
+        $sheet1 = $spreadsheet->getActiveSheet();
+        $sheet1->setTitle('01A');
+        $this->createSemesterHeaders($sheet1);
+        $this->setSheetTitle($sheet1, '01A - Laporan Penerapan SAF yang mencakup informasi kejadian fraud dan informasi pelaku fraud', 'AW');
+        $this->styleSemesterHeaders($sheet1);
+        $this->setSemesterColumnWidths($sheet1);
+
+        // Signifikan Sheet (01B)
+        $sheet2 = $spreadsheet->createSheet();
+        $sheet2->setTitle('01B');
+        $this->createSignifikanHeaders($sheet2);
+        $this->setSheetTitle($sheet2, '01B - Laporan Penerapan SAF berdampak signifikan yang mencakup informasi kejadian fraud dan informasi pelaku fraud berdampak signifikan', 'AH');
+        $this->styleSignifikanHeaders($sheet2);
+        $this->setSignifikanColumnWidths($sheet2);
+
+        // Add sample empty row (row 6) with formatting
+        $sheet1->getStyle('A6:AW6')->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_TOP)->setHorizontal(Alignment::HORIZONTAL_LEFT);
+        $sheet1->getRowDimension(6)->setRowHeight(-1);
+        
+        $sheet2->getStyle('A6:AH6')->getAlignment()->setWrapText(true)->setVertical(Alignment::VERTICAL_TOP)->setHorizontal(Alignment::HORIZONTAL_LEFT);
+        $sheet2->getRowDimension(6)->setRowHeight(-1);
+
+        // Download
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'template-laporan-kasus-fraud-' . now()->format('Ymd_His') . '.xlsx';
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $filename);
     }
 
     

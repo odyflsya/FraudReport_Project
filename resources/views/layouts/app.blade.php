@@ -28,40 +28,35 @@
 
     <!-- Dashboard -->
     <a href="{{ route('dashboard') }}"
-       class="px-6 py-3 flex items-center gap-3 transition {{ request()->routeIs('dashboard') ? 'bg-orange-500' : 'hover:bg-sky-500' }}">
-        
+       class="px-6 py-3 flex items-center gap-3 transition text-white/90 {{ request()->routeIs('dashboard') ? 'bg-orange-500' : 'hover:bg-sky-500' }}">
         <i class="fa-solid fa-table-columns w-5"></i>
         Dashboard
     </a>
 
     <!-- Manajemen Kasus -->
     <a href="{{ route('kasus.index') }}"
-       class="px-6 py-3 flex items-center gap-3 transition {{ request()->routeIs('kasus.index', 'kasus.show', 'kasus.edit') ? 'bg-orange-500' : 'hover:bg-sky-500' }}">
-        
+       class="px-6 py-3 flex items-center gap-3 transition text-white/90 {{ request()->routeIs('kasus.index', 'kasus.show', 'kasus.edit', 'kasus.import', 'kasus.import-form') ? 'bg-orange-500' : 'hover:bg-sky-500' }}">
         <i class="fa-solid fa-folder-open w-5"></i>
         Manajemen Kasus
     </a>
 
     <!-- Input Kasus -->
     <a href="{{ route('kasus.create') }}"
-       class="px-6 py-3 flex items-center gap-3 transition {{ request()->routeIs('kasus.create') ? 'bg-orange-500' : 'hover:bg-sky-500' }}">
-        
+       class="px-6 py-3 flex items-center gap-3 transition text-white/90 {{ request()->routeIs('kasus.create') ? 'bg-orange-500' : 'hover:bg-sky-500' }}">
         <i class="fa-solid fa-plus w-5"></i>
         Input Kasus
     </a>
 
-    <!-- Export -->
+    <!-- Export Laporan -->
     <a href="{{ route('kasus.export') }}"
-       class="px-6 py-3 flex items-center gap-3 transition {{ request()->routeIs('kasus.export') ? 'bg-orange-500' : 'hover:bg-sky-500' }}">
-        
+       class="px-6 py-3 flex items-center gap-3 transition text-white/90 {{ request()->routeIs('kasus.export') ? 'bg-orange-500' : 'hover:bg-sky-500' }}">
         <i class="fa-solid fa-file-export w-5"></i>
         Export Laporan
     </a>
 
     <!-- Pengaturan -->
     <a href="{{ route('pengaturan.index') }}"
-       class="px-6 py-3 flex items-center gap-3 transition {{ request()->routeIs('pengaturan.index', 'profile.edit') ? 'bg-orange-500' : 'hover:bg-sky-500' }}">
-        
+       class="px-6 py-3 flex items-center gap-3 transition text-white/90 {{ request()->routeIs('pengaturan.index', 'profile.edit') ? 'bg-orange-500' : 'hover:bg-sky-500' }}">
         <i class="fa-solid fa-gear w-5"></i>
         Pengaturan
     </a>
@@ -81,7 +76,7 @@
             <h1 class="text-2xl font-semibold">
                 @if(request()->routeIs('dashboard'))
                 Dashboard
-                @elseif(request()->routeIs('kasus.index', 'kasus.show', 'kasus.edit'))
+                @elseif(request()->routeIs('kasus.index', 'kasus.show', 'kasus.edit', 'kasus.import', 'kasus.import-form'))
                 Manajemen Kasus
                 @elseif(request()->routeIs('kasus.create'))
                 Input Kasus
@@ -154,6 +149,70 @@
 
 <!-- CONTENT -->
 <div class="mt-[80px] p-8 overflow-x-auto overflow-y-auto h-[calc(100vh-80px)]">
+    <!-- Flash Messages -->
+    @if (session('success'))
+        <div class="mb-6 rounded-lg border border-green-200 bg-green-50 p-4 shadow-sm">
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-semibold text-green-900">{{ __('Berhasil!') }}</h3>
+                    <p class="mt-1 text-sm text-green-800 whitespace-pre-line">{{ session('success') }}</p>
+                </div>
+                <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-green-600 hover:text-green-800">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    @endif
+
+    @if (session('error'))
+        <div class="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 shadow-sm">
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-semibold text-red-900">{{ __('Gagal!') }}</h3>
+                    <p class="mt-1 text-sm text-red-800 whitespace-pre-line">{{ session('error') }}</p>
+                </div>
+                <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-red-600 hover:text-red-800">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    @endif
+
+    @if (session('warning'))
+        <div class="mb-6 rounded-lg border border-yellow-200 bg-yellow-50 p-4 shadow-sm">
+            <div class="flex items-start gap-3">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" />
+                    </svg>
+                </div>
+                <div class="flex-1">
+                    <h3 class="font-semibold text-yellow-900">{{ __('Peringatan!') }}</h3>
+                    <p class="mt-1 text-sm text-yellow-800 whitespace-pre-line">{{ session('warning') }}</p>
+                </div>
+                <button type="button" onclick="this.parentElement.parentElement.remove()" class="text-yellow-600 hover:text-yellow-800">
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    @endif
+
     @yield('content')
 </div>
 
