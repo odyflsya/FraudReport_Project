@@ -42,10 +42,18 @@ class KerugianFraud extends Model
     public function getRecoveryTotalForKategori(string $kategori): float
     {
         if ($this->relationLoaded('recoveries')) {
-            return (float) $this->recoveries->where('kategori', $kategori)->sum('amount');
+            $fromHistory = (float) $this->recoveries->where('kategori', $kategori)->sum('amount');
+            if ($fromHistory > 0) {
+                return $fromHistory;
+            }
+        } else {
+            $fromHistory = (float) $this->recoveries()->where('kategori', $kategori)->sum('amount');
+            if ($fromHistory > 0) {
+                return $fromHistory;
+            }
         }
 
-        return (float) $this->recoveries()->where('kategori', $kategori)->sum('amount');
+        return (float) ($this->{$kategori . '_recovery'} ?? 0);
     }
 
     public function getTotalRecovery(): float
@@ -54,7 +62,12 @@ class KerugianFraud extends Model
             return (float) $this->recoveries->sum('amount');
         }
 
-        return (float) $this->recoveries()->sum('amount');
+        $fromHistory = (float) $this->recoveries()->sum('amount');
+        if ($fromHistory > 0) {
+            return $fromHistory;
+        }
+
+        return (float) (($this->ljk_recovery ?? 0) + ($this->konsumen_recovery ?? 0) + ($this->pihak_lain_recovery ?? 0));
     }
 
     public function getGrossLoss(): float

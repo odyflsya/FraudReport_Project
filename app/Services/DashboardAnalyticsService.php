@@ -364,15 +364,24 @@ class DashboardAnalyticsService
             ->all();
     }
 
-    private function formatCaseForDrilldown(Kasus $k): array
-    {
-        $totalLoss = 0;
-        if ($k->kerugianFraud) {
-            $kf = $k->kerugianFraud;
-            $totalLoss = ($kf->ljk_rill ?? 0) + ($kf->ljk_potensial ?? 0)
-                + ($kf->konsumen_rill ?? 0) + ($kf->konsumen_potensial ?? 0)
-                + ($kf->pihak_lain_rill ?? 0) + ($kf->pihak_lain_potensial ?? 0);
-        }
+private function formatCaseForDrilldown(Kasus $k): array
+{
+    $totalLoss = 0;
+
+    if ($k->kerugianFraud) {
+        $kf = $k->kerugianFraud;
+
+        $totalRecovery = $kf->recoveries()->sum('amount');
+
+        $totalLoss =
+            ($kf->ljk_rill ?? 0) +
+            ($kf->ljk_potensial ?? 0) +
+            ($kf->konsumen_rill ?? 0) +
+            ($kf->konsumen_potensial ?? 0) +
+            ($kf->pihak_lain_rill ?? 0) +
+            ($kf->pihak_lain_potensial ?? 0)
+            - $totalRecovery;
+    }
 
         return [
             'id' => $k->id,
