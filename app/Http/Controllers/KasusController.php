@@ -928,6 +928,45 @@ if (!in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
         return response()->json(['success' => true, 'message' => 'Rincian tersimpan', 'detail' => $detail]);
     }
 
+    // ================= UPDATE RECOVERY =================
+    public function updateRecovery(Request $request, $id)
+    {
+        try {
+            // 1. Validasi input dari modal edit recovery
+            $request->validate([
+                'tanggal' => 'required|date',
+                'kategori' => 'required|string',
+                'no_rekening' => 'nullable|string',
+                'amount' => 'required',
+            ]);
+
+            // 2. Cari data recovery berdasarkan ID
+            $recovery = KerugianRecovery::findOrFail($id);
+            $kerugianFraudId = $recovery->kerugian_fraud_id;
+
+            // 3. Bersihkan nominal amount dari format rupiah (jika masih berbentuk teks ribuan)
+            $amountNumeric = $this->parseNumericField($request->amount);
+
+            // 4. Update data recovery ke database
+            $recovery->update([
+                'tanggal' => $request->tanggal,
+                'kategori' => $request->kategori,
+                'no_rekening' => $request->no_rekening,
+                'amount' => $amountNumeric,
+            ]);
+
+            // 5. Hitung ulang total rekalkulasi seperti fungsi delete agar nominal di form utama ikut sinkron
+            $kerugian = KerugianFraud::findOrFail($kerugianFraudId);
+            $this->syncKerugianRecoveryTotals($kerugian);
+
+            // Jika form di edit.blade.php kamu dikirim via form submit standar (bukan AJAX)
+            return redirect()->back()->with('success', 'History recovery berhasil diperbarui!');
+
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Gagal memperbarui history recovery: ' . $e->getMessage());
+        }
+    }
+
 
     // ================= EXPORT =================
     public function export(Request $request)
@@ -1062,33 +1101,50 @@ if (!in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
         }
     }
 
-    private function applySelectedColumnsToSheet($sheet, array $exportData, array $selectedColumns)
-    {
-        if (empty($selectedColumns)) {
-            return;
-        }
-
+private function applySelectedColumnsToSheet($sheet, array $exportData, array $selectedColumns)
+{
+    if (empty($selectedColumns)) {
+        // Jika user tidak memilih kolom spesifik (artinya export semua), tetap jalankan penomoran normal
+        $highestColumnLetter = $sheet->getHighestColumn();
+        $totalColumns = Coordinate::columnIndexFromString($highestColumnLetter);
+    } else {
         $headers = $exportData['headers'];
         $totalColumns = count($headers);
-        $visibleIndexes = [];
+    }
 
+    $visibleIndexes = [];
+
+    if (!empty($selectedColumns)) {
         foreach ($selectedColumns as $columnLabel) {
             $index = array_search($columnLabel, $headers, true);
             if ($index !== false) {
                 $visibleIndexes[$index + 1] = true;
             }
         }
-
-        for ($col = 1; $col <= $totalColumns; $col++) {
-            $columnLetter = Coordinate::stringFromColumnIndex($col);
-            if (!isset($visibleIndexes[$col])) {
-                $sheet->getColumnDimension($columnLetter)->setVisible(false);
-            } else {
-                $sheet->getColumnDimension($columnLetter)->setVisible(true);
-            }
-        }
     }
 
+    // Inisialisasi nomor urut dimulai dari angka 2 untuk kolom kedua yang terlihat
+    $nomorUrut = 2;
+
+    for ($col = 2; $col <= $totalColumns; $col++) {
+        $columnLetter = Coordinate::stringFromColumnIndex($col);
+        
+        // Jika user memilih kolom spesifik, cek visibilitasnya
+        if (!empty($selectedColumns) && !isset($visibleIndexes[$col])) {
+            $sheet->getColumnDimension($columnLetter)->setVisible(false);
+            // Kosongkan nilainya agar tidak terselip angka jika di-unhide manual oleh user di Excel
+            $sheet->setCellValue($columnLetter . '5', ''); 
+        } else {
+            $sheet->getColumnDimension($columnLetter)->setVisible(true);
+            
+            // TULIS NOMOR HANYA UNTUK KOLOM YANG MUNCUL/TERLIHAT
+            $sheet->setCellValue($columnLetter . '5', (string)$nomorUrut);
+            
+            // Tambahkan nomor urut hanya jika kolom tersebut tampil
+            $nomorUrut++;
+        }
+    }
+}
 
  private function createSemesterHeaders($sheet)
 {
@@ -1285,8 +1341,50 @@ if (!in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
     $sheet->mergeCells('AH2:AH4');
 }
 
-    private function styleSemesterHeaders($sheet)
+private function styleSemesterHeaders($sheet)
 {
+    $highestColumnLetter = $sheet->getHighestColumn();
+
+    $headerStyle = [
+        'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'FF0000']],
+        'alignment' => [
+            'horizontal' => Alignment::HORIZONTAL_CENTER,
+            'vertical' => Alignment::VERTICAL_CENTER,
+            'wrapText' => true,
+        ],
+        'borders' => [
+            'allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN],
+        ],
+    ];
+
+    $sheet->getStyle('A2:' . $highestColumnLetter . '4')->applyFromArray($headerStyle);
+
+    $sheet->getStyle('A5:' . $highestColumnLetter . '5')->applyFromArray([
+        'fill' => ['fillType' => Fill::FILL_SOLID, 'startColor' => ['rgb' => 'BFBFBF']],
+        'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+        'borders' => [
+            'allBorders' => ['borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN],
+        ],
+    ]);
+    
+    // Cukup kosongkan kolom A5 saja di sini
+    $sheet->setCellValue('A5', ''); 
+
+    // (BAGIAN FOR LOOP PENOMORAN SEBELUMNYA DI SINI SUDAH DIHAPUS)
+
+    $sheet->getRowDimension(1)->setRowHeight(21);
+    $sheet->getRowDimension(2)->setRowHeight(15.6);
+    $sheet->getRowDimension(3)->setRowHeight(15.6);
+    $sheet->getRowDimension(4)->setRowHeight(46.8);
+    $sheet->getRowDimension(5)->setRowHeight(15);
+}
+
+private function styleSignifikanHeaders($sheet)
+{
+    // 1. Dapatkan kolom tertinggi yang terisi data pada sheet ini (misal: 'AH')
+    $highestColumnLetter = $sheet->getHighestColumn();
+
     // Style untuk seluruh header (Baris 2 sampai 4)
     $headerStyle = [
         'font' => [
@@ -1295,7 +1393,7 @@ if (!in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
         ],
         'fill' => [
             'fillType' => Fill::FILL_SOLID,
-            'startColor' => ['rgb' => 'FF0000'], 
+            'startColor' => ['rgb' => 'FF0000'], // Merah sesuai gambar
         ],
         'alignment' => [
             'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -1309,11 +1407,11 @@ if (!in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
         ],
     ];
 
-    // Terapkan style header hingga kolom AW
-    $sheet->getStyle('A2:AW4')->applyFromArray($headerStyle);
+    // Terapkan style header secara dinamis dari A sampai kolom tertinggi baris 4
+    $sheet->getStyle('A2:' . $highestColumnLetter . '4')->applyFromArray($headerStyle);
 
-    // Style untuk Baris Penomoran (Baris 5) - Diperluas hingga AW
-    $sheet->getStyle('A5:AW5')->applyFromArray([
+    // Style untuk Baris Penomoran (Baris 5)
+    $sheet->getStyle('A5:' . $highestColumnLetter . '5')->applyFromArray([
         'fill' => [
             'fillType' => Fill::FILL_SOLID,
             'startColor' => ['rgb' => 'BFBFBF'], // Abu-abu
@@ -1329,20 +1427,10 @@ if (!in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
         ],
     ]);
     
-    // --- PENOMORAN KOLOM ---
-    // Kolom A (index 1) dibiarkan kosong sesuai permintaan
+    // Kosongkan kolom A5 (di bawah kolom No)
     $sheet->setCellValue('A5', ''); 
 
-    // Perulangan dari kolom B (index 2) sampai AW (index 49)
-    // Penomoran dimulai dari angka 2
-    for ($col = 2; $col <= 49; $col++) {
-        $colLetter = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col);
-        
-        // Menggunakan $col sebagai nilai karena ingin mulai dari 2 di kolom B
-        $sheet->setCellValue($colLetter . '5', (string)$col);
-    }
-
-    // Set row heights agar proporsional
+    // Atur tinggi baris (Row Height) agar rapi mirip sheet 01A
     $sheet->getRowDimension(1)->setRowHeight(21);
     $sheet->getRowDimension(2)->setRowHeight(15.6);
     $sheet->getRowDimension(3)->setRowHeight(15.6);
@@ -1350,57 +1438,6 @@ if (!in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
     $sheet->getRowDimension(5)->setRowHeight(15);
 }
 
-    private function styleSignifikanHeaders($sheet)
-    {
-        $headerStyle = [
-            'font' => [
-                'bold' => true,
-                'color' => ['rgb' => 'FFFFFF'],
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['rgb' => 'FF0000'],
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER,
-                'wrapText' => true,
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                ],
-            ],
-        ];
-
-        $sheet->getStyle('A2:AH4')->applyFromArray($headerStyle);
-        $sheet->getStyle('A5:AH5')->applyFromArray([
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['rgb' => 'BFBFBF'],
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical' => Alignment::VERTICAL_CENTER,
-            ],
-            'borders' => [
-                'allBorders' => [
-                    'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN,
-                ],
-            ],
-        ]);
-        
-        for ($col = 2; $col <= 34; $col++) {
-            $colLetter = Coordinate::stringFromColumnIndex($col);
-            $sheet->setCellValue($colLetter . '5', (string)$col);
-        }
-
-        $sheet->getRowDimension(1)->setRowHeight(21);
-        $sheet->getRowDimension(2)->setRowHeight(15.6);
-        $sheet->getRowDimension(3)->setRowHeight(15.6);
-        $sheet->getRowDimension(4)->setRowHeight(46.8);
-        $sheet->getRowDimension(5)->setRowHeight(15);
-    }
 
     private function setSheetTitle($sheet, string $title, string $lastColumn)
     {

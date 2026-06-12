@@ -32,7 +32,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/kasus-import-template', [KasusController::class, 'downloadTemplate'])->name('kasus.import-template');
     
     // Recovery routes
-    Route::delete('/recovery/{id}', [KasusController::class, 'deleteRecovery'])->name('recovery.delete');
+    Route::put('/recovery/{id}', [KasusController::class, 'updateRecovery'])
+    ->name('recovery.update');
+
+    Route::delete('/recovery/{id}', [KasusController::class, 'deleteRecovery'])
+    ->name('recovery.delete');
+
     // Kerugian detail (AJAX)
     Route::post('/kerugian-detail', [KasusController::class, 'storeKerugianDetail'])->name('kerugian-detail.store');
     

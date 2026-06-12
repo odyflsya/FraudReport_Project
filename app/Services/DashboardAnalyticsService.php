@@ -103,7 +103,6 @@ class DashboardAnalyticsService
             'total_kasus' => $this->getTotalKasus(),
             'total_kerugian' => $this->getTotalKerugian(),
             'total_recovery' => $this->getTotalRecovery(),
-            'recovery_rate' => $this->getRecoveryRate(),
         ];
     }
 

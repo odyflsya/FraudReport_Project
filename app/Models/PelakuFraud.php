@@ -36,6 +36,21 @@ class PelakuFraud extends Model
         'kategori' => 'string',
     ];
 
+    public function getKategoriLabelAttribute()
+    {
+        $value = trim((string) ($this->kategori ?? ''));
+
+        if ($value === '001' || strtolower($value) === 'internal') {
+            return '001 (Internal)';
+        }
+
+        if ($value === '002' || strtolower($value) === 'eksternal') {
+            return '002 (Eksternal)';
+        }
+
+        return $value !== '' ? $value : '-';
+    }
+
     public function getJenisKelaminLabelAttribute()
     {
         $value = strtoupper(trim((string) ($this->jenis_kelamin ?? '')));
@@ -49,17 +64,6 @@ class PelakuFraud extends Model
         }
 
         return $value !== '' ? $value : '-';
-    }
-
-    public function getKategoriLabelAttribute()
-    {
-        $value = strtolower(trim((string) ($this->kategori ?? '')));
-
-        return match ($value) {
-            'internal' => '001 (Internal)',
-            'eksternal' => '002 (Eksternal)',
-            default => $this->kategori ?: '-',
-        };
     }
 
     public function kasus()

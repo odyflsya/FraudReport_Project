@@ -49,7 +49,7 @@
         {{-- BAGIAN 1: Executive Summary --}}
         <div>
             <h3 class="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">Executive Summary</h3>
-            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-red-600">
                     <p class="text-xs font-medium text-gray-500">Total Kasus Fraud</p>
                     <p id="kpi_total_kasus" class="text-2xl font-bold text-gray-900 mt-2">-</p>
@@ -62,10 +62,7 @@
                     <p class="text-xs font-medium text-gray-500">Total Recovery</p>
                     <p id="kpi_total_recovery" class="text-2xl font-bold text-gray-900 mt-2">-</p>
                 </div>
-                <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 border-l-4 border-l-blue-600">
-                    <p class="text-xs font-medium text-gray-500">Recovery Rate</p>
-                    <p id="kpi_recovery_rate" class="text-2xl font-bold text-gray-900 mt-2">-</p>
-                </div>
+
             </div>
         </div>
 
@@ -264,7 +261,6 @@
         document.getElementById('kpi_total_kasus').textContent = (kpi.total_kasus ?? 0).toLocaleString('id-ID');
         document.getElementById('kpi_total_kerugian').textContent = formatCurrency(kpi.total_kerugian);
         document.getElementById('kpi_total_recovery').textContent = formatCurrency(kpi.total_recovery);
-        document.getElementById('kpi_recovery_rate').textContent = formatPercent(kpi.recovery_rate);
 
         const trend = data.trend;
         destroyChart('trend');

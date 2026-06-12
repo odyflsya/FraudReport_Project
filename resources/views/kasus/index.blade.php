@@ -270,10 +270,10 @@
                     <th class="border p-2">Jenis Identitas</th>
                     <th class="border p-2">Nomor Identitas</th>
                     <th class="border p-2">Jenis Kelamin</th>
-                    <th class="border p-2">Tempat Lahir</th>
-                    <th class="border p-2">Tanggal Lahir</th>
                     <th class="border p-2">Alamat Identitas</th>
                     <th class="border p-2">Alamat Domisili</th>
+                    <th class="border p-2">Tempat Lahir</th>
+                    <th class="border p-2">Tanggal Lahir</th>
                     <th class="border p-2">Pada Saat Fraud Terjadi</th>
                     <th class="border p-2">Keterangan Jabatan</th>
                     <th class="border p-2">Pada Saat Fraud Diketahui</th>
@@ -454,19 +454,19 @@
                         </td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                            @foreach($k->pelakuFrauds as $p) {{ $p->tempat_lahir }}<br>@endforeach
-                        </td>
-
-                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                            @foreach($k->pelakuFrauds as $p) {{ $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '' }}<br>@endforeach
-                        </td>
-
-                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->alamat_identitas }}<br>@endforeach
                         </td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->alamat_domisili }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->tempat_lahir }}<br>@endforeach
+                        </td>
+
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '' }}<br>@endforeach
                         </td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
@@ -551,11 +551,12 @@
                     <th colspan="2" class="border p-2">Lokasi Fraud</th>
 
                     <th rowspan="3" class="border p-2">Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud</th>
+                    <th colspan="3" class="border p-2">Waktu</th>
+
                     <th rowspan="3" class="border p-2">Pihak Yang Dirugikan</th>
                     <th rowspan="3" class="border p-2">Jumlah Kerugian Potensial</th>
                     <th rowspan="3" class="border p-2">Tindak Lanjut LJK</th>
 
-                    <th colspan="3" class="border p-2">Waktu</th>
                     <th colspan="16" class="border p-2">Pelaku Fraud</th>
                     <th rowspan="3" class="border p-2">Status Penanganan</th>
                     <th rowspan="3" class="border p-2 text-center sticky-aksi">Aksi</th>
@@ -585,14 +586,14 @@
                     <th class="border p-2">Jenis Identitas</th>
                     <th class="border p-2">Nomor Identitas</th>
                     <th class="border p-2">Jenis Kelamin</th>
-                    <th class="border p-2">Tempat Lahir</th>
-                    <th class="border p-2">Tanggal Lahir</th>
                     <th class="border p-2">Alamat Identitas</th>
                     <th class="border p-2">Alamat Domisili</th>
+                    <th class="border p-2">Tempat Lahir</th>
+                    <th class="border p-2">Tanggal Lahir</th>
                     <th class="border p-2">Pada Saat Fraud Terjadi</th>
-                    <th class="border p-2">Keterangan</th>
+                    <th class="border p-2">Keterangan Jabatan</th>
                     <th class="border p-2">Pada Saat Fraud Diketahui</th>
-                    <th class="border p-2">Keterangan</th>
+                    <th class="border p-2">Keterangan Jabatan</th>
                 </tr>
             </thead>
             <tbody class="bg-white">
@@ -631,69 +632,108 @@
                         </td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">{{ $k->divisi_unit }}</td>
-                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                            {{ $formatRefLabel($k->pihakDirugikan) }}
-                        </td>
 
-                        <td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->getTotalKerugianPotensial()) : '' }}</td>
-                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">{{ $k->tindak_lanjut_ljk ?? '' }}</td>
-
+                        <!-- Waktu Awal -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             {{ $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '' }}
                         </td>
+                        <!-- Waktu Akhir -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             {{ $k->waktuFraud && $k->waktuFraud->waktu_akhir ? \Carbon\Carbon::parse($k->waktuFraud->waktu_akhir)->format('Y-m-d') : '' }}
                         </td>
+                        <!-- Waktu Diketahui -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             {{ $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '' }}
                         </td>
 
+                        <!-- Pihak Yang Dirugikan -->
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            {{ $formatRefLabel($k->pihakDirugikan) }}
+                        </td>
+
+                        <!-- Jumlah Kerugian Potensial -->
+                        <td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->getTotalKerugianPotensial()) : '' }}</td>
+
+                        <!-- Tindak Lanjut LJK -->
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">{{ $k->tindak_lanjut_ljk ?? '' }}</td>
+
+                        <!-- Pelaku Fraud: Internal/Eksternal -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->kategori_label }}<br>@endforeach
                         </td>
 
+                        <!-- Pelaku Fraud: Nama -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->nama }}<br>@endforeach
                         </td>
+
+                        <!-- Pelaku Fraud: Jenis Identitas -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->jenisIdentitas ? ($p->jenisIdentitas->kode ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : $p->jenisIdentitas->nama) : '' }}<br>@endforeach
                         </td>
+
+                        <!-- Pelaku Fraud: Nomor Identitas -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->nomor_identitas }}<br>@endforeach
                         </td>
+
+                        <!-- Pelaku Fraud: Jenis Kelamin -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->jenis_kelamin_label }}<br>@endforeach
                         </td>
-                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                            @foreach($k->pelakuFrauds as $p) {{ $p->tempat_lahir }}<br>@endforeach
-                        </td>
-                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                            @foreach($k->pelakuFrauds as $p) {{ $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '' }}<br>@endforeach
-                        </td>
+
+                        <!-- Pelaku Fraud: Alamat Identitas -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->alamat_identitas }}<br>@endforeach
                         </td>
+
+                        <!-- Pelaku Fraud: Alamat Domisili -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->alamat_domisili }}<br>@endforeach
                         </td>
+
+                        <!-- Pelaku Fraud: Tempat Lahir -->
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->tempat_lahir }}<br>@endforeach
+                        </td>
+
+                        <!-- Pelaku Fraud: Tanggal Lahir -->
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '' }}<br>@endforeach
+                        </td>
+
+                        <!-- Pelaku Fraud: Status Pelaku -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '' }}<br>@endforeach
                         </td>
+
+                        <!-- Pelaku Fraud: Jabatan Pada Saat Fraud Terjadi -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '' }}<br>@endforeach
                         </td>
+
+                        <!-- Pelaku Fraud: Keterangan Jabatan Kejadian -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                            @foreach($k->pelakuFrauds as $p) {{ $p->ket_jabatan_kejadian }}<br>@endforeach
+                            @foreach($k->pelakuFrauds as $p) {{ $p->ket_jabatan_kejadian ?? '' }}<br>@endforeach
                         </td>
+
+
+                        <!-- Pelaku Fraud: Jabatan Pada Saat Fraud Diketahui -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->jabatanDiketahui ? ($p->jabatanDiketahui->kode ? $p->jabatanDiketahui->kode . ' (' . $p->jabatanDiketahui->nama . ')' : $p->jabatanDiketahui->nama) : '' }}<br>@endforeach
                         </td>
+
+                        <!-- Pelaku Fraud: Keterangan Jabatan Diketahui -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->ket_jabatan_diketahui }}<br>@endforeach
                         </td>
+
+                        <!-- Pelaku Fraud: Keterangan Pelaku -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                            @foreach($k->pelakuFrauds as $p) {{ $p->keterangan }}<br>@endforeach
+                            @foreach($k->pelakuFrauds as $p) {{ $p->keterangan ?? '' }}<br>@endforeach
                         </td>
+
+                        <!-- Pelaku Fraud: Pengenaan Sanksi -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @forelse($k->pelakuFrauds as $p)
                                 {{ $p->sanksi ?? '' }}<br>
@@ -750,11 +790,12 @@
                     <th colspan="2" class="border p-2">Lokasi Fraud</th>
 
                     <th rowspan="3" class="border p-2">Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud</th>
+                    <th colspan="3" class="border p-2">Waktu</th>
+
                     <th rowspan="3" class="border p-2">Pihak Yang Dirugikan</th>
                     <th rowspan="3" class="border p-2">Jumlah Kerugian Potensial</th>
                     <th rowspan="3" class="border p-2">Tindak Lanjut LJK</th>
 
-                    <th colspan="3" class="border p-2">Waktu</th>
                     <th colspan="16" class="border p-2">Pelaku Fraud</th>
                     <th rowspan="3" class="border p-2">Status Penanganan</th>
                     <th rowspan="3" class="border p-2 text-center sticky-aksi">Aksi</th>
@@ -784,14 +825,14 @@
                     <th class="border p-2">Jenis Identitas</th>
                     <th class="border p-2">Nomor Identitas</th>
                     <th class="border p-2">Jenis Kelamin</th>
-                    <th class="border p-2">Tempat Lahir</th>
-                    <th class="border p-2">Tanggal Lahir</th>
                     <th class="border p-2">Alamat Identitas</th>
                     <th class="border p-2">Alamat Domisili</th>
+                    <th class="border p-2">Tempat Lahir</th>
+                    <th class="border p-2">Tanggal Lahir</th>
                     <th class="border p-2">Pada Saat Fraud Terjadi</th>
-                    <th class="border p-2">Keterangan</th>
+                    <th class="border p-2">Keterangan Jabatan</th>
                     <th class="border p-2">Pada Saat Fraud Diketahui</th>
-                    <th class="border p-2">Keterangan</th>
+                    <th class="border p-2">Keterangan Jabatan</th>
                 </tr>
             </thead>
             <tbody class="bg-white">
@@ -830,12 +871,6 @@
                         </td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">{{ $k->divisi_unit }}</td>
-                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                            {{ $formatRefLabel($k->pihakDirugikan) }}
-                        </td>
-
-                        <td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->getTotalKerugianPotensial()) : '' }}</td>
-                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">{{ $k->tindak_lanjut_ljk ?? '' }}</td>
 
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             {{ $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '' }}
@@ -847,6 +882,18 @@
                             {{ $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '' }}
                         </td>
 
+                                                <!-- Pihak Yang Dirugikan -->
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            {{ $formatRefLabel($k->pihakDirugikan) }}
+                        </td>
+
+                        <!-- Jumlah Kerugian Potensial -->
+                        <td class="border p-2">{{ $k->kerugianFraud ? $formatCurrency($k->getTotalKerugianPotensial()) : '' }}</td>
+
+                        <!-- Tindak Lanjut LJK -->
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">{{ $k->tindak_lanjut_ljk ?? '' }}</td>
+
+                        <!-- Pelaku Fraud: Internal/Eksternal -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->kategori_label }}<br>@endforeach
                         </td>
@@ -890,9 +937,19 @@
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @foreach($k->pelakuFrauds as $p) {{ $p->ket_jabatan_diketahui }}<br>@endforeach
                         </td>
+
+
+                        <!-- Pelaku Fraud: Status Pelaku -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
-                            @foreach($k->pelakuFrauds as $p) {{ $p->keterangan }}<br>@endforeach
+                            @foreach($k->pelakuFrauds as $p) {{ $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '' }}<br>@endforeach
                         </td>
+
+                        <!-- Pelaku Fraud: Keterangan Pelaku -->
+                        <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
+                            @foreach($k->pelakuFrauds as $p) {{ $p->keterangan ?? '' }}<br>@endforeach
+                        </td>
+
+                        <!-- Pelaku Fraud: Pengenaan Sanksi -->
                         <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis">
                             @forelse($k->pelakuFrauds as $p)
                                 {{ $p->sanksi ?? '' }}<br>

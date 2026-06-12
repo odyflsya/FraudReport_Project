@@ -402,9 +402,7 @@
                 'tipe' => $d->tipe,
                 'nominal' => $d->nominal,
                 'no_rekening' => $d->no_rekening,
-                'created_at' => $d->created_at?->format('Y-m-d H:i'),
-
-                
+                'created_at' => $d->created_at ? $d->created_at->format('Y-m-d') : null,
             ];
         })
         ->values()

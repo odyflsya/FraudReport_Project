@@ -1,16 +1,17 @@
-{{-- Modal kelola rincian kerugian (Create & Edit) --}}
+{{-- 1. BAGIAN UTAMA --}}
 <div class="mb-6">
     <h4 class="mb-2 font-medium text-slate-800">Rincian Kerugian</h4>
-    <input type="hidden" id="kerugian_details_input" name="kerugian_details" value="{{ $kerugianDetailsJson ?? '' }}">
-    <div id="kerugian_detail_counts" class="text-xs text-slate-600"></div>
+    <input type="hidden" id="kerugian_details_input" name="kerugian_details" value="{{ $kerugianDetailsJson ?? '[]' }}">
 </div>
 
-<div id="kerugianDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 px-4 py-6">
-    <div class="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+{{-- 2. MODAL DENGAN ISOLASI VALIDASI FORM --}}
+<div id="kerugianDetailModal" class="fixed inset-0 z-[9999] hidden items-center justify-center bg-black/60 px-4 py-6 left-0 top-0 w-full h-full" onclick="if(event.target === this) KerugianDetailManager.closeModal()">
+    <div class="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl" onclick="event.stopPropagation()">
         <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
             <h3 id="kerugianDetailModalTitle" class="text-lg font-semibold text-slate-900">Kelola Rincian Kerugian</h3>
             <button type="button" onclick="KerugianDetailManager.closeModal()" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Tutup</button>
         </div>
+        
         <div class="px-5 py-4 max-h-[70vh] overflow-y-auto">
             <div class="overflow-x-auto rounded-lg border border-slate-200">
                 <table class="min-w-full text-sm">
@@ -30,33 +31,34 @@
                 </table>
             </div>
 
+            {{-- FORM INPUT PANEL --}}
             <div id="kerugianDetailFormPanel" class="hidden mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <h4 id="kerugianDetailFormTitle" class="text-sm font-semibold text-slate-800 mb-3">Tambah Rincian</h4>
-                <input type="hidden" id="detail_edit_index" value="">
                 <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
                         <label class="block text-xs font-medium text-slate-700 mb-1">Nominal (Rp) *</label>
-                        <input type="text" id="detail_nominal" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="0">
+                        {{-- formnovalidate disuntikkan agar diabaikan oleh checkValidity() --}}
+                        <input type="text" id="detail_nominal" formnovalidate class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="0">
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-slate-700 mb-1">Nomor Rekening</label>
-                        <input type="text" id="detail_no_rek" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="">
+                        <input type="text" id="detail_no_rek" formnovalidate class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm" placeholder="">
                     </div>
                 </div>
                 <div class="mt-3 flex justify-end gap-2">
                     <button type="button" onclick="KerugianDetailManager.cancelForm()" class="rounded-lg border border-slate-300 px-4 py-2 text-sm text-slate-700 hover:bg-white">Batal</button>
-                    <button type="button" onclick="KerugianDetailManager.saveForm()" class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">Simpan Rincian</button>
+                    <button type="button" onclick="KerugianDetailManager.saveForm(event)" class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium text-white hover:bg-green-700">Simpan Rincian</button>
                 </div>
             </div>
 
             <button type="button" onclick="KerugianDetailManager.showAddForm()" class="mt-4 w-full rounded-lg border-2 border-dashed border-blue-300 py-2.5 text-sm font-medium text-blue-700 hover:bg-blue-50">
                 + Tambah Rincian
             </button>
-            <p id="kerugianDetailModalCount" class="mt-3 text-center text-xs font-medium text-slate-600"></p>
         </div>
     </div>
 </div>
 
+{{-- 3. JAVASCRIPT ENGINE (ANTI-MANDAL) --}}
 <script>
 window.KerugianDetailManager = (function () {
     let activeKategori = '';
@@ -65,12 +67,28 @@ window.KerugianDetailManager = (function () {
 
     function getList() {
         const input = document.getElementById('kerugian_details_input');
-        try { return JSON.parse(input.value || '[]'); } catch (e) { return []; }
+        if (!input) return [];
+        try { 
+            let data = JSON.parse(input.value || '[]'); 
+            return data.map(item => {
+                return {
+                    id: item.id || null,
+                    kategori: String(item.kategori || activeKategori).trim().toLowerCase(),
+                    tipe: String(item.tipe || activeTipe).trim().toLowerCase(),
+                    nominal: parseInt(String(item.nominal).replace(/\D/g, ''), 10) || 0,
+                    no_rekening: item.no_rekening || item.no_rek || ''
+                };
+            });
+        } catch (e) { 
+            return []; 
+        }
     }
 
     function setList(list) {
-        document.getElementById('kerugian_details_input').value = JSON.stringify(list);
-        updateGlobalCounts();
+        const input = document.getElementById('kerugian_details_input');
+        if (input) {
+            input.value = JSON.stringify(list);
+        }
     }
 
     function formatRp(value) {
@@ -78,29 +96,37 @@ window.KerugianDetailManager = (function () {
         return 'Rp ' + n.toLocaleString('id-ID');
     }
 
-    function filterActive(list) {
-        return list.filter(item => item.kategori === activeKategori && item.tipe === activeTipe && !item._deleted);
-    }
+    // Pasang event listener input nominal rupiah
+    document.addEventListener('DOMContentLoaded', function() {
+        const nominalInput = document.getElementById('detail_nominal');
+        if(nominalInput) {
+            nominalInput.addEventListener('input', function (e) {
+                // Hentikan propagasi agar tidak memicu checkFormValidity() di file edit
+                e.stopPropagation(); 
+                let value = e.target.value.replace(/\D/g, ''); 
+                if (value) {
+                    value = new Intl.NumberFormat('id-ID').format(value);
+                }
+                e.target.value = value;
+            });
+        }
+    });
 
     function getActiveIndices(list) {
         const indices = [];
+        const targetKategori = String(activeKategori).trim().toLowerCase();
+        const targetTipe = String(activeTipe).trim().toLowerCase();
+
         list.forEach((item, idx) => {
-            if (item.kategori === activeKategori && item.tipe === activeTipe && !item._deleted) {
-                indices.push(idx);
+            if (!item._deleted) {
+                const itemKategori = String(item.kategori || '').trim().toLowerCase();
+                const itemTipe = String(item.tipe || '').trim().toLowerCase();
+                if (itemKategori === targetKategori && itemTipe === targetTipe) {
+                    indices.push(idx);
+                }
             }
         });
         return indices;
-    }
-
-    function updateGlobalCounts() {
-        const list = getList().filter(i => !i._deleted);
-        const container = document.getElementById('kerugian_detail_counts');
-        if (!container) return;
-        if (list.length === 0) {
-            container.textContent = '';
-            return;
-        }
-        container.textContent = list.length + ' rincian telah dicatat';
     }
 
     function renderModalTable() {
@@ -108,37 +134,31 @@ window.KerugianDetailManager = (function () {
         const indices = getActiveIndices(list);
         const tbody = document.getElementById('kerugianDetailModalTableBody');
         const emptyRow = document.getElementById('kerugianDetailEmptyRow');
+        
+        if(!tbody) return;
+        
+        // Bersihkan baris tabel lama
         tbody.querySelectorAll('tr:not(#kerugianDetailEmptyRow)').forEach(r => r.remove());
 
         if (indices.length === 0) {
-            emptyRow.classList.remove('hidden');
+            if(emptyRow) emptyRow.classList.remove('hidden');
         } else {
-            emptyRow.classList.add('hidden');
+            if(emptyRow) emptyRow.classList.add('hidden');
             indices.forEach((listIndex, displayNo) => {
                 const item = list[listIndex];
                 const tr = document.createElement('tr');
-                tr.className = 'hover:bg-slate-50';
+                tr.className = 'hover:bg-slate-50 border-b border-slate-100';
                 tr.innerHTML = `
-                    <td class="border-b px-3 py-2">${displayNo + 1}</td>
-                    <td class="border-b px-3 py-2 text-right font-medium">${formatRp(item.nominal)}</td>
-                    <td class="border-b px-3 py-2">${item.no_rekening || '-'}</td>
-                    <td class="border-b px-3 py-2 text-center whitespace-nowrap">
-                        <button type="button" class="text-blue-600 hover:text-blue-800 text-xs font-semibold mr-2" data-action="edit" data-index="${listIndex}">Edit</button>
-                        <button type="button" class="text-red-600 hover:text-red-800 text-xs font-semibold" data-action="delete" data-index="${listIndex}">Hapus</button>
+                    <td class="px-3 py-2 text-slate-600">${displayNo + 1}</td>
+                    <td class="px-3 py-2 text-right font-medium text-slate-900">${formatRp(item.nominal)}</td>
+                    <td class="px-3 py-2 text-slate-600">${item.no_rekening || '-'}</td>
+                    <td class="px-3 py-2 text-center whitespace-nowrap">
+                        <button type="button" onclick="KerugianDetailManager.showEditForm(${listIndex})" class="text-blue-600 hover:text-blue-800 text-xs font-semibold mr-3">Edit</button>
+                        <button type="button" onclick="KerugianDetailManager.deleteItem(${listIndex})" class="text-red-600 hover:text-red-800 text-xs font-semibold">Hapus</button>
                     </td>`;
                 tbody.appendChild(tr);
             });
         }
-
-        document.getElementById('kerugianDetailModalCount').textContent =
-            indices.length > 0 ? indices.length + ' rincian telah dicatat' : '';
-
-        tbody.querySelectorAll('[data-action="edit"]').forEach(btn => {
-            btn.addEventListener('click', () => showEditForm(parseInt(btn.dataset.index, 10)));
-        });
-        tbody.querySelectorAll('[data-action="delete"]').forEach(btn => {
-            btn.addEventListener('click', () => deleteItem(parseInt(btn.dataset.index, 10)));
-        });
     }
 
     function showToast(msg) {
@@ -146,7 +166,7 @@ window.KerugianDetailManager = (function () {
         if (!toast) {
             toast = document.createElement('div');
             toast.id = 'detailSavedToast';
-            toast.className = 'fixed bottom-6 right-6 z-[60] rounded-lg bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-lg';
+            toast.className = 'fixed bottom-6 right-6 z-[99999] rounded-lg bg-green-600 px-4 py-3 text-sm font-medium text-white shadow-lg';
             document.body.appendChild(toast);
         }
         toast.textContent = msg;
@@ -155,25 +175,30 @@ window.KerugianDetailManager = (function () {
     }
 
     function openModal(kategori, tipe) {
-        activeKategori = kategori;
-        activeTipe = tipe;
+        activeKategori = String(kategori).trim().toLowerCase();
+        activeTipe = String(tipe).trim().toLowerCase();
         editingIndex = null;
         cancelForm();
 
-        const label = (kategori || '').toUpperCase() + (tipe ? ' - ' + (tipe === 'riil' ? 'Riil' : 'Potensial') : '');
-        document.getElementById('kerugianDetailModalTitle').textContent = 'Kelola Rincian Kerugian (' + label + ')';
+        const label = activeKategori.toUpperCase() + ' - ' + (activeTipe === 'riil' ? 'Riil' : 'Potensial');
+        const modalTitle = document.getElementById('kerugianDetailModalTitle');
+        if (modalTitle) modalTitle.textContent = 'Kelola Rincian Kerugian (' + label + ')';
 
         renderModalTable();
         const modal = document.getElementById('kerugianDetailModal');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
     }
 
     function closeModal() {
         cancelForm();
         const modal = document.getElementById('kerugianDetailModal');
-        modal.classList.add('hidden');
-        modal.classList.remove('flex');
+        if (modal) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
     }
 
     function showAddForm() {
@@ -189,7 +214,13 @@ window.KerugianDetailManager = (function () {
         const item = list[listIndex];
         if (!item) return;
         editingIndex = listIndex;
-        document.getElementById('detail_nominal').value = item.nominal || '';
+        
+        let formattedNominal = String(item.nominal).replace(/\D/g, '');
+        if(formattedNominal) {
+            formattedNominal = new Intl.NumberFormat('id-ID').format(formattedNominal);
+        }
+
+        document.getElementById('detail_nominal').value = formattedNominal;
         document.getElementById('detail_no_rek').value = item.no_rekening || '';
         document.getElementById('kerugianDetailFormTitle').textContent = 'Edit Rincian';
         document.getElementById('kerugianDetailFormPanel').classList.remove('hidden');
@@ -202,24 +233,33 @@ window.KerugianDetailManager = (function () {
         document.getElementById('kerugianDetailFormPanel').classList.add('hidden');
     }
 
-    function saveForm() {
-        const nominal = document.getElementById('detail_nominal').value.trim();
+    function saveForm(e) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation(); // Kunci rapat-rapat agar tidak memicu form edit utama
+        }
+
+        const nominalRaw = document.getElementById('detail_nominal').value.trim();
         const noRek = document.getElementById('detail_no_rek').value.trim();
-        if (!nominal) {
+        
+        if (!nominalRaw || nominalRaw === '0') {
             alert('Nominal wajib diisi.');
             return;
         }
 
+        const nominalNumeric = parseInt(nominalRaw.replace(/\D/g, ''), 10) || 0;
         const list = getList();
+        
         const payload = {
-            kategori: activeKategori,
-            tipe: activeTipe,
-            nominal: nominal,
+            kategori: activeKategori, 
+            tipe: activeTipe,         
+            nominal: nominalNumeric,
             no_rekening: noRek,
         };
 
         if (editingIndex !== null && list[editingIndex]) {
-            list[editingIndex] = { ...list[editingIndex], ...payload };
+            const oldId = list[editingIndex].id ? { id: list[editingIndex].id } : {};
+            list[editingIndex] = { ...oldId, ...payload };
             showToast('Rincian berhasil diperbarui.');
         } else {
             list.push(payload);
@@ -228,7 +268,7 @@ window.KerugianDetailManager = (function () {
 
         setList(list);
         cancelForm();
-        renderModalTable();
+        renderModalTable(); // UPDATE INSTAN KE TABEL ATAS!
     }
 
     function deleteItem(listIndex) {
@@ -244,9 +284,7 @@ window.KerugianDetailManager = (function () {
         showToast('Rincian berhasil dihapus.');
     }
 
-    document.addEventListener('DOMContentLoaded', updateGlobalCounts);
-
-    return { openModal, closeModal, showAddForm, showEditForm, cancelForm, saveForm, deleteItem };
+    return { openModal, closeModal, showAddForm, showEditForm, cancelForm, saveForm, deleteItem, renderModalTable };
 })();
 
 function openDetailModal(kategori, tipe) {

@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Kasus;
 use App\Models\WaktuFraud;
 use App\Models\KerugianFraud;
+use App\Models\KerugianRecovery;
 use App\Models\PelakuFraud;
 use App\Models\PencegahanFraud;
 use App\Models\RefKejadianFraud;
@@ -119,7 +120,7 @@ class ImportService
             // Process each row independently as separate Kasus (NOT grouped by kode_komponen)
             // Data starts from row 6 (index 5 in 0-based array)
             $dataStartRow = 5;
-            
+             
             for ($i = $dataStartRow; $i < count($rows); $i++) {
                 $row = $rows[$i];
                 
@@ -265,13 +266,24 @@ class ImportService
                 }
             }
 
-            // Kelemahan Fraud (M2M)
-            $kelemahanValue = $this->getColumnValue($row, 'Kelemahan Penyebab Fraud');
-            if (!empty($kelemahanValue)) {
-                $kelemahanId = $this->getRefId(RefKelemahanFraud::class, $kelemahanValue);
-                if ($kelemahanId) {
-                    $keterangan = $this->getColumnValue($row, 'Keterangan');
-                    $kasus->kelemahanFraud()->sync([$kelemahanId => ['keterangan' => $keterangan]]);
+            // Kelemahan Fraud (M2M) - hanya untuk Semester
+            if ($jeniLaporan === 'semester') {
+                $kelemahanValue = $this->getColumnValue($row, 'Kelemahan Penyebab Fraud');
+                if (!empty($kelemahanValue)) {
+                    $kelemahanId = $this->getRefId(RefKelemahanFraud::class, $kelemahanValue);
+                    if ($kelemahanId) {
+                        // Get keterangan specifically for kelemahan section (disambiguate from other keterangan fields)
+                        $keterangan = $this->getColumnValue($row, 'Keterangan Kelemahan') ?? 
+                                    $this->getColumnValue($row, 'Kelemahan Penyebab Fraud Keterangan');
+                        
+                        // Fallback: Try direct column index for Keterangan setelah Kelemahan (Col Z = index 25)
+                        if (empty($keterangan) && isset($row[25])) {
+                            $keterangan = trim($row[25]);
+                        }
+                        
+                        $keterangan = empty($keterangan) ? null : $keterangan;
+                        $kasus->kelemahanFraud()->sync([$kelemahanId => ['keterangan' => $keterangan]]);
+                    }
                 }
             }
 
@@ -292,7 +304,16 @@ class ImportService
             if (!empty($tindakanValue)) {
                 $tindakanId = $this->getRefId(RefTindakanPenanganan::class, $tindakanValue);
                 if ($tindakanId) {
-                    $keterangan = $this->getColumnValue($row, 'Keterangan Tindakan');
+                    // Get keterangan specifically for tindakan penanganan (disambiguate from other keterangan fields)
+                    $keterangan = $this->getColumnValue($row, 'Keterangan Tindakan Penanganan') ?? 
+                                $this->getColumnValue($row, 'Tindakan untuk Penanganan Fraud Keterangan');
+                    
+                    // Fallback: Try direct column index for Keterangan setelah Tindakan Penanganan (Col AB = index 27)
+                    if (empty($keterangan) && isset($row[27])) {
+                        $keterangan = trim($row[27]);
+                    }
+                    
+                    $keterangan = empty($keterangan) ? null : $keterangan;
                     $kasus->penangananFraud()->sync([$tindakanId => ['keterangan' => $keterangan]]);
                 }
             }
@@ -437,7 +458,8 @@ class ImportService
             if (!empty($kelemahanValue)) {
                 $accumulated['kelemahan'][] = [
                     'value' => $kelemahanValue,
-                    'keterangan' => $this->getColumnValue($row, 'Keterangan')
+                    'keterangan' => $this->getColumnValue($row, 'Keterangan Kelemahan') ?? 
+                                 $this->getColumnValue($row, 'Kelemahan Penyebab Fraud Keterangan') ?? null
                 ];
             }
         }
@@ -507,6 +529,7 @@ class ImportService
 
     /**
      * Sync accumulated Kelemahan Fraud (Many-to-Many) - hanya untuk Semester
+     * Keep NULL values as NULL, don't fill with defaults
      */
     private function syncKelemahanFraudGroup($kasus, $accumulated, $jeniLaporan)
     {
@@ -516,6 +539,7 @@ class ImportService
         foreach ($accumulated['kelemahan'] as $item) {
             $id = $this->getRefId(RefKelemahanFraud::class, $item['value']);
             if ($id && !isset($syncData[$id])) {
+                // Store keterangan as-is, including NULL values
                 $syncData[$id] = ['keterangan' => $item['keterangan']];
             }
         }
@@ -536,18 +560,42 @@ class ImportService
         $jenisIdentitasId = $this->getRefId(RefJenisIdentitas::class, $this->getColumnValue($row, 'Jenis Identitas'));
         $statusPelakuId = $this->getRefId(RefStatusPelaku::class, $this->getColumnValue($row, 'Status Pelaku'));
         
-        // Parse kategori - normalize to lowercase and extract first word (internal/eksternal)
-        $kategoriValue = strtolower(trim($this->getColumnValue($row, 'Internal / Eksternal')));
-        $kategori = 'internal'; // default
-        if (strpos($kategoriValue, 'eksternal') !== false) {
-            $kategori = 'eksternal';
-        } elseif (strpos($kategoriValue, 'internal') !== false) {
-            $kategori = 'internal';
+        // Parse kategori Internal/Eksternal - normalize and map to code (001 or 002)
+        // Try getColumnValue first with both possible header names
+        $kategoriRaw = $this->getColumnValue($row, 'Internal / Eksternal') ?: $this->getColumnValue($row, 'Internal/Eksternal');
+        
+        // For Signifikan: fallback to direct index 17 (Col R) if not found
+        if (empty($kategoriRaw) && isset($row[17])) {
+            $kategoriRaw = trim($row[17]);
+        }
+        
+        $kategoriCode = $this->parseKategoriInternalEksternal($kategoriRaw);
+
+        // Keterangan Jabatan extraction - handle Semester vs Signifikan with different strategies
+        // Semester has 2 "Keterangan Jabatan" columns (indices 43, 45) so we need direct index access
+        // Signifikan has 2 "Keterangan Jabatan" columns (indices 28, 30) similarly
+        
+        // Determine which format: Check array size
+        // Semester = ~50 columns, Signifikan = ~35 columns
+        $isSemester = count($row) > 45;
+        
+        if ($isSemester) {
+            // SEMESTER: Use direct indices for Keterangan Jabatan
+            // Index 43 = Keterangan untuk "Pada Saat Fraud Terjadi"
+            // Index 45 = Keterangan untuk "Pada Saat Fraud Diketahui"
+            $ketJabatanKejadian = isset($row[43]) ? trim($row[43]) : '';
+            $ketJabatanDiketahui = isset($row[45]) ? trim($row[45]) : '';
+        } else {
+            // SIGNIFIKAN: Use direct indices for Keterangan Jabatan
+            // Index 28 = Keterangan untuk "Pada Saat Fraud Terjadi"
+            // Index 30 = Keterangan untuk "Pada Saat Fraud Diketahui"
+            $ketJabatanKejadian = isset($row[28]) ? trim($row[28]) : '';
+            $ketJabatanDiketahui = isset($row[30]) ? trim($row[30]) : '';
         }
 
         PelakuFraud::create([
             'kasus_id' => $kasus->id,
-            'kategori' => $kategori,
+            'kategori' => $kategoriCode,  // Store code like '001 (Internal)' or '002 (Eksternal)'
             'nama' => $namaPelaku,
             'jenis_identitas_id' => $jenisIdentitasId,
             'nomor_identitas' => $this->getColumnValue($row, 'Nomor Identitas'),
@@ -558,10 +606,10 @@ class ImportService
             'tanggal_lahir' => $this->parseDate($this->getColumnValue($row, 'Tanggal Lahir')),
             'status_pelaku_id' => $statusPelakuId,
             'jabatan_saat_kejadian_id' => $this->getRefJabatanId($this->getColumnValue($row, 'Pada Saat Fraud Terjadi')),
-            'ket_jabatan_kejadian' => $this->getColumnValue($row, 'Keterangan Jabatan'),
+            'ket_jabatan_kejadian' => !empty($ketJabatanKejadian) ? $ketJabatanKejadian : null,
             'jabatan_saat_diketahui_id' => $this->getRefJabatanId($this->getColumnValue($row, 'Pada Saat Fraud Diketahui')),
-            'ket_jabatan_diketahui' => $this->getColumnValue($row, 'Keterangan Jabatan'),
-            'keterangan' => $this->getColumnValue($row, 'Keterangan Pelaku'),
+            'ket_jabatan_diketahui' => !empty($ketJabatanDiketahui) ? $ketJabatanDiketahui : null,
+            'keterangan' => $this->getColumnValue($row, 'Keterangan Pelaku') ?: null,
             'sanksi' => $this->getColumnValue($row, 'Pengenaan Sanksi'),
         ]);
     }
@@ -577,17 +625,37 @@ class ImportService
         $pencegahanId = $this->getRefId(RefPencegahanFraud::class, $pencegahanValue);
         if (!$pencegahanId) return;
 
-        $targetWaktu = $this->parseDate($this->getColumnValue($row, 'Target Waktu Pelaksanaan'));
-        $realisasiWaktu = $this->parseDate($this->getColumnValue($row, 'Realisasi Pelaksanaan'));
+        // Target Waktu Pelaksanaan - col 31 (index 30)
+        $targetWaktuRaw = $this->getColumnValue($row, 'Target Waktu Pelaksanaan');
+        if (empty($targetWaktuRaw) && isset($row[30])) {
+            $targetWaktuRaw = trim($row[30]);
+        }
+        $targetWaktu = $this->parseDate($targetWaktuRaw);
+        
+        // Realisasi Pelaksanaan - col 32 (index 31)
+        $realisasiRaw = $this->getColumnValue($row, 'Realisasi Pelaksanaan');
+        if (empty($realisasiRaw) && isset($row[31])) {
+            $realisasiRaw = trim($row[31]);
+        }
+        $realisasiWaktu = $this->parseDate($realisasiRaw);
+        
+        // Get keterangan specifically for pencegahan section (disambiguate from other keterangan fields)
         $keterangan = $this->getColumnValue($row, 'Keterangan');
-
-        PencegahanFraud::create([
-            'kasus_id' => $kasus->id,
-            'pencegahan_id' => $pencegahanId,
-            'keterangan' => $keterangan,
-            'target_waktu' => $targetWaktu,
-            'realisasi' => $realisasiWaktu,
-        ]);
+    
+        // Create record even if some optional fields are empty
+        // If Excel source is empty, then these values will be NULL (not filled with defaults)
+        try {
+            PencegahanFraud::create([
+                'kasus_id' => $kasus->id,
+                'pencegahan_id' => $pencegahanId,
+                'keterangan' => !empty($keterangan) ? $keterangan : '',
+                'target_waktu' => $targetWaktu,
+                'realisasi' => $realisasiWaktu,
+            ]);
+            Log::info("[SAVED-PENCEGAHAN] {$kasus->kode_komponen}: pencegahan_id={$pencegahanId}");
+        } catch (\Exception $e) {
+            Log::error("[PENCEGAHAN-ERROR] {$kasus->kode_komponen}: {$e->getMessage()}");
+        }
     }
 
     /**
@@ -605,19 +673,13 @@ class ImportService
 
             $jenisIdentitasId = $this->getRefId(RefJenisIdentitas::class, $this->getColumnValue($row, 'Jenis Identitas'));
             $statusPelakuId = $this->getRefId(RefStatusPelaku::class, $this->getColumnValue($row, 'Status Pelaku'));
-            
-            // Parse kategori - normalize to lowercase and extract first word (internal/eksternal)
-            $kategoriValue = strtolower(trim($this->getColumnValue($row, 'Internal / Eksternal')));
-            $kategori = 'internal'; // default
-            if (strpos($kategoriValue, 'eksternal') !== false) {
-                $kategori = 'eksternal';
-            } elseif (strpos($kategoriValue, 'internal') !== false) {
-                $kategori = 'internal';
-            }
+
+            // Parse kategori Internal/Eksternal - normalize and map to code (001 or 002)
+            $kategoriCode = $this->parseKategoriInternalEksternal($this->getColumnValue($row, 'Internal / Eksternal'));
 
             PelakuFraud::create([
                 'kasus_id' => $kasus->id,
-                'kategori' => $kategori,
+                'kategori' => $kategoriCode,  // Store code like '001' or '002'
                 'nama' => $namaPelaku,
                 'jenis_identitas_id' => $jenisIdentitasId,
                 'nomor_identitas' => $this->getColumnValue($row, 'Nomor Identitas'),
@@ -631,7 +693,7 @@ class ImportService
                 'ket_jabatan_kejadian' => $this->getColumnValue($row, 'Keterangan Jabatan'),
                 'jabatan_saat_diketahui_id' => $this->getRefJabatanId($this->getColumnValue($row, 'Pada Saat Fraud Diketahui')),
                 'ket_jabatan_diketahui' => $this->getColumnValue($row, 'Keterangan Jabatan'),
-                'keterangan' => $this->getColumnValue($row, 'Keterangan Pelaku'),
+                'keterangan' =>$this->getColumnValue($row, 'Keterangan Pelaku') ?: null,
                 'sanksi' => $this->getColumnValue($row, 'Pengenaan Sanksi'),
             ]);
         }
@@ -645,26 +707,42 @@ class ImportService
         $kasus->pencegahanFraud()->delete();
 
         foreach ($rowGroup as $entry) {
-            $row = $entry['data'];
+            $row = $entry['data'];            
             $pencegahanValue = $this->getColumnValue($row, 'Tindakan Perbaikan untuk Pencegahan Fraud');
             
             if (empty($pencegahanValue)) continue;
-
             $pencegahanId = $this->getRefId(RefPencegahanFraud::class, $pencegahanValue);
             if (!$pencegahanId) continue;
 
-            $targetWaktu = $this->parseDate($this->getColumnValue($row, 'Target Waktu Pelaksanaan'));
+            // Target Waktu Pelaksanaan - col 31 (index 30)
+            $targetWaktuRaw = $this->getColumnValue($row, 'Target Waktu Pelaksanaan');
+            if (empty($targetWaktuRaw) && isset($row[30])) {
+                $targetWaktuRaw = trim($row[30]);
+            }
+            $targetWaktu = $this->parseDate($targetWaktuRaw);
+            
+            // Realisasi Pelaksanaan - col 32 (index 31)
+            $realisasiRaw = $this->getColumnValue($row, 'Realisasi Pelaksanaan');
+            if (empty($realisasiRaw) && isset($row[31])) {
+                $realisasiRaw = trim($row[31]);
+            }
+            $realisasiWaktu = $this->parseDate($realisasiRaw);
+            
+            // Get keterangan specifically for pencegahan section (disambiguate from other keterangan fields)
             $keterangan = $this->getColumnValue($row, 'Keterangan');
 
-            // Only create if all required fields are present
-            if ($targetWaktu && $keterangan) {
+            // Create record even if optional fields are empty (Excel empty = NULL, not filled with defaults)
+            try {
                 PencegahanFraud::create([
                     'kasus_id' => $kasus->id,
                     'pencegahan_id' => $pencegahanId,
-                    'keterangan' => $keterangan,
+                    'keterangan' => !empty($keterangan) ? $keterangan : '',
                     'target_waktu' => $targetWaktu,
-                    'realisasi' => $this->parseDate($this->getColumnValue($row, 'Realisasi Pelaksanaan')),
+                    'realisasi' => $realisasiWaktu,
                 ]);
+                Log::info("[SAVED-PENCEGAHAN-GROUP] {$kasus->kode_komponen}: pencegahan_id={$pencegahanId}");
+            } catch (\Exception $e) {
+                Log::error("[PENCEGAHAN-GROUP-ERROR] {$kasus->kode_komponen}: {$e->getMessage()}");
             }
         }
     }
@@ -684,7 +762,10 @@ class ImportService
 
             $tindakanId = $this->getRefId(RefTindakanPenanganan::class, $tindakanValue);
             if ($tindakanId) {
-                $syncData = [$tindakanId => ['keterangan' => $this->getColumnValue($row, 'Keterangan')]];
+                // Get keterangan specifically for tindakan penanganan (disambiguate from other keterangan fields)
+                $keterangan = $this->getColumnValue($row, 'Keterangan Tindakan Penanganan') ?? 
+                            $this->getColumnValue($row, 'Tindakan untuk Penanganan Fraud Keterangan') ?? null;
+                $syncData = [$tindakanId => ['keterangan' => $keterangan]];
                 $kasus->penangananFraud()->syncWithoutDetaching($syncData);
             }
         }
@@ -730,19 +811,27 @@ class ImportService
         
         // Finally, add/override with headers from row 4 (detail column names)
         // AND create combined keys for compound headers (row3 + row4)
+        // IMPORTANT: When row 3 is empty, use last non-empty row 3 value for compound key
+        $lastRow3Header = '';
         foreach ($headerRow4 as $colIndex => $headerValue) {
             $header = trim($headerValue ?? '');
             if (!empty($header)) {
                 $key = strtolower($header);
                 $this->sheetMapping[$key] = $colIndex;
                 
-                // Also create compound key: row3_value + row4_value
-                if (isset($headerRow3[$colIndex])) {
-                    $row3Header = trim($headerRow3[$colIndex] ?? '');
-                    if (!empty($row3Header)) {
-                        $compoundKey = strtolower($row3Header . ' ' . $header);
-                        $this->sheetMapping[$compoundKey] = $colIndex;
-                    }
+                // Get row3 header - use current or last non-empty if current is empty
+                $row3Header = trim($headerRow3[$colIndex] ?? '');
+                
+                // Update last non-empty row3 when we encounter a non-empty one
+                if (!empty($row3Header)) {
+                    $lastRow3Header = $row3Header;
+                }
+                
+                // Create compound key using either current row3 or last non-empty row3
+                $effectiveRow3 = !empty($row3Header) ? $row3Header : $lastRow3Header;
+                if (!empty($effectiveRow3)) {
+                    $compoundKey = strtolower($effectiveRow3 . ' ' . $header);
+                    $this->sheetMapping[$compoundKey] = $colIndex;
                 }
             }
         }
@@ -840,6 +929,7 @@ class ImportService
 
     /**
      * Update Kerugian Fraud - from single row
+     * Menggunakan sheetMapping untuk akses column yang akurat
      */
     private function updateKerugianFraud($kasus, $row, $jeniLaporan)
     {
@@ -847,7 +937,9 @@ class ImportService
             $kerugianPotensial = $this->parseNumeric($this->getColumnValue($row, 'Jumlah Kerugian Potensial'));
             if ($kerugianPotensial !== null) {
                 if ($kasus->kerugianFraud) {
-                    $kasus->kerugianFraud->update(['ljk_potensial' => $kerugianPotensial]);
+                    $kasus->kerugianFraud->update([
+                        'ljk_potensial' => $kerugianPotensial
+                    ]);
                 } else {
                     KerugianFraud::create([
                         'kasus_id' => $kasus->id,
@@ -856,25 +948,59 @@ class ImportService
                 }
             }
         } else {
-            // Semester - has detailed breakdown
-            $kerugianData = [
-                'ljk_rill' => $this->parseNumeric($this->getColumnValue($row, 'LJK Rill')),
-                'ljk_potensial' => $this->parseNumeric($this->getColumnValue($row, 'LJK Potensial')),
-                'ljk_recovery' => $this->parseNumeric($this->getColumnValue($row, 'LJK Recovery')),
-                'konsumen_rill' => $this->parseNumeric($this->getColumnValue($row, 'Konsumen Rill')),
-                'konsumen_potensial' => $this->parseNumeric($this->getColumnValue($row, 'Konsumen Potensial')),
-                'konsumen_recovery' => $this->parseNumeric($this->getColumnValue($row, 'Konsumen Recovery')),
-                'pihak_lain_rill' => $this->parseNumeric($this->getColumnValue($row, 'Pihak Lain Rill')),
-                'pihak_lain_potensial' => $this->parseNumeric($this->getColumnValue($row, 'Pihak Lain Potensial')),
-                'pihak_lain_recovery' => $this->parseNumeric($this->getColumnValue($row, 'Pihak Lain Recovery')),
+            // SEMESTER - Extract 9 kerugian fields using sheetMapping
+            $kerugianData = [];
+            
+            // Map dbField to possible compound key patterns
+            $patterns = [
+                'ljk_rill' => 'ljk riil (incurred)',
+                'ljk_potensial' => 'ljk potensial (potential)',
+                'ljk_recovery' => 'ljk setelah pengembalian (recovery)',
+                'konsumen_rill' => 'konsumen riil (incurred)',
+                'konsumen_potensial' => 'konsumen potensial (potential)',
+                'konsumen_recovery' => 'konsumen setelah pengembalian (recovery)',
+                'pihak_lain_rill' => 'pihak lain riil (incurred)',
+                'pihak_lain_potensial' => 'pihak lain potensial (potential)',
+                'pihak_lain_recovery' => 'pihak lain setelah pengembalian (recovery)',
             ];
+            
+            // Try to extract each field
+            foreach ($patterns as $dbField => $keyName) {
+                $keyLower = strtolower($keyName);
+                
+                // Try exact match first
+                if (isset($this->sheetMapping[$keyLower])) {
+                    $colIndex = $this->sheetMapping[$keyLower];
+                    $value = $this->parseNumeric($row[$colIndex] ?? null);
+                    if ($value !== null) {
+                        $kerugianData[$dbField] = $value;
+                    }
+                }
+            }
+            
+            // Save if ada data
+            if (!empty($kerugianData)) {
+                try {
+                    $kerugian = $kasus->kerugianFraud;
 
-            // Only save if there's actual data
-            if (count(array_filter($kerugianData, fn($v) => $v !== null)) > 0) {
-                if ($kasus->kerugianFraud) {
-                    $kasus->kerugianFraud->update($kerugianData);
-                } else {
-                    KerugianFraud::create(array_merge($kerugianData, ['kasus_id' => $kasus->id]));
+                    if ($kerugian) {
+                        $kerugian->update($kerugianData);
+                    } else {
+                        $kerugian = KerugianFraud::create(array_merge(
+                            $kerugianData,
+                            ['kasus_id' => $kasus->id]
+                        ));
+                    }
+
+                    $kerugian->refresh();
+
+                    // Nilai recovery dari Excel tetap disimpan di kolom *_recovery.
+                    // Histori recovery otomatis: (Riil + Potensial) - Recovery Excel.
+                    $this->createRecoveryDetailsFromImport($kerugian, $kerugianData, $kasus->user_id);
+
+                    Log::info("[SAVED-KERUGIAN] {$kasus->kode_komponen}: " . count($kerugianData) . " fields");
+                } catch (\Exception $e) {
+                    Log::error("[KERUGIAN-ERROR] {$kasus->kode_komponen}: {$e->getMessage()}");
                 }
             }
         }
@@ -926,19 +1052,33 @@ class ImportService
     }
 
     private function parseNumeric($value)
-    {
-        if (empty($value)) return null;
-        
-        // Remove common currency/formatting
-        $value = str_replace(['Rp', '.', ',', ' ', '-'], '', trim($value));
-        
-        // Handle comma as decimal separator
-        if (strpos($value, ',') !== false) {
-            $value = str_replace(',', '.', $value);
-        }
-        
-        return is_numeric($value) ? (int) $value : null;
+{
+    if ($value === null || $value === '') {
+        return null;
     }
+
+    $value = trim((string) $value);
+
+    // Hapus simbol mata uang dan spasi
+    $value = str_replace(['Rp', 'Rp.', '₨', ' '], '', $value);
+
+    // Jika format seperti 441,912,635 atau 441.912.635
+    // anggap itu pemisah ribuan
+    if (preg_match('/^\d{1,3}([,.]\d{3})+$/', $value)) {
+        $value = str_replace([',', '.'], '', $value);
+    }
+    // Jika format desimal Indonesia
+    elseif (strpos($value, ',') !== false && strpos($value, '.') !== false) {
+        $value = str_replace('.', '', $value);
+        $value = str_replace(',', '.', $value);
+    }
+    // Jika hanya ada koma tunggal
+    elseif (substr_count($value, ',') === 1) {
+        $value = str_replace(',', '.', $value);
+    }
+
+    return is_numeric($value) ? (int) round((float) $value) : null;
+}
 
     private function parseJenisKelamin($value)
     {
@@ -950,6 +1090,58 @@ class ImportService
         if ($value === 'P' || strpos($value, 'PEREMPUAN') !== false) return 'P';
         
         return null;
+    }
+
+    /**
+     * Buat histori recovery otomatis saat import Excel.
+     * Kolom recovery di file disimpan apa adanya di kerugian_fraud.*_recovery.
+     * Nominal histori = (Riil + Potensial) - Recovery dari Excel.
+     * Tidak mengubah logika recovery manual maupun sync total ke kolom *_recovery.
+     */
+    private function createRecoveryDetailsFromImport(KerugianFraud $kerugian, array $kerugianData, ?int $userId): void
+    {
+        if ($userId === null) {
+            return;
+        }
+
+        $categories = [
+            'ljk' => ['rill' => 'ljk_rill', 'potensial' => 'ljk_potensial', 'recovery' => 'ljk_recovery'],
+            'konsumen' => ['rill' => 'konsumen_rill', 'potensial' => 'konsumen_potensial', 'recovery' => 'konsumen_recovery'],
+            'pihak_lain' => ['rill' => 'pihak_lain_rill', 'potensial' => 'pihak_lain_potensial', 'recovery' => 'pihak_lain_recovery'],
+        ];
+
+        $today = now()->toDateString();
+
+        foreach ($categories as $kategori => $fields) {
+            if (!array_key_exists($fields['recovery'], $kerugianData)) {
+                continue;
+            }
+
+            $excelRecovery = $kerugianData[$fields['recovery']];
+            if ($excelRecovery === null) {
+                continue;
+            }
+
+            $rill = $kerugianData[$fields['rill']] ?? $kerugian->{$fields['rill']} ?? 0;
+            $potensial = $kerugianData[$fields['potensial']] ?? $kerugian->{$fields['potensial']} ?? 0;
+            $gross = $rill + $potensial;
+
+            // Contoh: (100.000 + 100.000) - 50.000 = 150.000
+            $historyAmount = max(0, $gross - $excelRecovery);
+
+            if ($historyAmount <= 0) {
+                continue;
+            }
+
+            KerugianRecovery::create([
+                'kerugian_fraud_id' => $kerugian->id,
+                'kategori' => $kategori,
+                'tanggal' => $today,
+                'amount' => $historyAmount,
+                'no_rekening' => null,
+                'user_id' => $userId,
+            ]);
+        }
     }
 
     private function parseStatusCode($value)
@@ -965,6 +1157,25 @@ class ImportService
         
         return '001';
     }
+
+   private function parseKategoriInternalEksternal($value)
+{
+    if (empty($value)) {
+        return null;
+    }
+
+    $value = trim($value);
+
+    if (preg_match('/^001/', $value) || stripos($value, 'internal') !== false) {
+        return 'internal';
+    }
+
+    if (preg_match('/^002/', $value) || stripos($value, 'eksternal') !== false) {
+        return 'eksternal';
+    }
+
+    return $value;
+}
 
     /**
      * Check if a row is an instruction/notes row that should be skipped

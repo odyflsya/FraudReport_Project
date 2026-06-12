@@ -171,7 +171,7 @@
 
         <!-- LAPORAN SEMESTER TABLE -->
         <div id="semesterTableContainer" class="bg-white rounded-lg shadow overflow-x-auto mb-8">
-            <table class="min-w-[3500px] text-xs border-collapse" id="semesterTable">
+            <table class="text-xs border-collapse table-fixed" id="semesterTable" style="width: max-content;">
                 <colgroup id="semesterColGroup"></colgroup>
                 <thead class="bg-[#FF0000] text-white">
                     <tr>
@@ -483,64 +483,66 @@
 
         <!-- LAPORAN SIGNIFIKAN TABLE -->
         <div id="signifikanTableContainer" class="bg-white rounded-lg shadow overflow-x-auto mb-8 hidden">
-            <table class="min-w-[3500px] text-xs border-collapse" id="signifikanTable">
+            <table class="text-xs border-collapse table-fixed" id="signifikanTable" style="width: max-content;">
                 <colgroup id="signifikanColGroup"></colgroup>
                 <thead class="bg-[#FF0000] text-white">
-                    <tr>
+                <tr>
                     <th rowspan="3" class="border p-2" data-column="No">No</th>
                     <th rowspan="3" class="border p-2" data-column="Kode Komponen">Kode Komponen</th>
                     <th rowspan="3" class="border p-2" data-column="Kejadian Fraud Menurut Pelaku">Kejadian Fraud Menurut Pelaku</th>
                     <th rowspan="3" class="border p-2" data-column="ID Kejadian Fraud">ID Kejadian Fraud</th>
 
-                    <th colspan="2" class="border p-2" data-group="group-jenis-fraud">Jenis Fraud</th>
+                    <th colspan="2" class="border p-2" data-group="sg-group-jenis-fraud">Jenis Fraud</th>
 
                     <th rowspan="3" class="border p-2" data-column="Aktivitas Terkait Fraud">Aktivitas Terkait Fraud</th>
                     <th rowspan="3" class="border p-2" data-column="Deskripsi Fraud / Modus Operandi">Deskripsi Fraud / Modus Operandi</th>
 
-                    <th colspan="2" class="border p-2" data-group="group-lokasi-fraud">Lokasi Fraud</th>
+                    <th colspan="2" class="border p-2" data-group="sg-group-lokasi-fraud">Lokasi Fraud</th>
 
                     <th rowspan="3" class="border p-2" data-column="Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud">Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud</th>
+                    <th colspan="3" class="border p-2" data-group="sg-group-waktu">Waktu</th>
+
                     <th rowspan="3" class="border p-2" data-column="Pihak Yang Dirugikan">Pihak Yang Dirugikan</th>
                     <th rowspan="3" class="border p-2" data-column="Jumlah Kerugian Potensial">Jumlah Kerugian Potensial</th>
                     <th rowspan="3" class="border p-2" data-column="Tindak Lanjut LJK">Tindak Lanjut LJK</th>
 
-                    <th colspan="3" class="border p-2" data-group="group-waktu">Waktu</th>
-                    <th colspan="16" class="border p-2" data-group="group-pelaku-fraud">Pelaku Fraud</th>
+                    <th colspan="16" class="border p-2" data-group="sg-group-pelaku-fraud">Pelaku Fraud</th>
                     <th rowspan="3" class="border p-2" data-column="Status Penanganan">Status Penanganan</th>
+                    <th rowspan="3" class="border p-2 text-center sticky-aksi" data-column="Aksi">Aksi</th>
                 </tr>
                 <tr>
-                    <th rowspan="2" class="border p-2" data-column="Jenis Fraud" data-group="group-jenis-fraud">Jenis Fraud</th>
-                    <th rowspan="2" class="border p-2" data-column="Keterangan Jenis Fraud" data-group="group-jenis-fraud">Keterangan Jenis Fraud</th>
+                    <th rowspan="2" class="border p-2" data-column="Jenis Fraud" data-group="sg-group-jenis-fraud">Jenis Fraud</th>
+                    <th rowspan="2" class="border p-2" data-column="Keterangan Jenis Fraud" data-group="sg-group-jenis-fraud">Keterangan Jenis Fraud</th>
 
-                    <th rowspan="2" class="border p-2" data-column="Lokasi Fraud" data-group="group-lokasi-fraud">Lokasi Fraud</th>
-                    <th rowspan="2" class="border p-2" data-column="Keterangan Lokasi Fraud" data-group="group-lokasi-fraud">Keterangan Lokasi Fraud</th>
+                    <th rowspan="2" class="border p-2" data-column="Lokasi Fraud" data-group="sg-group-lokasi-fraud">Lokasi Fraud</th>
+                    <th rowspan="2" class="border p-2" data-column="Keterangan Lokasi Fraud" data-group="sg-group-lokasi-fraud">Keterangan Lokasi Fraud</th>
 
-                    <th colspan="2" class="border p-2" data-group="group-waktu group-waktu-terjadi">Waktu Terjadi</th>
-                    <th rowspan="2" class="border p-2" data-column="Fraud Diketahui" data-group="group-waktu">Fraud Diketahui</th>
+                    <th colspan="2" class="border p-2" data-group="sg-group-waktu sg-group-waktu-terjadi">Waktu Terjadi</th>
+                    <th rowspan="2" class="border p-2" data-column="Fraud Diketahui" data-group="sg-group-waktu">Fraud Diketahui</th>
 
-                    <th rowspan="2" class="border p-2" data-column="Internal/Eksternal" data-group="group-pelaku-fraud">Internal/Eksternal</th>
-                    <th colspan="8" class="border p-2" data-group="group-pelaku-fraud group-identitas-pelaku">Identitas Pelaku</th>
-                    <th rowspan="2" class="border p-2" data-column="Status Pelaku" data-group="group-pelaku-fraud">Status Pelaku</th>
-                    <th colspan="4" class="border p-2" data-group="group-pelaku-fraud group-jabatan-pelaku">Jabatan Pelaku</th>
-                    <th rowspan="2" class="border p-2" data-column="Keterangan Pelaku" data-group="group-pelaku-fraud">Keterangan Pelaku</th>
-                    <th rowspan="2" class="border p-2" data-column="Pengenaan Sanksi" data-group="group-pelaku-fraud">Pengenaan Sanksi</th>
+                    <th rowspan="2" class="border p-2" data-column="Internal/Eksternal" data-group="sg-group-pelaku-fraud">Internal/Eksternal</th>
+                    <th colspan="8" class="border p-2" data-group="sg-group-pelaku-fraud sg-group-identitas-pelaku">Identitas Pelaku</th>
+                    <th rowspan="2" class="border p-2" data-column="Status Pelaku" data-group="sg-group-pelaku-fraud">Status Pelaku</th>
+                    <th colspan="4" class="border p-2" data-group="sg-group-pelaku-fraud sg-group-jabatan-pelaku">Jabatan Pelaku</th>
+                    <th rowspan="2" class="border p-2" data-column="Keterangan Pelaku" data-group="sg-group-pelaku-fraud">Keterangan Pelaku</th>
+                    <th rowspan="2" class="border p-2" data-column="Pengenaan Sanksi" data-group="sg-group-pelaku-fraud">Pengenaan Sanksi</th>
                 </tr>
                 <tr>
-                    <th class="border p-2" data-column="Waktu Terjadi Awal" data-group="group-waktu group-waktu-terjadi">Awal</th>
-                    <th class="border p-2" data-column="Waktu Terjadi Akhir" data-group="group-waktu group-waktu-terjadi">Akhir</th>
+                    <th class="border p-2" data-column="Waktu Terjadi Awal" data-group="sg-group-waktu sg-group-waktu-terjadi">Awal</th>
+                    <th class="border p-2" data-column="Waktu Terjadi Akhir" data-group="sg-group-waktu sg-group-waktu-terjadi">Akhir</th>
 
-                    <th class="border p-2" data-column="Nama Pelaku" data-group="group-pelaku-fraud group-identitas-pelaku">Nama</th>
-                    <th class="border p-2" data-column="Jenis Identitas" data-group="group-pelaku-fraud group-identitas-pelaku">Jenis Identitas</th>
-                    <th class="border p-2" data-column="Nomor Identitas" data-group="group-pelaku-fraud group-identitas-pelaku">Nomor Identitas</th>
-                    <th class="border p-2" data-column="Jenis Kelamin" data-group="group-pelaku-fraud group-identitas-pelaku">Jenis Kelamin</th>
-                    <th class="border p-2" data-column="Tempat Lahir" data-group="group-pelaku-fraud group-identitas-pelaku">Tempat Lahir</th>
-                    <th class="border p-2" data-column="Tanggal Lahir" data-group="group-pelaku-fraud group-identitas-pelaku">Tanggal Lahir</th>
-                    <th class="border p-2" data-column="Alamat Identitas" data-group="group-pelaku-fraud group-identitas-pelaku">Alamat Identitas</th>
-                    <th class="border p-2" data-column="Alamat Domisili" data-group="group-pelaku-fraud group-identitas-pelaku">Alamat Domisili</th>
-                    <th class="border p-2" data-column="Pada Saat Fraud Terjadi" data-group="group-pelaku-fraud group-jabatan-pelaku">Pada Saat Fraud Terjadi</th>
-                    <th class="border p-2" data-column="Keterangan Jabatan Terjadi" data-group="group-pelaku-fraud group-jabatan-pelaku">Keterangan</th>
-                    <th class="border p-2" data-column="Pada Saat Fraud Diketahui" data-group="group-pelaku-fraud group-jabatan-pelaku">Pada Saat Fraud Diketahui</th>
-                    <th class="border p-2" data-column="Keterangan Jabatan Diketahui" data-group="group-pelaku-fraud group-jabatan-pelaku">Keterangan</th>
+                    <th class="border p-2" data-column="Nama Pelaku" data-group="sg-group-pelaku-fraud sg-group-identitas-pelaku">Nama</th>
+                    <th class="border p-2" data-column="Jenis Identitas" data-group="sg-group-pelaku-fraud sg-group-identitas-pelaku">Jenis Identitas</th>
+                    <th class="border p-2" data-column="Nomor Identitas" data-group="sg-group-pelaku-fraud sg-group-identitas-pelaku">Nomor Identitas</th>
+                    <th class="border p-2" data-column="Jenis Kelamin" data-group="sg-group-pelaku-fraud sg-group-identitas-pelaku">Jenis Kelamin</th>
+                    <th class="border p-2" data-column="Alamat Identitas" data-group="sg-group-pelaku-fraud sg-group-identitas-pelaku">Alamat Identitas</th>
+                    <th class="border p-2" data-column="Alamat Domisili" data-group="sg-group-pelaku-fraud sg-group-identitas-pelaku">Alamat Domisili</th>
+                    <th class="border p-2" data-column="Tempat Lahir" data-group="sg-group-pelaku-fraud sg-group-identitas-pelaku">Tempat Lahir</th>
+                    <th class="border p-2" data-column="Tanggal Lahir" data-group="sg-group-pelaku-fraud sg-group-identitas-pelaku">Tanggal Lahir</th>
+                    <th class="border p-2" data-column="Pada Saat Fraud Terjadi" data-group="sg-group-pelaku-fraud sg-group-jabatan-pelaku">Pada Saat Fraud Terjadi</th>
+                    <th class="border p-2" data-column="Keterangan Jabatan Terjadi" data-group="sg-group-pelaku-fraud sg-group-jabatan-pelaku">Keterangan Jabatan</th>
+                    <th class="border p-2" data-column="Pada Saat Fraud Diketahui" data-group="sg-group-pelaku-fraud sg-group-jabatan-pelaku">Pada Saat Fraud Diketahui</th>
+                    <th class="border p-2" data-column="Keterangan Jabatan Diketahui" data-group="sg-group-pelaku-fraud sg-group-jabatan-pelaku">Keterangan Jabatan</th>
                 </tr>
                 </thead>
                 <tbody class="bg-white">
@@ -579,11 +581,6 @@
                             </td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud">{{ $k->divisi_unit }}</td>
-                            <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Pihak Yang Dirugikan">
-                                {{ $formatRefLabel($k->pihakDirugikan) }}
-                            </td>
-                            <td class="border p-2" data-column="Jumlah Kerugian Potensial">{{ $k->kerugianFraud ? $formatCurrency($k->getTotalKerugianPotensial()) : '' }}</td>
-                            <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Tindak Lanjut LJK">{{ $k->tindak_lanjut_ljk ?? '-' }}</td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Waktu Terjadi Awal">
                                 {{ $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '' }}
                             </td>
@@ -593,6 +590,12 @@
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Fraud Diketahui">
                                 {{ $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '' }}
                             </td>
+
+                            <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Pihak Yang Dirugikan">
+                                {{ $formatRefLabel($k->pihakDirugikan) }}
+                            </td>
+                            <td class="border p-2" data-column="Jumlah Kerugian Potensial">{{ $k->kerugianFraud ? $formatCurrency($k->getTotalKerugianPotensial()) : '' }}</td>
+                            <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Tindak Lanjut LJK">{{ $k->tindak_lanjut_ljk ?? '' }}</td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Internal/Eksternal">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->kategori_label }}<br>@endforeach
@@ -663,64 +666,66 @@
 
         <!-- LAPORAN NON-SIGNIFIKAN TABLE -->
         <div id="nonSignifikanTableContainer" class="bg-white rounded-lg shadow overflow-x-auto mb-8 hidden">
-            <table class="min-w-[3500px] text-xs border-collapse" id="nonSignifikanTable">
+            <table class="text-xs border-collapse table-fixed" id="nonSignifikanTable" style="width: max-content;">
                 <colgroup id="nonSignifikanColGroup"></colgroup>
                 <thead class="bg-[#FF0000] text-white">
-                    <tr>
+                <tr>
                     <th rowspan="3" class="border p-2" data-column="No">No</th>
                     <th rowspan="3" class="border p-2" data-column="Kode Komponen">Kode Komponen</th>
                     <th rowspan="3" class="border p-2" data-column="Kejadian Fraud Menurut Pelaku">Kejadian Fraud Menurut Pelaku</th>
                     <th rowspan="3" class="border p-2" data-column="ID Kejadian Fraud">ID Kejadian Fraud</th>
 
-                    <th colspan="2" class="border p-2" data-group="group-jenis-fraud">Jenis Fraud</th>
+                    <th colspan="2" class="border p-2" data-group="ns-group-jenis-fraud">Jenis Fraud</th>
 
                     <th rowspan="3" class="border p-2" data-column="Aktivitas Terkait Fraud">Aktivitas Terkait Fraud</th>
                     <th rowspan="3" class="border p-2" data-column="Deskripsi Fraud / Modus Operandi">Deskripsi Fraud / Modus Operandi</th>
 
-                    <th colspan="2" class="border p-2" data-group="group-lokasi-fraud">Lokasi Fraud</th>
+                    <th colspan="2" class="border p-2" data-group="ns-group-lokasi-fraud">Lokasi Fraud</th>
 
                     <th rowspan="3" class="border p-2" data-column="Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud">Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud</th>
+                    <th colspan="3" class="border p-2" data-group="ns-group-waktu">Waktu</th>
+
                     <th rowspan="3" class="border p-2" data-column="Pihak Yang Dirugikan">Pihak Yang Dirugikan</th>
                     <th rowspan="3" class="border p-2" data-column="Jumlah Kerugian Potensial">Jumlah Kerugian Potensial</th>
                     <th rowspan="3" class="border p-2" data-column="Tindak Lanjut LJK">Tindak Lanjut LJK</th>
 
-                    <th colspan="3" class="border p-2" data-group="group-waktu">Waktu</th>
-                    <th colspan="16" class="border p-2" data-group="group-pelaku-fraud">Pelaku Fraud</th>
+                    <th colspan="16" class="border p-2" data-group="ns-group-pelaku-fraud">Pelaku Fraud</th>
                     <th rowspan="3" class="border p-2" data-column="Status Penanganan">Status Penanganan</th>
+                    <th rowspan="3" class="border p-2 text-center sticky-aksi" data-column="Aksi">Aksi</th>
                 </tr>
                 <tr>
-                    <th rowspan="2" class="border p-2" data-column="Jenis Fraud" data-group="group-jenis-fraud">Jenis Fraud</th>
-                    <th rowspan="2" class="border p-2" data-column="Keterangan Jenis Fraud" data-group="group-jenis-fraud">Keterangan Jenis Fraud</th>
+                    <th rowspan="2" class="border p-2" data-column="Jenis Fraud" data-group="ns-group-jenis-fraud">Jenis Fraud</th>
+                    <th rowspan="2" class="border p-2" data-column="Keterangan Jenis Fraud" data-group="ns-group-jenis-fraud">Keterangan Jenis Fraud</th>
 
-                    <th rowspan="2" class="border p-2" data-column="Lokasi Fraud" data-group="group-lokasi-fraud">Lokasi Fraud</th>
-                    <th rowspan="2" class="border p-2" data-column="Keterangan Lokasi Fraud" data-group="group-lokasi-fraud">Keterangan Lokasi Fraud</th>
+                    <th rowspan="2" class="border p-2" data-column="Lokasi Fraud" data-group="ns-group-lokasi-fraud">Lokasi Fraud</th>
+                    <th rowspan="2" class="border p-2" data-column="Keterangan Lokasi Fraud" data-group="ns-group-lokasi-fraud">Keterangan Lokasi Fraud</th>
 
-                    <th colspan="2" class="border p-2" data-group="group-waktu group-waktu-terjadi">Waktu Terjadi</th>
-                    <th rowspan="2" class="border p-2" data-column="Fraud Diketahui" data-group="group-waktu">Fraud Diketahui</th>
+                    <th colspan="2" class="border p-2" data-group="ns-group-waktu ns-group-waktu-terjadi">Waktu Terjadi</th>
+                    <th rowspan="2" class="border p-2" data-column="Fraud Diketahui" data-group="ns-group-waktu">Fraud Diketahui</th>
 
-                    <th rowspan="2" class="border p-2" data-column="Internal/Eksternal" data-group="group-pelaku-fraud">Internal/Eksternal</th>
-                    <th colspan="8" class="border p-2" data-group="group-pelaku-fraud group-identitas-pelaku">Identitas Pelaku</th>
-                    <th rowspan="2" class="border p-2" data-column="Status Pelaku" data-group="group-pelaku-fraud">Status Pelaku</th>
-                    <th colspan="4" class="border p-2" data-group="group-pelaku-fraud group-jabatan-pelaku">Jabatan Pelaku</th>
-                    <th rowspan="2" class="border p-2" data-column="Keterangan Pelaku" data-group="group-pelaku-fraud">Keterangan Pelaku</th>
-                    <th rowspan="2" class="border p-2" data-column="Pengenaan Sanksi" data-group="group-pelaku-fraud">Pengenaan Sanksi</th>
+                    <th rowspan="2" class="border p-2" data-column="Internal/Eksternal" data-group="ns-group-pelaku-fraud">Internal/Eksternal</th>
+                    <th colspan="8" class="border p-2" data-group="ns-group-pelaku-fraud ns-group-identitas-pelaku">Identitas Pelaku</th>
+                    <th rowspan="2" class="border p-2" data-column="Status Pelaku" data-group="ns-group-pelaku-fraud">Status Pelaku</th>
+                    <th colspan="4" class="border p-2" data-group="ns-group-pelaku-fraud ns-group-jabatan-pelaku">Jabatan Pelaku</th>
+                    <th rowspan="2" class="border p-2" data-column="Keterangan Pelaku" data-group="ns-group-pelaku-fraud">Keterangan Pelaku</th>
+                    <th rowspan="2" class="border p-2" data-column="Pengenaan Sanksi" data-group="ns-group-pelaku-fraud">Pengenaan Sanksi</th>
                 </tr>
                 <tr>
-                    <th class="border p-2" data-column="Waktu Terjadi Awal" data-group="group-waktu group-waktu-terjadi">Awal</th>
-                    <th class="border p-2" data-column="Waktu Terjadi Akhir" data-group="group-waktu group-waktu-terjadi">Akhir</th>
+                    <th class="border p-2" data-column="Waktu Terjadi Awal" data-group="ns-group-waktu ns-group-waktu-terjadi">Awal</th>
+                    <th class="border p-2" data-column="Waktu Terjadi Akhir" data-group="ns-group-waktu ns-group-waktu-terjadi">Akhir</th>
 
-                    <th class="border p-2" data-column="Nama Pelaku" data-group="group-pelaku-fraud group-identitas-pelaku">Nama</th>
-                    <th class="border p-2" data-column="Jenis Identitas" data-group="group-pelaku-fraud group-identitas-pelaku">Jenis Identitas</th>
-                    <th class="border p-2" data-column="Nomor Identitas" data-group="group-pelaku-fraud group-identitas-pelaku">Nomor Identitas</th>
-                    <th class="border p-2" data-column="Jenis Kelamin" data-group="group-pelaku-fraud group-identitas-pelaku">Jenis Kelamin</th>
-                    <th class="border p-2" data-column="Tempat Lahir" data-group="group-pelaku-fraud group-identitas-pelaku">Tempat Lahir</th>
-                    <th class="border p-2" data-column="Tanggal Lahir" data-group="group-pelaku-fraud group-identitas-pelaku">Tanggal Lahir</th>
-                    <th class="border p-2" data-column="Alamat Identitas" data-group="group-pelaku-fraud group-identitas-pelaku">Alamat Identitas</th>
-                    <th class="border p-2" data-column="Alamat Domisili" data-group="group-pelaku-fraud group-identitas-pelaku">Alamat Domisili</th>
-                    <th class="border p-2" data-column="Pada Saat Fraud Terjadi" data-group="group-pelaku-fraud group-jabatan-pelaku">Pada Saat Fraud Terjadi</th>
-                    <th class="border p-2" data-column="Keterangan Jabatan Terjadi" data-group="group-pelaku-fraud group-jabatan-pelaku">Keterangan</th>
-                    <th class="border p-2" data-column="Pada Saat Fraud Diketahui" data-group="group-pelaku-fraud group-jabatan-pelaku">Pada Saat Fraud Diketahui</th>
-                    <th class="border p-2" data-column="Keterangan Jabatan Diketahui" data-group="group-pelaku-fraud group-jabatan-pelaku">Keterangan</th>
+                    <th class="border p-2" data-column="Nama Pelaku" data-group="ns-group-pelaku-fraud ns-group-identitas-pelaku">Nama</th>
+                    <th class="border p-2" data-column="Jenis Identitas" data-group="ns-group-pelaku-fraud ns-group-identitas-pelaku">Jenis Identitas</th>
+                    <th class="border p-2" data-column="Nomor Identitas" data-group="ns-group-pelaku-fraud ns-group-identitas-pelaku">Nomor Identitas</th>
+                    <th class="border p-2" data-column="Jenis Kelamin" data-group="ns-group-pelaku-fraud ns-group-identitas-pelaku">Jenis Kelamin</th>
+                    <th class="border p-2" data-column="Alamat Identitas" data-group="ns-group-pelaku-fraud ns-group-identitas-pelaku">Alamat Identitas</th>
+                    <th class="border p-2" data-column="Alamat Domisili" data-group="ns-group-pelaku-fraud ns-group-identitas-pelaku">Alamat Domisili</th>
+                    <th class="border p-2" data-column="Tempat Lahir" data-group="ns-group-pelaku-fraud ns-group-identitas-pelaku">Tempat Lahir</th>
+                    <th class="border p-2" data-column="Tanggal Lahir" data-group="ns-group-pelaku-fraud ns-group-identitas-pelaku">Tanggal Lahir</th>
+                    <th class="border p-2" data-column="Pada Saat Fraud Terjadi" data-group="ns-group-pelaku-fraud ns-group-jabatan-pelaku">Pada Saat Fraud Terjadi</th>
+                    <th class="border p-2" data-column="Keterangan Jabatan Terjadi" data-group="ns-group-pelaku-fraud ns-group-jabatan-pelaku">Keterangan Jabatan</th>
+                    <th class="border p-2" data-column="Pada Saat Fraud Diketahui" data-group="ns-group-pelaku-fraud ns-group-jabatan-pelaku">Pada Saat Fraud Diketahui</th>
+                    <th class="border p-2" data-column="Keterangan Jabatan Diketahui" data-group="ns-group-pelaku-fraud ns-group-jabatan-pelaku">Keterangan Jabatan</th>
                 </tr>
                 </thead>
                 <tbody class="bg-white">
@@ -759,11 +764,6 @@
                             </td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud">{{ $k->divisi_unit }}</td>
-                            <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Pihak Yang Dirugikan">
-                                {{ $formatRefLabel($k->pihakDirugikan) }}
-                            </td>
-                            <td class="border p-2" data-column="Jumlah Kerugian Potensial">{{ $k->kerugianFraud ? $formatCurrency($k->getTotalKerugianPotensial()) : '' }}</td>
-                            <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Tindak Lanjut LJK">{{ $k->tindak_lanjut_ljk ?? '' }}</td>
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Waktu Terjadi Awal">
                                 {{ $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '' }}
                             </td>
@@ -773,6 +773,12 @@
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Fraud Diketahui">
                                 {{ $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '' }}
                             </td>
+
+                            <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Pihak Yang Dirugikan">
+                                {{ $formatRefLabel($k->pihakDirugikan) }}
+                            </td>
+                            <td class="border p-2" data-column="Jumlah Kerugian Potensial">{{ $k->kerugianFraud ? $formatCurrency($k->getTotalKerugianPotensial()) : '' }}</td>
+                            <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Tindak Lanjut LJK">{{ $k->tindak_lanjut_ljk ?? '' }}</td>
 
                             <td class="border p-2 whitespace-nowrap max-w-[250px] overflow-hidden text-ellipsis" data-column="Internal/Eksternal">
                                 @foreach($k->pelakuFrauds as $p) {{ $p->kategori_label }}<br>@endforeach
@@ -845,17 +851,56 @@
 </div>
 
 <style>
+    /* ── Table layout ── */
+    #semesterTable,
+    #signifikanTable,
+    #nonSignifikanTable {
+        table-layout: fixed !important; /* honour <col> widths exactly */
+        border-collapse: collapse;
+    }
+
     #semesterTable th,
     #signifikanTable th,
     #nonSignifikanTable th {
         text-align: center;
         vertical-align: middle;
+        /* Prevent th from stretching beyond the <col> width */
+        overflow: hidden;
+        word-break: break-word;
+        white-space: normal;
     }
 
     #semesterTable td,
     #signifikanTable td,
     #nonSignifikanTable td {
         vertical-align: top;
+        overflow: hidden;
+    }
+
+    /*
+     * Hidden-column cells must truly disappear with zero footprint.
+     * We set these via JS (display:none + padding:0 + border:none),
+     * and reinforce here with !important so Tailwind doesn't override.
+     */
+    #semesterTable th[style*="display: none"],
+    #semesterTable td[style*="display: none"],
+    #signifikanTable th[style*="display: none"],
+    #signifikanTable td[style*="display: none"],
+    #nonSignifikanTable th[style*="display: none"],
+    #nonSignifikanTable td[style*="display: none"] {
+        display: none !important;
+        padding: 0 !important;
+        border: none !important;
+        overflow: hidden !important;
+    }
+
+    /*
+     * When visibility:collapse is supported on <col> (Firefox, Chrome 100+),
+     * the column slot is removed automatically. The display:none fallback above
+     * handles older WebKit.
+     */
+    colgroup col[style*="visibility: collapse"] {
+        visibility: collapse !important;
     }
 </style>
 
@@ -948,179 +993,254 @@ const signifikanColumns = [
     'Keterangan Pelaku',
     'Pengenaan Sanksi',
     'Status Penanganan',
+    'Aksi',
 ];
 
 const nonSignifikanColumns = [...signifikanColumns];
 
+// Per-column fixed widths (px) — keeps each column the same width regardless of
+// how many columns are shown. Keyed by data-column name.
+// Adjust values as needed for your content.
+const COLUMN_WIDTHS = {
+    // Narrow
+    'No': 40,
+    'Kode Komponen': 110,
+    'ID Kejadian Fraud': 140,
+    'LJK Rill': 100, 'LJK Potensial': 100, 'LJK Recovery': 100,
+    'Konsumen Rill': 100, 'Konsumen Potensial': 100, 'Konsumen Recovery': 100,
+    'Pihak Lain Rill': 100, 'Pihak Lain Potensial': 100, 'Pihak Lain Recovery': 100,
+    'Jumlah Kerugian Potensial': 130,
+    'Waktu Terjadi Awal': 110, 'Waktu Terjadi Akhir': 110, 'Fraud Diketahui': 110,
+    'Target Waktu Pelaksanaan': 110, 'Realisasi Pelaksanaan': 110,
+    'Tanggal Lahir': 100,
+    'Jenis Kelamin': 90,
+    'Status Pelaku': 90,
+    'Status Penanganan': 120,
+    'Aksi': 80,
+    // Medium
+    'Jenis Fraud': 150, 'Keterangan Jenis Fraud': 150,
+    'Lokasi Fraud': 150, 'Keterangan Lokasi Fraud': 150,
+    'Internal/Eksternal': 120,
+    'Jenis Identitas': 120, 'Nomor Identitas': 130,
+    'Tempat Lahir': 120,
+    'Nama Pelaku': 150,
+    'Pengenaan Sanksi': 120,
+    'Pihak Yang Dirugikan': 140,
+    'Kelemahan Penyebab Fraud': 150, 'Keterangan Kelemahan': 150,
+    'Tindakan untuk Penanganan Fraud': 160, 'Keterangan Penanganan': 150,
+    'Tindak Lanjut LJK': 150,
+    'Pada Saat Fraud Terjadi': 150, 'Keterangan Jabatan Terjadi': 150,
+    'Pada Saat Fraud Diketahui': 150, 'Keterangan Jabatan Diketahui': 150,
+    'Keterangan Pelaku': 150,
+    // Wide
+    'Kejadian Fraud Menurut Pelaku': 200,
+    'Aktivitas Terkait Fraud': 200,
+    'Deskripsi Fraud / Modus Operandi': 220,
+    'Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud': 200,
+    'Tindakan Perbaikan untuk Pencegahan Fraud': 200, 'Keterangan Perbaikan': 150,
+    'Alamat Identitas': 200, 'Alamat Domisili': 200,
+};
+const DEFAULT_COL_WIDTH = 140; // fallback if column name not in map
+
+function getColWidth(colName) {
+    return (COLUMN_WIDTHS[colName] || DEFAULT_COL_WIDTH) + 'px';
+}
+
 function initializeColumnSelectors() {
-    buildTableColGroup('semesterTable', semesterColumns.length);
-    buildTableColGroup('signifikanTable', signifikanColumns.length);
+    // Clear stale localStorage data from older versions of this page
+    // to prevent invisible columns or missing checkboxes on first load
+    const STORAGE_VERSION = 'v3';
+    if (localStorage.getItem('colSelectorVersion') !== STORAGE_VERSION) {
+        ['semesterSelectedColumns', 'signifikanSelectedColumns', 'nonSignifikanSelectedColumns'].forEach(k => localStorage.removeItem(k));
+        localStorage.setItem('colSelectorVersion', STORAGE_VERSION);
+    }
 
-    // Semester columns
-    const semesterSelector = document.getElementById('semesterColumnsSelector');
-    semesterColumns.forEach(col => {
-        const label = document.createElement('label');
-        label.className = 'flex items-center gap-2 cursor-pointer';
-        label.innerHTML = `
-            <input type="checkbox" class="semester-column-checkbox" value="${col}" checked 
-                onchange="toggleColumn('semesterTable', this)">
-            <span class="text-sm">${col}</span>
-        `;
-        semesterSelector.appendChild(label);
-    });
+    // Build colgroups with fixed per-column widths — this is what keeps proportions stable
+    buildTableColGroup('semesterTable', semesterColumns);
+    buildTableColGroup('signifikanTable', signifikanColumns);
+    buildTableColGroup('nonSignifikanTable', nonSignifikanColumns);
 
-    // Signifikan columns
-    const signifikanSelector = document.getElementById('signifikanColumnsSelector');
-    signifikanColumns.forEach(col => {
-        const label = document.createElement('label');
-        label.className = 'flex items-center gap-2 cursor-pointer';
-        label.innerHTML = `
-            <input type="checkbox" class="signifikan-column-checkbox" value="${col}" checked 
-                onchange="toggleColumn('signifikanTable', this)">
-            <span class="text-sm">${col}</span>
-        `;
-        signifikanSelector.appendChild(label);
-    });
-
-    // Non-signifikan columns
-    const nonSignifikanSelector = document.getElementById('nonSignifikanColumnsSelector');
-    nonSignifikanColumns.forEach(col => {
-        const label = document.createElement('label');
-        label.className = 'flex items-center gap-2 cursor-pointer';
-        label.innerHTML = `
-            <input type="checkbox" class="nonSignifikan-column-checkbox" value="${col}" checked 
-                onchange="toggleColumn('nonSignifikanTable', this)">
-            <span class="text-sm">${col}</span>
-        `;
-        nonSignifikanSelector.appendChild(label);
-    });
+    // Build checkbox UI
+    buildColumnCheckboxes('semesterColumnsSelector', semesterColumns, 'semester-column-checkbox', 'semesterTable');
+    buildColumnCheckboxes('signifikanColumnsSelector', signifikanColumns, 'signifikan-column-checkbox', 'signifikanTable');
+    buildColumnCheckboxes('nonSignifikanColumnsSelector', nonSignifikanColumns, 'nonSignifikan-column-checkbox', 'nonSignifikanTable');
 
     loadSelectedColumnsFromStorage();
 }
 
-function buildTableColGroup(tableId, columnCount) {
+function buildColumnCheckboxes(selectorId, columns, checkboxClass, tableId) {
+    const container = document.getElementById(selectorId);
+    columns.forEach(col => {
+        const label = document.createElement('label');
+        label.className = 'flex items-center gap-2 cursor-pointer';
+        label.innerHTML = `
+            <input type="checkbox" class="${checkboxClass}" value="${col.replace(/"/g, '&quot;')}" checked
+                onchange="toggleColumn('${tableId}', this)">
+            <span class="text-sm">${col}</span>
+        `;
+        container.appendChild(label);
+    });
+}
+
+/**
+ * Build <colgroup> with one <col> per column, each with an explicit fixed width.
+ * This is the KEY to keeping column widths consistent when some columns are hidden —
+ * because table-fixed layout honours <col> widths and hidden cols retain their slot.
+ */
+function buildTableColGroup(tableId, columns) {
     const table = document.getElementById(tableId);
     const colGroup = table.querySelector('colgroup');
     if (!colGroup) return;
     colGroup.innerHTML = '';
 
-    for (let i = 0; i < columnCount; i++) {
+    columns.forEach((colName, i) => {
         const col = document.createElement('col');
         col.dataset.columnIndex = i;
-        col.style.display = '';
-        col.style.visibility = '';
-        col.style.width = '';
-        col.style.minWidth = '';
+        col.dataset.columnName = colName;
+        const width = getColWidth(colName);
+        col.style.width = width;
+        col.style.minWidth = width;
+        col.style.maxWidth = width;
         colGroup.appendChild(col);
-    }
+    });
+
+    // Use fixed column widths but allow the table to shrink down to only visible columns.
+    table.style.tableLayout = 'fixed';
+    table.style.width = 'auto';
+    table.style.minWidth = '0';
+    table.style.maxWidth = 'none';
 }
 
 function loadSelectedColumnsFromStorage() {
-    const semesterSelected = localStorage.getItem('semesterSelectedColumns');
-    const signifikanSelected = localStorage.getItem('signifikanSelectedColumns');
+    restoreColumns('semester-column-checkbox', 'semesterSelectedColumns', 'semesterTable', semesterColumns);
+    restoreColumns('signifikan-column-checkbox', 'signifikanSelectedColumns', 'signifikanTable', signifikanColumns);
+    restoreColumns('nonSignifikan-column-checkbox', 'nonSignifikanSelectedColumns', 'nonSignifikanTable', nonSignifikanColumns);
+}
 
-    if (semesterSelected) {
-        const selected = JSON.parse(semesterSelected);
-        document.querySelectorAll('.semester-column-checkbox').forEach(cb => {
-            cb.checked = selected.includes(cb.value);
-            toggleColumn('semesterTable', cb);
-        });
+/**
+ * Restore column visibility from localStorage.
+ * IMPORTANT: only hide columns that are NOT in the saved selection.
+ * Columns that ARE selected remain visible (default state), so we only
+ * call applyColumnVisibility for unchecked ones — avoids accidentally
+ * hiding everything when localStorage has stale/partial data.
+ */
+function restoreColumns(checkboxClass, storageKey, tableId, allColumns) {
+    const saved = localStorage.getItem(storageKey);
+    if (!saved) return; // nothing saved → keep all visible (default)
+
+    let selected;
+    try {
+        selected = JSON.parse(saved);
+    } catch(e) {
+        localStorage.removeItem(storageKey);
+        return;
     }
 
-    if (signifikanSelected) {
-        const selected = JSON.parse(signifikanSelected);
-        document.querySelectorAll('.signifikan-column-checkbox').forEach(cb => {
-            cb.checked = selected.includes(cb.value);
-            toggleColumn('signifikanTable', cb);
-        });
+    // Validate: if saved list is empty or doesn't match any column, clear it
+    const valid = selected.filter(s => allColumns.includes(s));
+    if (valid.length === 0) {
+        localStorage.removeItem(storageKey);
+        return;
     }
 
-    const nonSignifikanSelected = localStorage.getItem('nonSignifikanSelectedColumns');
-    if (nonSignifikanSelected) {
-        const selected = JSON.parse(nonSignifikanSelected);
-        document.querySelectorAll('.nonSignifikan-column-checkbox').forEach(cb => {
-            cb.checked = selected.includes(cb.value);
-            toggleColumn('nonSignifikanTable', cb);
-        });
-    }
+    const table = document.getElementById(tableId);
+    document.querySelectorAll('.' + checkboxClass).forEach(cb => {
+        const shouldBeChecked = selected.includes(cb.value);
+        cb.checked = shouldBeChecked;
+        // Only need to hide; visible is already the default
+        if (!shouldBeChecked) {
+            applyColumnVisibility(table, cb.value, false);
+        }
+    });
+    updateAllColsVisibility(table);
+    updateGroupHeaders(table);
 }
 
 function toggleColumn(tableId, checkbox) {
     const table = document.getElementById(tableId);
-    const colName = checkbox.value;
-    const isChecked = checkbox.checked;
-    const needColVisibilityUpdate = toggleColumnCells(table, colName, isChecked);
-
-    if (needColVisibilityUpdate) {
-        updateAllColsVisibility(table);
-    }
-
+    applyColumnVisibility(table, checkbox.value, checkbox.checked);
+    updateAllColsVisibility(table);
     updateGroupHeaders(table);
-
-    // Save to localStorage
     saveSelectedColumns(tableId);
 }
 
-function toggleColumnCells(table, colName, isVisible) {
-    const escapedName = colName.replace(/"/g, '\\"');
-    const cells = table.querySelectorAll(`[data-column="${escapedName}"]`);
-    if (!cells.length) {
-        return false;
+/**
+ * Show/hide a column by:
+ * 1. Setting visibility:collapse on its <col> — browser hides the column slot
+ * 2. Setting display:none on all th/td cells in the active table — cross-browser fallback
+ *
+ * The <col> keeps its width value even when collapsed, so when you re-show it
+ * the table snaps back to exactly the right width.
+ */
+function applyColumnVisibility(table, colName, isVisible) {
+    // Find the <col> by column name and toggle visibility:collapse
+    const col = table.querySelector('colgroup col[data-column-name="' + CSS.escape(colName) + '"]');
+    if (col) {
+        const width = isVisible ? getColWidth(colName) : '0px';
+        col.style.visibility = isVisible ? '' : 'collapse';
+        col.style.display = isVisible ? '' : 'none';
+        col.style.width = width;
+        col.style.minWidth = width;
+        col.style.maxWidth = width;
     }
 
+    // Keep the table width auto so visible columns do not stretch when some are hidden.
+    table.style.width = 'auto';
+
+    // Toggle display on all cells (th + td) in this table with matching data-column attribute
+    const cells = table.querySelectorAll('[data-column]');
     cells.forEach(cell => {
-        cell.style.display = isVisible ? '' : 'none';
-    });
-
-    return true;
-}
-
-function updateGroupHeaders(table) {
-    const visibleLeafHeaders = Array.from(table.querySelectorAll('thead th[data-column]')).filter(th => th.style.display !== 'none');
-    const groupHeaders = Array.from(table.querySelectorAll('thead th[data-group]:not([data-column])'));
-
-    groupHeaders.forEach(groupCell => {
-        const groupList = (groupCell.dataset.group || '').split(' ').filter(Boolean);
-        if (!groupList.length) {
-            return;
-        }
-
-        const visibleChildren = visibleLeafHeaders.filter(leaf => {
-            const leafGroups = (leaf.dataset.group || '').split(' ').filter(Boolean);
-            return groupList.every(group => leafGroups.includes(group));
-        });
-
-        if (!visibleChildren.length) {
-            groupCell.style.display = 'none';
-            groupCell.colSpan = 0;
-        } else {
-            groupCell.style.display = '';
-            groupCell.colSpan = visibleChildren.length;
+        if (cell.getAttribute('data-column') === colName) {
+            cell.style.display = isVisible ? '' : 'none';
+            cell.style.padding = isVisible ? '' : '0';
+            cell.style.border = isVisible ? '' : 'none';
+            cell.style.overflow = isVisible ? '' : 'hidden';
         }
     });
 }
 
 function updateAllColsVisibility(table) {
-    const leafHeaders = Array.from(table.querySelectorAll('thead th[data-column]'));
     const cols = table.querySelectorAll('colgroup col');
-
-    leafHeaders.forEach((header, index) => {
-        const visible = header.style.display !== 'none';
-        const col = cols[index];
-        if (!col) {
-            return;
-        }
-
-        if (visible) {
-            col.style.display = '';
-            col.style.visibility = '';
-            col.style.width = '';
-            col.style.minWidth = '';
-        } else {
-            col.style.display = 'none';
+    cols.forEach(col => {
+        const name = col.dataset.columnName;
+        const hidden = col.style.visibility === 'collapse' || col.style.display === 'none';
+        if (hidden) {
             col.style.visibility = 'collapse';
+            col.style.display = 'none';
             col.style.width = '0px';
             col.style.minWidth = '0px';
+            col.style.maxWidth = '0px';
+        } else {
+            const width = getColWidth(name);
+            col.style.visibility = '';
+            col.style.display = '';
+            col.style.width = width;
+            col.style.minWidth = width;
+            col.style.maxWidth = width;
+        }
+    });
+}
+
+function updateGroupHeaders(table) {
+    const allLeafHeaders = Array.from(table.querySelectorAll('thead th[data-column]'));
+    const visibleLeafHeaders = allLeafHeaders.filter(th => th.style.display !== 'none');
+    const groupHeaders = Array.from(table.querySelectorAll('thead th[data-group]:not([data-column])'));
+
+    groupHeaders.forEach(groupCell => {
+        const groupList = (groupCell.dataset.group || '').split(' ').filter(Boolean);
+        if (!groupList.length) return;
+
+        const visibleChildren = visibleLeafHeaders.filter(leaf => {
+            const leafGroups = (leaf.dataset.group || '').split(' ').filter(Boolean);
+            return groupList.every(g => leafGroups.includes(g));
+        });
+
+        if (!visibleChildren.length) {
+            groupCell.style.display = 'none';
+            groupCell.colSpan = 1;
+        } else {
+            groupCell.style.display = '';
+            groupCell.colSpan = visibleChildren.length;
         }
     });
 }

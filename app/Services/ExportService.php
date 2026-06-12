@@ -203,7 +203,7 @@ class ExportService
     private function formatExportNumber(?int $value): string
     {
         if ($value === null) {
-            return '-';
+            return '';
         }
 
         return number_format($value, 0, '.', ',');
@@ -280,27 +280,26 @@ private function formatExportNumberBlank($value): string
             $counter++;
             $data[] = [
                 'no' => $counter,
-                'kode_komponen' => $k->kode_komponen ?? '-',
+                'kode_komponen' => $k->kode_komponen ?? '',
                 'kejadian_fraud' => $k->kejadianFraud?->count() ? $k->kejadianFraud->map(function($item) {
                     return $item->kode ? $item->kode . ' (' . $item->nama . ')' : $item->nama;
-                })->join("\n") : '-',
-                'id_kejadian' => $k->kejadianFraud?->count() ? $k->kejadianFraud->pluck('pivot.kode_kejadian')->filter()->join("\n") : '-',
+                })->join("\n") : '',
+                'id_kejadian' => $k->kejadianFraud?->count() ? $k->kejadianFraud->pluck('pivot.kode_kejadian')->filter()->join("\n") : '',
                 'jenis_fraud' => $k->jenisFraud?->count() ? $k->jenisFraud->map(function($item) {
                     return $item->kode ? $item->kode . ' (' . $item->nama . ')' : $item->nama;
-                })->join("\n") : '-',
-                'keterangan_jenis' => $k->jenisFraud?->count() ? $k->jenisFraud->pluck('pivot.keterangan')->filter()->join("\n") : '-',
-                'aktivitas_terkait' => $k->aktivitasTerkait ? ($k->aktivitasTerkait->kode ? $k->aktivitasTerkait->kode . ' (' . $k->aktivitasTerkait->nama . ')' : $k->aktivitasTerkait->nama) : '-',
-                'deskripsi_fraud' => $k->deskripsi_fraud ?? '-',
+                })->join("\n") : '',
+                'keterangan_jenis' => $k->jenisFraud?->count() ? $k->jenisFraud->pluck('pivot.keterangan')->filter()->join("\n") : '',
+                'aktivitas_terkait' => $k->aktivitasTerkait ? ($k->aktivitasTerkait->kode ? $k->aktivitasTerkait->kode . ' (' . $k->aktivitasTerkait->nama . ')' : $k->aktivitasTerkait->nama) : '',
+                'deskripsi_fraud' => $k->deskripsi_fraud ?? '',
                 'lokasi_fraud' => $k->lokasiFraud?->count() ? $k->lokasiFraud->map(function($item) {
                     return $item->kode ? $item->kode . ' (' . $item->nama . ')' : $item->nama;
-                })->join("\n") : '-',
-                'keterangan_lokasi' => $k->lokasiFraud?->count() ? $k->lokasiFraud->pluck('pivot.keterangan')->filter()->join("\n") : '-',
-                'divisi_unit' => $k->divisi_unit ?? '-',
-                'pihak_dirugikan' => $k->pihakDirugikan ? ($k->pihakDirugikan->kode ? $k->pihakDirugikan->kode . ' (' . $k->pihakDirugikan->nama . ')' : $k->pihakDirugikan->nama) : '-',
-                'waktu_awal' => $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '-',
-                'waktu_akhir' => $k->waktuFraud && $k->waktuFraud->waktu_akhir ? \Carbon\Carbon::parse($k->waktuFraud->waktu_akhir)->format('Y-m-d') : '-',
-                'fraud_diketahui' => $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '-',
-                'kategori_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('kategori_label')->join("\n") : '-',
+                })->join("\n") : '',
+                'keterangan_lokasi' => $k->lokasiFraud?->count() ? $k->lokasiFraud->pluck('pivot.keterangan')->filter()->join("\n") : '',
+                'divisi_unit' => $k->divisi_unit ?? '',
+                'pihak_dirugikan' => $k->pihakDirugikan ? ($k->pihakDirugikan->kode ? $k->pihakDirugikan->kode . ' (' . $k->pihakDirugikan->nama . ')' : $k->pihakDirugikan->nama) : '',
+                'waktu_awal' => $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '',
+                'waktu_akhir' => $k->waktuFraud && $k->waktuFraud->waktu_akhir ? \Carbon\Carbon::parse($k->waktuFraud->waktu_akhir)->format('Y-m-d') : '',
+                'fraud_diketahui' => $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '',
                 'ljk_rill' => $this->formatExportNumberBlank($k->kerugianFraud?->ljk_rill),
                 'ljk_potensial' => $this->formatExportNumberBlank($k->kerugianFraud?->ljk_potensial),
                 'ljk_recovery' => $this->formatExportNumberBlank($k->kerugianFraud?->getOutstandingForKategori('ljk')),
@@ -312,49 +311,49 @@ private function formatExportNumberBlank($value): string
                 'pihak_lain_recovery' => $this->formatExportNumberBlank($k->kerugianFraud?->getOutstandingForKategori('pihak_lain')),
                 'kelemahan' => $k->kelemahanFraud?->count() ? $k->kelemahanFraud->map(function($item) {
                     return $item->kode ? $item->kode . ' (' . $item->nama . ')' : $item->nama;
-                })->join("\n") : '-',
-                'keterangan_kelemahan' => $k->kelemahanFraud?->count() ? $k->kelemahanFraud->pluck('pivot.keterangan')->filter()->join("\n") : '-',
+                })->join("\n") : '',
+                'keterangan_kelemahan' => $k->kelemahanFraud?->count() ? $k->kelemahanFraud->pluck('pivot.keterangan')->filter()->join("\n") : '',
                 'tindakan_penanganan' => $k->penangananFraud?->count() ? $k->penangananFraud->map(function($item) {
                     return $item->kode ? $item->kode . ' (' . $item->nama . ')' : $item->nama;
-                })->join("\n") : '-',
-                'keterangan_penanganan' => $k->penangananFraud?->count() ? $k->penangananFraud->pluck('pivot.keterangan')->filter()->join("\n") : '-',
+                })->join("\n") : '',
+                'keterangan_penanganan' => $k->penangananFraud?->count() ? $k->penangananFraud->pluck('pivot.keterangan')->filter()->join("\n") : '',
                 'tindakan_perbaikan' => $k->pencegahanFraud?->count() ? $k->pencegahanFraud->map(function($item) {
-                    return $item->refPencegahan ? ($item->refPencegahan->kode ? $item->refPencegahan->kode . ' (' . $item->refPencegahan->nama . ')' : $item->refPencegahan->nama) : '-';
-                })->join("\n") : '-',
-                'keterangan_perbaikan' => $k->pencegahanFraud?->count() ? $k->pencegahanFraud->pluck('keterangan')->filter()->join("\n") : '-',
+                    return $item->refPencegahan ? ($item->refPencegahan->kode ? $item->refPencegahan->kode . ' (' . $item->refPencegahan->nama . ')' : $item->refPencegahan->nama) : '';
+                })->join("\n") : '',
+                'keterangan_perbaikan' => $k->pencegahanFraud?->count() ? $k->pencegahanFraud->pluck('keterangan')->filter()->join("\n") : '',
                 'target_waktu' => $k->pencegahanFraud?->count() ? $k->pencegahanFraud->map(function($item) {
-                    return $item->target_waktu ? \Carbon\Carbon::parse($item->target_waktu)->format('Y-m-d') : '-';
-                })->join("\n") : '-',
+                    return $item->target_waktu ? \Carbon\Carbon::parse($item->target_waktu)->format('Y-m-d') : '';
+                })->join("\n") : '',
                 'realisasi' => $k->pencegahanFraud?->count() ? $k->pencegahanFraud->map(function($item) {
-                    return $item->realisasi ? \Carbon\Carbon::parse($item->realisasi)->format('Y-m-d') : '-';
-                })->join("\n") : '-',
-                'kategori_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('kategori_label')->join("\n") : '-',
-                'nama_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('nama')->join("\n") : '-',
+                    return $item->realisasi ? \Carbon\Carbon::parse($item->realisasi)->format('Y-m-d') : '';
+                })->join("\n") : '',
+                'kategori_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('kategori_label')->join("\n") : '',
+                'nama_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('nama')->join("\n") : '',
                 'jenis_identitas' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->map(function($p) {
-                    return $p->jenisIdentitas ? ($p->jenisIdentitas->kode ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : $p->jenisIdentitas->nama) : '-';
-                })->join("\n") : '-',
-                'nomor_identitas' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('nomor_identitas')->join("\n") : '-',
-                'jenis_kelamin' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('jenis_kelamin_label')->join("\n") : '-',
-                'alamat_identitas' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('alamat_identitas')->join("\n") : '-',
-                'alamat_domisili' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('alamat_domisili')->join("\n") : '-',
-                'tempat_lahir' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('tempat_lahir')->join("\n") : '-',
+                    return $p->jenisIdentitas ? ($p->jenisIdentitas->kode ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : $p->jenisIdentitas->nama) : '';
+                })->join("\n") : '',
+                'nomor_identitas' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('nomor_identitas')->join("\n") : '',
+                'jenis_kelamin' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('jenis_kelamin_label')->join("\n") : '',
+                'alamat_identitas' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('alamat_identitas')->join("\n") : '',
+                'alamat_domisili' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('alamat_domisili')->join("\n") : '',
+                'tempat_lahir' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('tempat_lahir')->join("\n") : '',
                 'tanggal_lahir' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->map(function($p) {
-                    return $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '-';
-                })->join("\n") : '-',
+                    return $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '';
+                })->join("\n") : '',
                 'status_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->map(function($p) {
-                    return $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-';
-                })->join("\n") : '-',
+                    return $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '';
+                })->join("\n") : '',
                 'jabatan_kejadian' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->map(function($p) {
-                    return $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '-';
-                })->join("\n") : '-',
-                'ket_jabatan_kejadian' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('ket_jabatan_kejadian')->join("\n") : '-',
+                    return $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '';
+                })->join("\n") : '',
+                'ket_jabatan_kejadian' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('ket_jabatan_kejadian')->join("\n") : '',
                 'jabatan_diketahui' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->map(function($p) {
-                    return $p->jabatanDiketahui ? ($p->jabatanDiketahui->kode ? $p->jabatanDiketahui->kode . ' (' . $p->jabatanDiketahui->nama . ')' : $p->jabatanDiketahui->nama) : '-';
-                })->join("\n") : '-',
-                'ket_jabatan_diketahui' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('ket_jabatan_diketahui')->join("\n") : '-',
-                'keterangan_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('keterangan')->join("\n") : '-',
-                'sanksi' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('sanksi')->map(function($s) { return $s ?? '-'; })->join("\n") : '-',
-                'status_penanganan' => $this->getStatusLabels()[$k->status_penanganan] ?? ($k->status_penanganan ?? '-'),
+                    return $p->jabatanDiketahui ? ($p->jabatanDiketahui->kode ? $p->jabatanDiketahui->kode . ' (' . $p->jabatanDiketahui->nama . ')' : $p->jabatanDiketahui->nama) : '';
+                })->join("\n") : '',
+                'ket_jabatan_diketahui' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('ket_jabatan_diketahui')->join("\n") : '',
+                'keterangan_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('keterangan')->join("\n") : '',
+                'sanksi' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('sanksi')->map(function($s) { return $s ?? ''; })->join("\n") : '',
+                'status_penanganan' => $this->getStatusLabels()[$k->status_penanganan] ?? ($k->status_penanganan ?? ''),
             ];
         }
 
@@ -383,13 +382,12 @@ private function formatExportNumberBlank($value): string
             'Lokasi Fraud',
             'Keterangan Lokasi Fraud',
             'Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud',
-            'Pihak Yang Dirugikan',
-            'Jumlah Kerugian Potensial',
-            'Tindak Lanjut LJK',
             'Waktu Terjadi Awal',
             'Waktu Terjadi Akhir',
             'Fraud Diketahui',
-            'Kategori Pelaku',
+            'Pihak Yang Dirugikan',
+            'Jumlah Kerugian Potensial',
+            'Tindak Lanjut LJK',
             'Internal/Eksternal',
             'Nama Pelaku',
             'Jenis Identitas',
@@ -416,59 +414,59 @@ private function formatExportNumberBlank($value): string
             $counter++;
             $data[] = [
                 'no' => $counter,
-                'kode_komponen' => $k->kode_komponen ?? '-',
+                'kode_komponen' => $k->kode_komponen ?? '',
                 'kejadian_fraud' => $k->kejadianFraud?->map(function($item) {
                     return $item->kode ? $item->kode . ' (' . $item->nama . ')' : $item->nama;
-                })->join("\n") ?? '-',
-                'id_kejadian' => $k->kejadianFraud?->pluck('pivot.kode_kejadian')->filter()->join("\n") ?? '-',
+                })->join("\n") ?? '',
+                'id_kejadian' => $k->kejadianFraud?->pluck('pivot.kode_kejadian')->filter()->join("\n") ?? '',
                 'jenis_fraud' => $k->jenisFraud?->map(function($item) {
                     return $item->kode ? $item->kode . ' (' . $item->nama . ')' : $item->nama;
-                })->join("\n") ?? '-',
-                'keterangan_jenis' => $k->jenisFraud?->pluck('pivot.keterangan')->filter()->join("\n") ?? '-',
-                'aktivitas_terkait' => $k->aktivitasTerkait ? ($k->aktivitasTerkait->kode ? $k->aktivitasTerkait->kode . ' (' . $k->aktivitasTerkait->nama . ')' : $k->aktivitasTerkait->nama) : '-',
-                'deskripsi_fraud' => $k->deskripsi_fraud ?? '-',
+                })->join("\n") ?? '',
+                'keterangan_jenis' => $k->jenisFraud?->pluck('pivot.keterangan')->filter()->join("\n") ?? '',
+                'aktivitas_terkait' => $k->aktivitasTerkait ? ($k->aktivitasTerkait->kode ? $k->aktivitasTerkait->kode . ' (' . $k->aktivitasTerkait->nama . ')' : $k->aktivitasTerkait->nama) : '',
+                'deskripsi_fraud' => $k->deskripsi_fraud ?? '',
                 'lokasi_fraud' => $k->lokasiFraud?->map(function($item) {
                     return $item->kode ? $item->kode . ' (' . $item->nama . ')' : $item->nama;
-                })->join("\n") ?? '-',
-                'keterangan_lokasi' => $k->lokasiFraud?->pluck('pivot.keterangan')->filter()->join("\n") ?? '-',
-                'divisi_unit' => $k->divisi_unit ?? '-',
-                'pihak_dirugikan' => $k->pihakDirugikan ? ($k->pihakDirugikan->kode ? $k->pihakDirugikan->kode . ' (' . $k->pihakDirugikan->nama . ')' : $k->pihakDirugikan->nama) : '-',
+                })->join("\n") ?? '',
+                'keterangan_lokasi' => $k->lokasiFraud?->pluck('pivot.keterangan')->filter()->join("\n") ?? '',
+                'divisi_unit' => $k->divisi_unit ?? '',
+                'waktu_awal' => $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '',
+                'waktu_akhir' => $k->waktuFraud && $k->waktuFraud->waktu_akhir ? \Carbon\Carbon::parse($k->waktuFraud->waktu_akhir)->format('Y-m-d') : '',
+                'fraud_diketahui' => $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '',
+                'pihak_dirugikan' => $k->pihakDirugikan ? ($k->pihakDirugikan->kode ? $k->pihakDirugikan->kode . ' (' . $k->pihakDirugikan->nama . ')' : $k->pihakDirugikan->nama) : '',
                 'kerugian_potensial' => $this->formatExportNumber($this->sumExportNumbers(
                     $k->kerugianFraud?->ljk_potensial,
                     $k->kerugianFraud?->konsumen_potensial,
                     $k->kerugianFraud?->pihak_lain_potensial
                 )),
-                'tindak_lanjut_ljk' => $k->tindak_lanjut_ljk ?? '-',
-                'waktu_awal' => $k->waktuFraud && $k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '-',
-                'waktu_akhir' => $k->waktuFraud && $k->waktuFraud->waktu_akhir ? \Carbon\Carbon::parse($k->waktuFraud->waktu_akhir)->format('Y-m-d') : '-',
-                'fraud_diketahui' => $k->waktuFraud && $k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '-',
-                'kategori_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('kategori_label')->join("\n") : '-',
-                'nama_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('nama')->join("\n") : '-',
+                'tindak_lanjut_ljk' => $k->tindak_lanjut_ljk ?? '',
+                'kategori_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('kategori_label')->join("\n") : '',
+                'nama_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('nama')->join("\n") : '',
                 'jenis_identitas' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->map(function($p) {
-                    return $p->jenisIdentitas ? ($p->jenisIdentitas->kode ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : $p->jenisIdentitas->nama) : '-';
-                })->join("\n") : '-',
-                'nomor_identitas' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('nomor_identitas')->join("\n") : '-',
-                'jenis_kelamin' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('jenis_kelamin_label')->join("\n") : '-',
-                'tempat_lahir' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('tempat_lahir')->join("\n") : '-',
+                    return $p->jenisIdentitas ? ($p->jenisIdentitas->kode ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : $p->jenisIdentitas->nama) : '';
+                })->join("\n") : '',
+                'nomor_identitas' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('nomor_identitas')->join("\n") : '',
+                'jenis_kelamin' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('jenis_kelamin_label')->join("\n") : '',
+                'tempat_lahir' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('tempat_lahir')->join("\n") : '',
                 'tanggal_lahir' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->map(function($p) {
-                    return $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '-';
-                })->join("\n") : '-',
-                'alamat_identitas' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('alamat_identitas')->join("\n") : '-',
-                'alamat_domisili' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('alamat_domisili')->join("\n") : '-',
+                    return $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '';
+                })->join("\n") : '',
+                'alamat_identitas' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('alamat_identitas')->join("\n") : '',
+                'alamat_domisili' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('alamat_domisili')->join("\n") : '',
                 'status_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->map(function($p) {
-                    return $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-';
-                })->join("\n") : '-',
+                    return $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '';
+                })->join("\n") : '',
                 'jabatan_kejadian' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->map(function($p) {
-                    return $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '-';
-                })->join("\n") : '-',
-                'ket_jabatan_kejadian' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('ket_jabatan_kejadian')->join("\n") : '-',
+                    return $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '';
+                })->join("\n") : '',
+                'ket_jabatan_kejadian' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('ket_jabatan_kejadian')->join("\n") : '',
                 'jabatan_diketahui' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->map(function($p) {
-                    return $p->jabatanDiketahui ? ($p->jabatanDiketahui->kode ? $p->jabatanDiketahui->kode . ' (' . $p->jabatanDiketahui->nama . ')' : $p->jabatanDiketahui->nama) : '-';
-                })->join("\n") : '-',
-                'ket_jabatan_diketahui' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('ket_jabatan_diketahui')->join("\n") : '-',
-                'keterangan_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('keterangan')->join("\n") : '-',
-                'sanksi' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('sanksi')->map(fn($s) => $s ?? '-')->join("\n") : '-',
-                'status_penanganan' => $this->getStatusLabels()[$k->status_penanganan] ?? ($k->status_penanganan ?? '-'),
+                    return $p->jabatanDiketahui ? ($p->jabatanDiketahui->kode ? $p->jabatanDiketahui->kode . ' (' . $p->jabatanDiketahui->nama . ')' : $p->jabatanDiketahui->nama) : '';
+                })->join("\n") : '',
+                'ket_jabatan_diketahui' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('ket_jabatan_diketahui')->join("\n") : '',
+                'keterangan_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('keterangan')->join("\n") : '',
+                'sanksi' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('sanksi')->map(fn($s) => $s ?? '')->join("\n") : '',
+                'status_penanganan' => $this->getStatusLabels()[$k->status_penanganan] ?? ($k->status_penanganan ?? ''),
             ];
         }
 
@@ -481,6 +479,7 @@ private function formatExportNumberBlank($value): string
         ];
     }
 
+    // 1. PASTIKAN METHOD INI ADA DAN BERDIRI SENDIRI DI DALAM CLASS
     private function getNonSignifikanColumnKeys(): array
     {
         return [
@@ -495,7 +494,7 @@ private function formatExportNumberBlank($value): string
             'lokasi_fraud',
             'keterangan_lokasi',
             'divisi_unit',
-            'pihak_dirugikan',
+            'pihak_dirugikan',       // Urutan disesuaikan dengan Excel Anda sebelumnya
             'kerugian_potensial',
             'tindak_lanjut_ljk',
             'waktu_awal',
@@ -521,6 +520,7 @@ private function formatExportNumberBlank($value): string
         ];
     }
 
+    // 2. METHOD UTAMA UNTUK EXPORT
     public function prepareExportDataNonSignifikan(Collection $kasus): array
     {
         $nonSignifikanKasus = $kasus;
@@ -537,14 +537,13 @@ private function formatExportNumberBlank($value): string
             'Lokasi Fraud',
             'Keterangan Lokasi Fraud',
             'Divisi atau Unit Kerja dan/atau Lini Bisnis Terjadinya Fraud',
-            'Pihak Yang Dirugikan',
-            'Jumlah Kerugian Potensial',
-            'Tindak Lanjut LJK',
-            'Waktu Terjadi Awal',
-            'Waktu Terjadi Akhir',
-            'Fraud Diketahui',
-            'Kategori Pelaku',
-            'Internal/Eksternal',
+            'Pihak Yang Dirugikan', 
+            'Jumlah Kerugian Potensial', 
+            'Tindak Lanjut LJK', 
+            'Waktu Terjadi Awal', 
+            'Waktu Terjadi Akhir', 
+            'Fraud Diketahui', 
+            'Internal/Eksternal', 
             'Nama Pelaku',
             'Jenis Identitas',
             'Nomor Identitas',
@@ -562,65 +561,71 @@ private function formatExportNumberBlank($value): string
             'Pengenaan Sanksi',
             'Status Penanganan'
         ];
+
+        // Sekarang $this->getNonSignifikanColumnKeys() tidak akan error lagi
         $keys = $this->getNonSignifikanColumnKeys();
 
         $data = [];
         foreach ($nonSignifikanKasus as $index => $k) {
             $data[] = [
                 'no' => $index + 1,
-                'kode_komponen' => $k->kode_komponen ?? '-',
+                'kode_komponen' => $k->kode_komponen ?? '',
                 'kejadian_fraud' => $k->kejadianFraud?->map(function($item) {
                     return $item->kode ? $item->kode . ' (' . $item->nama . ')' : $item->nama;
-                })->join("\n") ?? '-',
-                'id_kejadian' => $k->kejadianFraud?->pluck('pivot.kode_kejadian')->filter()->join("\n") ?? '-',
+                })->join("\n") ?? '',
+                'id_kejadian' => $k->kejadianFraud?->pluck('pivot.kode_kejadian')->filter()->join("\n") ?? '',
                 'jenis_fraud' => $k->jenisFraud?->map(function($item) {
                     return $item->kode ? $item->kode . ' (' . $item->nama . ')' : $item->nama;
-                })->join("\n") ?? '-',
-                'keterangan_jenis' => $k->jenisFraud?->pluck('pivot.keterangan')->filter()->join("\n") ?? '-',
-                'aktivitas_terkait' => $k->aktivitasTerkait ? ($k->aktivitasTerkait->kode ? $k->aktivitasTerkait->kode . ' (' . $k->aktivitasTerkait->nama . ')' : $k->aktivitasTerkait->nama) : '-',
-                'deskripsi_fraud' => $k->deskripsi_fraud ?? '-',
+                })->join("\n") ?? '',
+                'keterangan_jenis' => $k->jenisFraud?->pluck('pivot.keterangan')->filter()->join("\n") ?? '',
+                'aktivitas_terkait' => $k->aktivitasTerkait ? ($k->aktivitasTerkait->kode ? $k->aktivitasTerkait->kode . ' (' . $k->aktivitasTerkait->nama . ')' : $k->aktivitasTerkait->nama) : '',
+                'deskripsi_fraud' => $k->deskripsi_fraud ?? '',
                 'lokasi_fraud' => $k->lokasiFraud?->map(function($item) {
                     return $item->kode ? $item->kode . ' (' . $item->nama . ')' : $item->nama;
-                })->join("\n") ?? '-',
-                'keterangan_lokasi' => $k->lokasiFraud?->pluck('pivot.keterangan')->filter()->join("\n") ?? '-',
-                'divisi_unit' => $k->divisi_unit ?? '-',
-                'pihak_dirugikan' => $k->pihakDirugikan ? ($k->pihakDirugikan->kode ? $k->pihakDirugikan->kode . ' (' . $k->pihakDirugikan->nama . ')' : $k->pihakDirugikan->nama) : '-',
+                })->join("\n") ?? '',
+                'keterangan_lokasi' => $k->lokasiFraud?->pluck('pivot.keterangan')->filter()->join("\n") ?? '',
+                'divisi_unit' => $k->divisi_unit ?? '',
+                
+                'pihak_dirugikan' => $k->pihakDirugikan ? ($k->pihakDirugikan->kode ? $k->pihakDirugikan->kode . ' (' . $k->pihakDirugikan->nama . ')' : $k->pihakDirugikan->nama) : '',
                 'kerugian_potensial' => $this->formatExportNumber($this->sumExportNumbers(
                     $k->kerugianFraud?->ljk_potensial,
                     $k->kerugianFraud?->konsumen_potensial,
                     $k->kerugianFraud?->pihak_lain_potensial
                 )),
-                'tindak_lanjut_ljk' => $k->tindak_lanjut_ljk ?? '-',
-                'waktu_awal' => $k->waktuFraud ? ($k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '-') : '-',
-                'waktu_akhir' => $k->waktuFraud ? ($k->waktuFraud->waktu_akhir ? \Carbon\Carbon::parse($k->waktuFraud->waktu_akhir)->format('Y-m-d') : '-') : '-',
-                'fraud_diketahui' => $k->waktuFraud ? ($k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '-') : '-',
-                'kategori_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('kategori_label')->join("\n") : '-',
-                'nama_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('nama')->join("\n") : '-',
+                'tindak_lanjut_ljk' => $k->tindak_lanjut_ljk ?? '',
+                
+                'waktu_awal' => $k->waktuFraud ? ($k->waktuFraud->waktu_awal ? \Carbon\Carbon::parse($k->waktuFraud->waktu_awal)->format('Y-m-d') : '') : '',
+                'waktu_akhir' => $k->waktuFraud ? ($k->waktuFraud->waktu_akhir ? \Carbon\Carbon::parse($k->waktuFraud->waktu_akhir)->format('Y-m-d') : '') : '',
+                'fraud_diketahui' => $k->waktuFraud ? ($k->waktuFraud->waktu_diketahui ? \Carbon\Carbon::parse($k->waktuFraud->waktu_diketahui)->format('Y-m-d') : '') : '',
+                
+                'kategori_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('kategori_label')->join("\n") : '',
+                
+                'nama_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('nama')->join("\n") : '',
                 'jenis_identitas' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->map(function($p) {
-                    return $p->jenisIdentitas ? ($p->jenisIdentitas->kode ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : $p->jenisIdentitas->nama) : '-';
-                })->join("\n") : '-',
-                'nomor_identitas' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('nomor_identitas')->join("\n") : '-',
-                'jenis_kelamin' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('jenis_kelamin_label')->join("\n") : '-',
-                'tempat_lahir' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('tempat_lahir')->join("\n") : '-',
+                    return $p->jenisIdentitas ? ($p->jenisIdentitas->kode ? $p->jenisIdentitas->kode . ' (' . $p->jenisIdentitas->nama . ')' : $p->jenisIdentitas->nama) : '';
+                })->join("\n") : '',
+                'nomor_identitas' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('nomor_identitas')->join("\n") : '',
+                'jenis_kelamin' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('jenis_kelamin_label')->join("\n") : '',
+                'tempat_lahir' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('tempat_lahir')->join("\n") : '',
                 'tanggal_lahir' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->map(function($p) {
-                    return $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '-';
-                })->join("\n") : '-',
-                'alamat_identitas' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('alamat_identitas')->join("\n") : '-',
-                'alamat_domisili' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('alamat_domisili')->join("\n") : '-',
+                    return $p->tanggal_lahir ? \Carbon\Carbon::parse($p->tanggal_lahir)->format('Y-m-d') : '';
+                })->join("\n") : '',
+                'alamat_identitas' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('alamat_identitas')->join("\n") : '',
+                'alamat_domisili' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('alamat_domisili')->join("\n") : '',
                 'status_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->map(function($p) {
-                    return $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '-';
-                })->join("\n") : '-',
+                    return $p->statusPelaku ? ($p->statusPelaku->kode ? $p->statusPelaku->kode . ' (' . $p->statusPelaku->nama . ')' : $p->statusPelaku->nama) : '';
+                })->join("\n") : '',
                 'jabatan_kejadian' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->map(function($p) {
-                    return $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '-';
-                })->join("\n") : '-',
-                'ket_jabatan_kejadian' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('ket_jabatan_kejadian')->join("\n") : '-',
+                    return $p->jabatanKejadian ? ($p->jabatanKejadian->kode ? $p->jabatanKejadian->kode . ' (' . $p->jabatanKejadian->nama . ')' : $p->jabatanKejadian->nama) : '';
+                })->join("\n") : '',
+                'ket_jabatan_kejadian' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('ket_jabatan_kejadian')->join("\n") : '',
                 'jabatan_diketahui' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->map(function($p) {
-                    return $p->jabatanDiketahui ? ($p->jabatanDiketahui->kode ? $p->jabatanDiketahui->kode . ' (' . $p->jabatanDiketahui->nama . ')' : $p->jabatanDiketahui->nama) : '-';
-                })->join("\n") : '-',
-                'ket_jabatan_diketahui' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('ket_jabatan_diketahui')->join("\n") : '-',
-                'keterangan_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('keterangan')->join("\n") : '-',
-                'sanksi' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('sanksi')->map(fn($s) => $s ?? '-')->join("\n") : '-',
-                'status_penanganan' => $this->getStatusLabels()[$k->status_penanganan] ?? ($k->status_penanganan ?? '-'),
+                    return $p->jabatanDiketahui ? ($p->jabatanDiketahui->kode ? $p->jabatanDiketahui->kode . ' (' . $p->jabatanDiketahui->nama . ')' : $p->jabatanDiketahui->nama) : '';
+                })->join("\n") : '',
+                'ket_jabatan_diketahui' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('ket_jabatan_diketahui')->join("\n") : '',
+                'keterangan_pelaku' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('keterangan')->join("\n") : '',
+                'sanksi' => $k->pelakuFrauds?->count() ? $k->pelakuFrauds->pluck('sanksi')->map(fn($s) => $s ?? '')->join("\n") : '',
+                'status_penanganan' => $this->getStatusLabels()[$k->status_penanganan] ?? ($k->status_penanganan ?? ''),
             ];
         }
 
@@ -632,6 +637,7 @@ private function formatExportNumberBlank($value): string
             'type' => 'non-signifikan'
         ];
     }
+
 
     /**
      * Get summary statistics

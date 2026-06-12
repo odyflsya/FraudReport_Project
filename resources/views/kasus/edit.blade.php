@@ -85,20 +85,6 @@
                         </div>
                     </div>
 
-                    @php
-                        $kerugianDetailsJson = '[]';
-                        if ($kasus->kerugianFraud && $kasus->kerugianFraud->details) {
-                            $kerugianDetailsJson = json_encode($kasus->kerugianFraud->details->map(fn ($d) => [
-                                'id' => $d->id,
-                                'kategori' => $d->kategori,
-                                'tipe' => $d->tipe,
-                                'nominal' => $d->nominal,
-                                'no_rekening' => $d->no_rekening,
-                            ])->values()->all());
-                        }
-                    @endphp
-                    @include('kasus.partials.kerugian-detail-manager', ['kerugianDetailsJson' => $kerugianDetailsJson])
-
                     <!-- SECTION: KEJADIAN FRAUD MENURUT PELAKU -->
                     <div>
                         <h3 class="mb-4 text-lg font-semibold text-slate-900">Kejadian Fraud Menurut Pelaku</h3>
@@ -378,6 +364,20 @@
                             </div>
                         </div>
 
+                    @php
+                        $kerugianDetailsJson = '[]';
+                        if ($kasus->kerugianFraud && $kasus->kerugianFraud->details) {
+                            $kerugianDetailsJson = json_encode($kasus->kerugianFraud->details->map(fn ($d) => [
+                                'id' => $d->id,
+                                'kategori' => $d->kategori,
+                                'tipe' => $d->tipe,
+                                'nominal' => $d->nominal,
+                                'no_rekening' => $d->no_rekening,
+                            ])->values()->all());
+                        }
+                    @endphp
+                    @include('kasus.partials.kerugian-detail-manager', ['kerugianDetailsJson' => $kerugianDetailsJson])
+
                         <div>
                             <h3 class="mb-4 text-lg font-semibold text-slate-900">Histori Recovery Tercatat</h3>
                             @php
@@ -405,6 +405,16 @@
                                                     <td class="border-b px-3 py-2 text-right">Rp {{ number_format($row['amount'], 0, ',', '.') }}</td>
                                                     <td class="border-b px-3 py-2 text-right font-medium">Rp {{ number_format($row['total_outstanding'], 0, ',', '.') }}</td>
                                                     <td class="border-b px-3 py-2 text-center">
+                                                        <button type="button"
+                                                            class="edit-recovery-button text-xs font-semibold text-blue-600 hover:text-blue-800 mr-3"
+                                                            data-recovery-id="{{ $row['id'] }}"
+                                                            data-tanggal="{{ $row['tanggal'] }}"
+                                                            data-kategori="{{ $row['kategori'] }}"
+                                                            data-no-rekening="{{ $row['no_rekening'] ?? '' }}"
+                                                            data-amount="{{ $row['amount'] }}">
+                                                            Edit
+                                                        </button>
+
                                                         <button type="button" data-recovery-id="{{ $row['id'] }}" class="delete-recovery-button text-xs font-semibold text-red-600 hover:text-red-800">Hapus</button>
                                                     </td>
                                                 </tr>
@@ -696,7 +706,62 @@
     </div>
 </div>
 
+<!-- Edit Recovery Modal -->
+<div id="editRecoveryModal" class="fixed inset-0 z-50 hidden items-center justify-center">
+    <div id="editRecoveryBackdrop" class="absolute inset-0 bg-black/50"></div>
+    <div class="relative bg-white rounded-xl shadow-lg w-full max-w-lg mx-4">
+        <div class="flex items-center justify-between border-b px-4 py-3">
+            <h3 class="text-lg font-semibold">Edit Recovery</h3>
+            <button type="button" id="closeEditRecoveryModal" class="text-slate-600 hover:text-slate-800">✕</button>
+        </div>
+
+        <form id="editRecoveryForm" method="POST" action="">
+            @csrf
+            @method('PUT')
+            <div class="p-4 space-y-3">
+                <div>
+                    <label for="edit_recovery_tanggal" class="mb-1 block text-sm font-medium text-slate-700">Tanggal</label>
+                    <input id="edit_recovery_tanggal" name="tanggal" type="date" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                </div>
+
+                <div>
+                    <label for="edit_recovery_kategori" class="mb-1 block text-sm font-medium text-slate-700">Kategori</label>
+                    <input id="edit_recovery_kategori" name="kategori" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                </div>
+
+                <div>
+                    <label for="edit_recovery_no_rekening" class="mb-1 block text-sm font-medium text-slate-700">Nomor Rekening</label>
+                    <input id="edit_recovery_no_rekening" name="no_rekening" type="text" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                </div>
+
+                <div>
+                    <label for="edit_recovery_amount" class="mb-1 block text-sm font-medium text-slate-700">Nominal Recovery</label>
+                    <input id="edit_recovery_amount" name="amount" type="text" inputmode="numeric" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm">
+                </div>
+            </div>
+
+            <div class="flex items-center justify-end gap-3 border-t px-4 py-3">
+                <button type="button" id="cancelEditRecovery" class="px-4 py-2 rounded-lg border bg-white text-sm">Batal</button>
+                <button type="submit" class="px-4 py-2 rounded-lg bg-green-600 text-white text-sm">Simpan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
 <script>
+const amountInput = document.getElementById('edit_recovery_amount');
+
+if (amountInput) {
+    amountInput.addEventListener('input', function (e) {
+        let angka = e.target.value.replace(/[^\d]/g, '');
+        if (!angka) {
+            e.target.value = '';
+            return;
+        }
+        e.target.value = angka.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    });
+}
+    
     function validateDuplicateOptionValue(selectElement) {
         const values = {};
         let hasDuplicate = false;
@@ -720,11 +785,7 @@
 
     function toggleKeteranganField(selectElement, wrapperId) {
         const wrapper = document.getElementById(wrapperId);
-        
-        // Safety check - wrapper might not exist
-        if (!wrapper) {
-            return;
-        }
+        if (!wrapper) return;
         
         const selectedOption = selectElement.options[selectElement.selectedIndex];
         const selectedCode = selectedOption.getAttribute('data-keterangan-code');
@@ -746,8 +807,17 @@
         }
     }
 
+    // =========================================================================
+    // FIX UTAMA 1: AMANKAN INPUT HIDDEN RINCIAN AGAR TIDAK DIHAPUS OTOMATIS
+    // =========================================================================
     function clearInputsAndDisable(wrapper) {
+        if (!wrapper) return;
         wrapper.querySelectorAll('input, select, textarea').forEach(element => {
+            // JANGAN hapus atau disable input data rincian manager!
+            if (element.id === 'kerugian_details_input' || element.name === 'kerugian_details') {
+                return; 
+            }
+
             if (element.tagName === 'SELECT') {
                 element.selectedIndex = 0;
             } else if (element.type === 'checkbox' || element.type === 'radio') {
@@ -761,7 +831,12 @@
     }
 
     function enableInputs(wrapper) {
+        if (!wrapper) return;
         wrapper.querySelectorAll('input, select, textarea').forEach(element => {
+            if (element.id === 'kerugian_details_input' || element.name === 'kerugian_details') {
+                element.disabled = false;
+                return; 
+            }
             element.disabled = false;
         });
     }
@@ -824,13 +899,15 @@
         if (form) {
             form.addEventListener('submit', () => {
                 currencyInputs.forEach(input => {
-                    input.value = sanitizeCurrencyValue(input.value);
+                    // Amankan input rincian hidden agar tidak rusak saat di-sanitize teks rupiah biasa
+                    if (input.id !== 'kerugian_details_input') {
+                        input.value = sanitizeCurrencyValue(input.value);
+                    }
                 });
             });
         }
     }
-
-    // Store deleted recovery IDs
+    
     const deletedRecoveryIds = new Set();
 
     function initRecoveryDeleteButtons() {
@@ -840,14 +917,10 @@
                 e.stopPropagation();
                 
                 const recoveryId = parseInt(button.getAttribute('data-recovery-id'), 10);
-                console.log('Delete button clicked for recovery ID:', recoveryId);
                 
-                // Show confirmation dialog
                 if (confirm('Yakin ingin menghapus entry recovery ini?')) {
                     const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                    console.log('CSRF Token found:', !!csrfToken);
                     
-                    // Send AJAX DELETE request
                     fetch(`/recovery/${recoveryId}`, {
                         method: 'DELETE',
                         headers: {
@@ -857,35 +930,76 @@
                         }
                     })
                     .then(response => {
-                        console.log('Response status:', response.status);
-                        if (!response.ok) {
-                            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                        }
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
                         return response.json();
                     })
                     .then(data => {
-                        console.log('Response data:', data);
                         if (data.success) {
-                            // Remove card from UI
-                            const wrapper = button.closest('.rounded-3xl');
-                            if (wrapper) {
-                                wrapper.remove();
-                                console.log('Card removed from UI');
-                            }
+                            const wrapper = button.closest('tr') || button.closest('.rounded-3xl');
+                            if (wrapper) wrapper.remove();
                             alert('✓ Entry recovery berhasil dihapus!');
                         } else {
                             alert('❌ Gagal menghapus: ' + (data.message || 'Unknown error'));
                         }
                     })
                     .catch(error => {
-                        console.error('Delete error:', error);
                         alert('❌ Terjadi kesalahan saat menghapus:\n' + error.message);
                     });
                 }
             });
         });
-        
-        console.log('Delete recovery buttons initialized:', document.querySelectorAll('.delete-recovery-button').length);
+    }
+
+    function initEditRecoveryButtons() {
+        const modal = document.getElementById('editRecoveryModal');
+        const backdrop = document.getElementById('editRecoveryBackdrop');
+        const closeBtn = document.getElementById('closeEditRecoveryModal');
+        const cancelBtn = document.getElementById('cancelEditRecovery');
+        const form = document.getElementById('editRecoveryForm');
+
+        if (!modal || !form) return;
+
+        function openModalForRow(button) {
+            const id = button.getAttribute('data-recovery-id');
+            const tanggal = button.getAttribute('data-tanggal');
+            const kategori = button.getAttribute('data-kategori') || '';
+            const noRek = button.getAttribute('data-no-rekening') || '';
+            const amount = button.getAttribute('data-amount') || '';
+
+            document.getElementById('edit_recovery_tanggal').value = tanggal ? tanggal.split(' ')[0] : '';
+            document.getElementById('edit_recovery_kategori').value = kategori;
+            document.getElementById('edit_recovery_no_rekening').value = noRek;
+            document.getElementById('edit_recovery_amount').value = amount;
+
+            form.action = '/recovery/' + id;
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.querySelectorAll('.edit-recovery-button').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                openModalForRow(btn);
+            });
+        });
+
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+        if (backdrop) backdrop.addEventListener('click', closeModal);
+
+        form.addEventListener('submit', function () {
+            const amountInput = document.getElementById('edit_recovery_amount');
+            if (amountInput) {
+                amountInput.value = amountInput.value.replace(/\./g, '');
+            }
+        });
     }
 
     function toggleJenisLaporanFields() {
@@ -895,9 +1009,7 @@
         const relatedSection = document.getElementById('semester_related_sections');
         const hiddenFields = document.querySelectorAll('.signifikan-hidden');
 
-        if (!jenisLaporanSelect || !wrapper || !textarea) {
-            return;
-        }
+        if (!jenisLaporanSelect || !wrapper || !textarea) return;
 
         if (jenisLaporanSelect.value === 'signifikan' || jenisLaporanSelect.value === 'non-signifikan') {
             wrapper.classList.remove('hidden');
@@ -928,14 +1040,27 @@
             });
         }
 
+        // Pastikan input rincian dipaksa aktif terus apa pun jenis laporannya
+        const mainInputRincian = document.getElementById('kerugian_details_input');
+        if (mainInputRincian) {
+            mainInputRincian.disabled = false;
+        }
+
+        // Render ulang modal table rincian agar isinya tidak pecah/kosong di view
+        if (window.KerugianDetailManager && typeof window.KerugianDetailManager.renderModalTable === 'function') {
+            window.KerugianDetailManager.renderModalTable();
+        }
+
         checkFormValidity();
     }
 
     function checkFormValidity() {
         const form = document.getElementById('kasusForm');
+        if (!form) return;
         const submitButton = form.querySelector('button[type="submit"]');
+        if (!submitButton) return;
+        
         const isValid = form.checkValidity();
-
         submitButton.disabled = !isValid;
         submitButton.classList.toggle('opacity-50', !isValid);
         submitButton.classList.toggle('cursor-not-allowed', !isValid);
@@ -965,19 +1090,20 @@
             toggleJenisLaporanFields();
         }
 
-        // Add input event listeners to check form validity
         const form = document.getElementById('kasusForm');
-        const inputs = form.querySelectorAll('input, select, textarea');
-        inputs.forEach(input => {
-            input.addEventListener('input', checkFormValidity);
-            input.addEventListener('change', checkFormValidity);
-        });
+        if (form) {
+            const inputs = form.querySelectorAll('input, select, textarea');
+            inputs.forEach(input => {
+                input.addEventListener('input', checkFormValidity);
+                input.addEventListener('change', checkFormValidity);
+            });
+        }
 
         initCurrencyInputs();
         initRecoveryDeleteButtons();
+        initEditRecoveryButtons();
         checkFormValidity();
     });
-
 </script>
 
 @endsection
