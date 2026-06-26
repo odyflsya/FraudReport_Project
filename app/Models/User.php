@@ -24,6 +24,8 @@ class User extends Authenticatable implements MustVerifyEmailContract
         'email',
         'password',
         'profile_photo_path',
+        'role',
+        'status',
     ];
 
     /**
@@ -47,5 +49,15 @@ class User extends Authenticatable implements MustVerifyEmailContract
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function activities()
+    {
+        return $this->hasMany(UserActivity::class);
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role === 'admin';
     }
 }

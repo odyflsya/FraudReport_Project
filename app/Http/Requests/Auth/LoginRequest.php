@@ -6,6 +6,8 @@ use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
+use App\Models\UserActivity;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -45,6 +47,20 @@ class LoginRequest extends FormRequest
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
+            // Log failed login attempt
+            $user = User::where('email', $this->string('email'))->first();
+            UserActivity::create([
+                'user_id' => $user?->id,
+                'name' => $user?->name,
+                'email' => $this->string('email'),
+                'role' => $user?->role,
+                'activity' => 'Failed Login',
+                'module' => 'Auth',
+                'description' => 'Failed login attempt',
+                'ip_address' => $this->ip(),
+                'user_agent' => $this->userAgent(),
+            ]);
+
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
@@ -56,6 +72,29 @@ class LoginRequest extends FormRequest
 
             throw ValidationException::withMessages([
                 'email' => 'Akun belum terverifikasi. Silakan periksa email Anda untuk kode verifikasi.',
+            ]);
+        }
+
+        // Check active status
+        if (Auth::user()?->status !== 'active') {
+            $u = Auth::user();
+            Auth::guard()->logout();
+            RateLimiter::hit($this->throttleKey());
+
+            UserActivity::create([
+                'user_id' => $u?->id,
+                'name' => $u?->name,
+                'email' => $u?->email,
+                'role' => $u?->role,
+                'activity' => 'Blocked Login',
+                'module' => 'Auth',
+                'description' => 'Attempt to login with non-active status: '.($u?->status ?? 'unknown'),
+                'ip_address' => $this->ip(),
+                'user_agent' => $this->userAgent(),
+            ]);
+
+            throw ValidationException::withMessages([
+                'email' => 'Akun tidak aktif. Silakan hubungi administrator.',
             ]);
         }
 

@@ -12,7 +12,7 @@ class RefTindakanPenangananSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('ref_tindakan_penanganan')->insert([
+        DB::table('ref_tindakan_penanganan')->insertOrIgnore([
             ['kode' => '01', 'nama' => 'Pemberian surat peringatan'],
             ['kode' => '02', 'nama' => 'Rotasi atau mutasi'],
             ['kode' => '03', 'nama' => 'Penurunan jabatan'],

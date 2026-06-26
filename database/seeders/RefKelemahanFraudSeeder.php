@@ -12,7 +12,7 @@ class RefKelemahanFraudSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('ref_kelemahan_fraud')->insert([
+        DB::table('ref_kelemahan_fraud')->insertOrIgnore([
             ['kode' => '101', 'nama' => 'Sumber Daya Manusia – Integritas'],
             ['kode' => '102', 'nama' => 'Sumber Daya Manusia – Kompetensi'],
             ['kode' => '201', 'nama' => 'Sistem Pengendalian internal – Pengendalian internal Pimpinan'],

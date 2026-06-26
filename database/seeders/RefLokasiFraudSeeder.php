@@ -12,7 +12,7 @@ class RefLokasiFraudSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('ref_lokasi_fraud')->insert([
+        DB::table('ref_lokasi_fraud')->insertOrIgnore([
             ['kode' => '01', 'nama' => 'Kantor Pusat Operasional'],
             ['kode' => '02', 'nama' => 'Kantor Pusat Non Operasional'],
             ['kode' => '03', 'nama' => 'Kantor Cabang LJK yang berkedudukan di Luar Negeri'],

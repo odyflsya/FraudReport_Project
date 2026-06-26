@@ -6,29 +6,24 @@ use App\Http\Controllers\Controller;
 use App\Mail\SendOtpCode;
 use App\Models\EmailOtp;
 use App\Models\User;
+use App\Models\UserActivity;
+use App\Services\OtpService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class RegisteredUserController extends Controller
 {
-    /**
-     * Display the registration view.
-     */
+    public function __construct(private OtpService $otpService) {}
+
     public function create(): View
     {
         return view('auth.register');
     }
 
-    /**
-     * Handle an incoming registration request.
-     *
-     * @throws ValidationException
-     */
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
@@ -41,20 +36,41 @@ class RegisteredUserController extends Controller
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'role' => 'user',
+            'status' => 'pending',
         ]);
 
-        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
-
-        EmailOtp::create([
+        UserActivity::create([
+            'user_id' => $user->id,
+            'name' => $user->name,
             'email' => $user->email,
-            'code_hash' => Hash::make($code),
-            'expires_at' => now()->addMinutes(10),
+            'role' => $user->role,
+            'activity' => 'Register',
+            'module' => 'Auth',
+            'description' => 'User registered, awaiting email verification and admin approval',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
         ]);
 
-        Mail::to($user->email)->send(new SendOtpCode($code));
+        $result = $this->otpService->issue($user->email);
 
-        session(['otp_email' => $user->email]);
+        session([
+            'otp_email' => $user->email,
+            'otp_purpose' => 'register',
+        ]);
 
-        return redirect()->route('verification.code')->with('status', 'Akun Anda berhasil dibuat. Silakan cek email untuk kode verifikasi.');
+        if ($this->otpService->shouldShowDevCode()) {
+            session(['dev_otp_code' => $result['code']]);
+        }
+
+        $message = $result['sent']
+            ? 'Akun berhasil dibuat. Cek email Anda untuk kode verifikasi (berlaku 10 menit).'
+            : 'Akun berhasil dibuat, namun email gagal dikirim. Silakan klik "Minta kode baru".';
+
+        if ($this->otpService->shouldShowDevCode()) {
+            $message .= ' Mode development: kode juga tercatat di storage/logs/laravel.log.';
+        }
+
+        return redirect()->route('verification.code')->with('status', $message);
     }
 }

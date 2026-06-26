@@ -1,13 +1,20 @@
-@extends('layouts.app')
+@extends(auth()->user()->isAdmin() ? 'layouts.admin' : 'layouts.app')
 
 @section('content')
-<div class="min-h-screen bg-slate-50 py-8">
-    <div class="mx-auto w-full max-w-5xl px-6">
+@php $isAdminLayout = auth()->user()->isAdmin(); @endphp
+<div class="{{ $isAdminLayout ? '' : 'min-h-screen bg-slate-50 py-8' }}">
+    <div class="mx-auto w-full max-w-5xl {{ $isAdminLayout ? '' : 'px-6' }}">
+        @unless($isAdminLayout)
         <!-- Header -->
         <div class="mb-8">
             <h1 class="text-4xl font-bold text-slate-900">Pengaturan</h1>
             <p class="mt-2 text-slate-600">Kelola profil akun, keamanan, dan preferensi Anda</p>
         </div>
+        @else
+        <div class="mb-6">
+            <p class="text-sm text-gray-500">Kelola profil akun, keamanan, dan preferensi Anda</p>
+        </div>
+        @endunless
 
         <!-- Alert Messages -->
         @if (session('status'))

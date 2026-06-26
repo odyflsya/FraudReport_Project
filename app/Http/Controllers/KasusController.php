@@ -31,6 +31,7 @@ use App\Models\KerugianDetail;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Models\UserActivity;
 use App\Services\ExportService;
 use App\Services\ImportService;
 
@@ -1079,6 +1080,13 @@ if (!in_array($request->jenis_laporan, ['signifikan', 'non-signifikan'])) {
         $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
         $filename = 'laporan-kasus-fraud-' . now()->format('Ymd_His') . '.xlsx';
 
+        $this->logUserActivity(
+            $request,
+            'Export Laporan',
+            'Laporan',
+            'Export laporan ke Excel: ' . $filename . $this->exportFilterDescription($filters, $kasus->count())
+        );
+
         return response()->streamDownload(function () use ($writer) {
             $writer->save('php://output');
         }, $filename);
@@ -1667,5 +1675,44 @@ private function styleSignifikanHeaders($sheet)
         }, $filename);
     }
 
-    
+    private function logUserActivity(Request $request, string $activity, string $module, string $description): void
+    {
+        $user = auth()->user();
+        if (! $user) {
+            return;
+        }
+
+        UserActivity::create([
+            'user_id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+            'activity' => $activity,
+            'module' => $module,
+            'description' => $description,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
+    }
+
+    private function exportFilterDescription(array $filters, int $totalKasus): string
+    {
+        $parts = [' (' . $totalKasus . ' kasus)'];
+
+        if (! empty($filters['tanggal_awal']) || ! empty($filters['tanggal_akhir'])) {
+            $parts[] = ' periode: ' . ($filters['tanggal_awal'] ?? '...') . ' s/d ' . ($filters['tanggal_akhir'] ?? '...');
+        }
+        if (! empty($filters['status_penanganan'])) {
+            $parts[] = ', status: ' . $filters['status_penanganan'];
+        }
+        if (! empty($filters['jenis_laporan'])) {
+            $parts[] = ', jenis: ' . $filters['jenis_laporan'];
+        }
+        if (! empty($filters['search'])) {
+            $parts[] = ', pencarian: ' . $filters['search'];
+        }
+
+        return implode('', $parts);
+    }
+
 }

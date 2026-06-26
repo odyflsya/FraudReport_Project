@@ -94,55 +94,41 @@
         </div>
 
 
-            <!-- User -->
-<!-- User Dropdown -->
-<div x-data="{ open: false }" class="relative">
+            <!-- User Dropdown -->
+            <div x-data="{ open: false }" class="relative">
+                <button type="button" @click="open = !open"
+                    class="flex items-center gap-2.5 pl-2 pr-3 py-1.5 rounded-full border border-gray-200 hover:bg-gray-50 transition">
+                    @if(auth()->user()->profile_photo_path)
+                        <img src="{{ Storage::url(auth()->user()->profile_photo_path) }}"
+                             class="w-8 h-8 rounded-full object-cover" alt="">
+                    @else
+                        <div class="w-8 h-8 bg-gradient-to-br from-[#0693E3] to-blue-700 rounded-full flex items-center justify-center text-white text-xs font-bold">
+                            {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                        </div>
+                    @endif
+                    <span class="text-sm text-gray-700 hidden sm:block">{{ auth()->user()->name }}</span>
+                    <i class="fa-solid fa-chevron-down text-[10px] text-gray-400"></i>
+                </button>
 
-    <!-- TRIGGER -->
-    <button type="button"
-        @click="open = !open"
-        class="flex items-center gap-2 hover:opacity-75 transition">
-
-        @if(auth()->user()->profile_photo_path)
-            <img src="{{ Storage::url(auth()->user()->profile_photo_path) }}"
-                 class="w-8 h-8 rounded-full object-cover border-2 border-gray-300">
-        @else
-            <div class="w-8 h-8 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white text-xs font-bold">
-                {{ strtoupper(substr(auth()->user()->name, 0, 1)) }}
+                <div x-show="open" @click.outside="open = false" x-transition
+                     class="absolute right-0 mt-2 w-52 bg-white rounded-xl shadow-lg border border-gray-100 z-50 overflow-hidden">
+                    <div class="px-4 py-3 border-b bg-gray-50">
+                        <p class="text-sm font-medium text-gray-800">{{ auth()->user()->name }}</p>
+                        <p class="text-xs text-gray-500">{{ auth()->user()->email }}</p>
+                    </div>
+                    <a href="{{ route('pengaturan.index') }}"
+                       class="flex items-center gap-2.5 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50">
+                        <i class="fa-solid fa-gear w-4 text-gray-400"></i> Pengaturan
+                    </a>
+                    <form method="POST" action="{{ route('profile.logout') }}">
+                        @csrf
+                        <button type="submit"
+                            class="flex items-center gap-2.5 w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50 border-t">
+                            <i class="fa-solid fa-right-from-bracket w-4"></i> Logout
+                        </button>
+                    </form>
+                </div>
             </div>
-        @endif
-
-        <span class="text-sm">{{ auth()->user()->name }}</span>
-    </button>
-
-    <!-- DROPDOWN -->
-<div x-show="open"
-     @click.outside="open = false"
-     x-transition
-     class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-lg border z-50">
-
-    <!-- PENGATURAN -->
-    <a href="{{ route('pengaturan.index') }}"
-       class="flex items-center gap-2 px-4 py-3 text-sm text-gray-700 hover:bg-gray-100">
-
-        <i class="fa-solid fa-gear"></i>
-        Pengaturan
-    </a>
-
-    <!-- LOGOUT -->
-    <form method="POST" action="{{ route('profile.logout') }}">
-        @csrf
-        <button type="submit"
-            class="flex items-center gap-2 w-full text-left px-4 py-3 text-sm text-red-600 hover:bg-red-50">
-
-            <i class="fa-solid fa-right-from-bracket"></i>
-            Logout
-        </button>
-    </form>
-
-</div>
-
-        </div>
 
     </div>
 </div>

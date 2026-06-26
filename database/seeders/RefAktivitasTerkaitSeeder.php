@@ -12,7 +12,7 @@ class RefAktivitasTerkaitSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('ref_aktivitas_terkait')->insert([
+        DB::table('ref_aktivitas_terkait')->insertOrIgnore([
             ['kode' => '301', 'nama' => 'Pendanaan'],
             ['kode' => '302', 'nama' => 'Perkreditan/pembiayaan'],
             ['kode' => '303', 'nama' => 'Penggunaan identitas dan data orang, pihak lain, atau konsumen'],

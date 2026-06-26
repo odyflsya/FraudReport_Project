@@ -12,7 +12,7 @@ class RefPihakDirugikanSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('ref_pihak_dirugikan')->insert([
+        DB::table('ref_pihak_dirugikan')->insertOrIgnore([
             ['kode' => '001', 'nama' => 'LJK'],
             ['kode' => '002', 'nama' => 'Konsumen'],
             ['kode' => '003', 'nama' => 'Pihak Lain'],

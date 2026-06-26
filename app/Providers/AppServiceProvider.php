@@ -19,6 +19,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // Register middleware aliases for admin and active_user
+        $router = $this->app->make(\Illuminate\Routing\Router::class);
+        $router->aliasMiddleware('admin', \App\Http\Middleware\AdminMiddleware::class);
+        $router->aliasMiddleware('active_user', \App\Http\Middleware\ActiveUserMiddleware::class);
+        $router->aliasMiddleware('user_only', \App\Http\Middleware\UserOnlyMiddleware::class);
     }
 }

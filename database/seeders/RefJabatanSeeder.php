@@ -12,7 +12,7 @@ class RefJabatanSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('ref_jabatan')->insert([
+        DB::table('ref_jabatan')->insertOrIgnore([
             ['kode' => '001', 'nama' => 'Direktur Utama/Ketua Pengurus'],
             ['kode' => '002', 'nama' => 'Direktur / Pengurus'],
             ['kode' => '003', 'nama' => 'Direktur Kepatuhan/Pengurus bidang Kepatuhan'],
@@ -30,7 +30,7 @@ class RefJabatanSeeder extends Seeder
             ['kode' => '042', 'nama' => 'Pensiun Dini/Disabilitas'],
             ['kode' => '043', 'nama' => 'Diberhentikan atas keinginan sendiri'],
             ['kode' => '044', 'nama' => 'Berakhir masa kontrak/penugasan'],
-            ['kode' => '045', 'nama' => 'Meninggal dunia'],
+            ['kode' => '045', 'nama' => 'Meninggal dunia']
         ]);
     }
 }

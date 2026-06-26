@@ -12,7 +12,7 @@ class RefJenisIdentitasSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('ref_jenis_identitas')->insert([
+        DB::table('ref_jenis_identitas')->insertOrIgnore([
             ['kode' => '001', 'nama' => 'KTP (Nomor Induk Kependudukan)'],
             ['kode' => '002', 'nama' => 'Paspor (Nomor Paspor)'],
             ['kode' => '003', 'nama' => 'NPWP (Nomor Pokok Wajib Pajak)'],

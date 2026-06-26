@@ -34,7 +34,11 @@
                 <span class="text-brand-orange">Kode OTP</span>
             </h1>
             <p class="text-lg md:text-xl text-gray-200 max-w-md">
-                Masukkan kode OTP yang telah dikirim ke email Anda untuk menyelesaikan proses login.
+                @if(($purpose ?? 'register') === 'register')
+                    Verifikasi email Anda terlebih dahulu. Setelah itu, tunggu persetujuan administrator sebelum dapat login.
+                @else
+                    Masukkan kode OTP yang telah dikirim ke email Anda.
+                @endif
             </p>
         </div>
 
@@ -46,7 +50,11 @@
                     Verifikasi Akun
                 </h2>
                 <p class="text-gray-600 text-sm">
-                    Masukkan kode yang dikirim ke email
+                    @if(($purpose ?? 'register') === 'register')
+                        Langkah 2: Verifikasi email dengan kode OTP
+                    @else
+                        Masukkan kode yang dikirim ke email
+                    @endif
                 </p>
             </div>
 
@@ -56,6 +64,14 @@
                     <div class="text-sm">
                         {{ session('status') }}
                     </div>
+                </div>
+            @endif
+
+            @if(!empty($showDevCode) && !empty($devOtpCode))
+                <div class="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4 text-amber-900 text-sm">
+                    <strong>Mode Development:</strong> Email dikirim ke log, bukan inbox.
+                    Kode OTP Anda: <span class="font-mono font-bold text-lg tracking-widest">{{ $devOtpCode }}</span>
+                    <p class="mt-1 text-xs text-amber-700">Juga tersedia di <code>storage/logs/laravel.log</code></p>
                 </div>
             @endif
 
@@ -121,7 +137,11 @@
 
                 <button type="submit"
                         class="w-full bg-brand-blue hover:bg-brand-orange text-white py-3 px-4 rounded-lg font-medium transition-colors focus:ring-2 focus:ring-brand-orange focus:ring-offset-2">
-                    Verifikasi dan Masuk
+                    @if(($purpose ?? 'register') === 'register')
+                        Verifikasi Email
+                    @else
+                        Verifikasi dan Masuk
+                    @endif
                 </button>
             </form>
 

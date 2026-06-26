@@ -3,19 +3,20 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Mail\SendOtpCode;
 use App\Models\EmailOtp;
 use App\Models\User;
+use App\Models\UserActivity;
+use App\Services\OtpService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Mail\MailManager;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\View\View;
 
 class OtpLoginController extends Controller
 {
+    public function __construct(private OtpService $otpService) {}
+
     public function showRequestForm(): View
     {
         return view('auth.otp-login');
@@ -33,25 +34,31 @@ class OtpLoginController extends Controller
             return back()->withErrors(['email' => 'Email belum terdaftar. Silakan daftar terlebih dahulu.'])->withInput();
         }
 
-        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        $result = $this->otpService->issue($user->email);
 
-        EmailOtp::create([
-            'email' => $user->email,
-            'code_hash' => Hash::make($code),
-            'expires_at' => now()->addMinutes(10),
+        session([
+            'otp_email' => $user->email,
+            'otp_purpose' => 'login',
         ]);
 
-        Mail::to($user->email)->send(new SendOtpCode($code));
+        if ($this->otpService->shouldShowDevCode()) {
+            session(['dev_otp_code' => $result['code']]);
+        }
 
-        session(['otp_email' => $user->email]);
+        $message = $result['sent']
+            ? 'Kode verifikasi telah dikirim ke email Anda.'
+            : 'Gagal mengirim email. Silakan coba lagi.';
 
-        return redirect()->route('verification.code')->with('status', 'Kode verifikasi telah dikirim ke email Anda.');
+        return redirect()->route('verification.code')->with('status', $message);
     }
 
     public function showVerifyForm(Request $request): View
     {
         return view('auth.otp-verify', [
             'email' => $request->session()->get('otp_email'),
+            'purpose' => $request->session()->get('otp_purpose', 'register'),
+            'showDevCode' => $this->otpService->shouldShowDevCode(),
+            'devOtpCode' => $request->session()->get('dev_otp_code'),
         ]);
     }
 
@@ -60,7 +67,9 @@ class OtpLoginController extends Controller
         $email = $request->session()->get('otp_email');
 
         if (! $email) {
-            return redirect()->route('verification.code')->withErrors(['email' => 'Sesi verifikasi telah berakhir. Silakan mulai ulang proses login.']);
+            return redirect()->route('verification.code')->withErrors([
+                'email' => 'Sesi verifikasi telah berakhir. Silakan daftar atau login ulang.',
+            ]);
         }
 
         $user = User::where('email', $email)->first();
@@ -69,23 +78,21 @@ class OtpLoginController extends Controller
             return redirect()->route('verification.code')->withErrors(['email' => 'Email tidak ditemukan.']);
         }
 
-        // Invalidate kode OTP lama yang belum digunakan
-        EmailOtp::where('email', $email)
-            ->whereNull('used_at')
-            ->update(['used_at' => now()]);
+        $result = $this->otpService->reissue($user->email);
 
-        // Generate kode baru
-        $code = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+        if ($this->otpService->shouldShowDevCode()) {
+            session(['dev_otp_code' => $result['code']]);
+        }
 
-        EmailOtp::create([
-            'email' => $user->email,
-            'code_hash' => Hash::make($code),
-            'expires_at' => now()->addMinutes(10),
-        ]);
+        $message = $result['sent']
+            ? 'Kode verifikasi baru telah dikirim ke email Anda.'
+            : 'Gagal mengirim email. Silakan coba lagi.';
 
-        Mail::to($user->email)->send(new SendOtpCode($code));
+        if ($this->otpService->shouldShowDevCode()) {
+            $message .= ' Mode development: cek storage/logs/laravel.log.';
+        }
 
-        return redirect()->route('verification.code')->with('status', 'Kode verifikasi baru telah dikirim ke email Anda.');
+        return redirect()->route('verification.code')->with('status', $message);
     }
 
     public function verifyOtp(Request $request): RedirectResponse
@@ -115,9 +122,35 @@ class OtpLoginController extends Controller
 
         $user->markEmailAsVerified();
 
-        Auth::login($user);
-        $request->session()->forget('otp_email');
+        UserActivity::create([
+            'user_id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role,
+            'activity' => 'Verify Email',
+            'module' => 'Auth',
+            'description' => 'Email verified via OTP',
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
+        ]);
 
-        return redirect()->intended(route('dashboard', absolute: false));
+        $request->session()->forget(['otp_email', 'otp_purpose', 'dev_otp_code']);
+
+        // Belum disetujui admin → tunggu approval, jangan login
+        if ($user->status !== 'active') {
+            return redirect()->route('registration.pending')->with(
+                'status',
+                'Email berhasil diverifikasi. Akun Anda menunggu persetujuan administrator sebelum dapat login.'
+            );
+        }
+
+        Auth::login($user);
+        $request->session()->regenerate();
+
+        $redirectRoute = $user->isAdmin()
+            ? route('admin.users.index', absolute: false)
+            : route('dashboard', absolute: false);
+
+        return redirect()->intended($redirectRoute);
     }
 }

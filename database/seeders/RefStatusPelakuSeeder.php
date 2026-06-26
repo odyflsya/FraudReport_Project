@@ -12,7 +12,7 @@ class RefStatusPelakuSeeder extends Seeder
      */
     public function run(): void
     {
-        DB::table('ref_status_pelaku')->insert([
+        DB::table('ref_status_pelaku')->insertOrIgnore([
             ['kode' => '001', 'nama' => 'Pelaku Utama'],
             ['kode' => '002', 'nama' => 'Pihak Terlibat'],
         ]);

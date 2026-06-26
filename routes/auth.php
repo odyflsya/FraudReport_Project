@@ -38,6 +38,9 @@ Route::middleware('guest')->group(function () {
     Route::post('register/verify', [OtpLoginController::class, 'verifyOtp'])
         ->name('verification.verify.code');
 
+    Route::get('register/pending', fn () => view('auth.pending-approval'))
+        ->name('registration.pending');
+
     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
         ->name('password.reset');
 
